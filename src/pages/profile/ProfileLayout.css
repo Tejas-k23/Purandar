@@ -1,0 +1,123 @@
+.profile-layout {
+    min-height: calc(100vh - 72px);
+    background-color: var(--gray-50);
+    padding: var(--space-8) 0;
+}
+
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+}
+
+@media (min-width: 1024px) {
+    .profile-container {
+        grid-template-columns: 280px 1fr;
+    }
+}
+
+/* Sidebar */
+.sidebar-header {
+    background-color: var(--white);
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    padding: var(--space-6) var(--space-6) var(--space-4);
+    border: 1px solid var(--gray-100);
+    border-bottom: none;
+    text-align: center;
+}
+
+.sidebar-avatar-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-4);
+}
+
+.sidebar-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 4px solid var(--white);
+    box-shadow: var(--shadow-lg);
+}
+
+.sidebar-user-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.sidebar-user-email {
+    font-size: 14px;
+    color: var(--gray-500);
+    margin-top: 4px;
+}
+
+.sidebar-nav {
+    background-color: var(--white);
+    padding: var(--space-2);
+    border-left: 1px solid var(--gray-100);
+    border-right: 1px solid var(--gray-100);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-xl);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-600);
+    transition: all 0.2s;
+}
+
+.sidebar-link:hover {
+    background-color: var(--gray-50);
+    color: var(--gray-900);
+}
+
+.sidebar-link.active {
+    background-color: var(--indigo-50);
+    color: var(--indigo-600);
+    font-weight: 600;
+}
+
+.sidebar-footer {
+    background-color: var(--white);
+    padding: var(--space-4) var(--space-6);
+    border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+    border: 1px solid var(--gray-100);
+    border-top: 1px solid var(--gray-50);
+}
+
+.back-home-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 13px;
+    color: var(--gray-500);
+    transition: color 0.2s;
+}
+
+.back-home-link:hover {
+    color: var(--indigo-600);
+}
+
+/* Profile Content */
+.profile-content {
+    min-height: 500px;
+}
+
+@media (max-width: 1023px) {
+    .profile-sidebar {
+        display: none;
+    }
+}

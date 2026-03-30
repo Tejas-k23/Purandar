@@ -1,0 +1,24 @@
+.properties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-6);
+}
+
+.saved-card-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+.saved-card-wrapper > div {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--space-12) 0;
+    color: var(--gray-500);
+    background-color: var(--white);
+    border-radius: var(--radius-2xl);
+    border: 1px dashed var(--gray-300);
+}

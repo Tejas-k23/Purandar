@@ -1,97 +1,228 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Share2, Heart, ShieldCheck } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import {
+    ArrowLeft, Share2, Heart, ShieldCheck, ChevronRight,
+    TrendingUp, Phone
+} from 'lucide-react';
 import PropertyGallery from '../../components/property/PropertyGallery';
 import PropertyTitleSection from '../../components/property/PropertyTitleSection';
 import PropertyStatsBar from '../../components/property/PropertyStatsBar';
 import PropertyDescription from '../../components/property/PropertyDescription';
-import PropertyAmenities from '../../components/property/PropertyAmenities';
-import BlockchainInfo from '../../components/property/BlockchainInfo';
+import PropertyInfoPanel from '../../components/property/PropertyInfoPanel';
 import PropertyMap from '../../components/property/PropertyMap';
+import SimilarProperties from '../../components/property/SimilarProperties';
 import './PropertyDetails.css';
+
+/* ─── Mock data that mirrors the PostProperty form shape ─────────────── */
+const mockProperty = {
+    // Step 1 — Basic
+    intent: 'sell',
+    category: 'residential',
+    propertyType: 'Flat / Apartment',
+
+    // Step 2 — Location
+    city: 'Pune',
+    locality: 'Koregaon Park',
+    subLocality: 'Lane 5',
+    landmark: 'Osho Ashram',
+    flatNo: 'B-402',
+    totalFloors: '12',
+    floorNo: '4',
+
+    // Step 3 — Property Profile
+    bedrooms: '4',
+    bathrooms: '3',
+    balconies: '2',
+    totalArea: '320',
+    areaUnit: 'sq.ft',
+    carpetArea: '275',
+    plotArea: '',
+    furnishing: 'Semi-Furnished',
+    availability: 'Ready to Move',
+    possessionMonth: '',
+    possessionYear: '',
+    propertyAge: '1-5',
+    ownership: 'Freehold',
+    price: '45000000',
+    priceNegotiable: true,
+    securityDeposit: '',
+    maintenance: '8500',
+
+    // Step 5 — Amenities
+    societyAmenities: [
+        'Lift', 'CCTV', 'Security', 'Gymnasium', 'Swimming Pool',
+        'Club House', 'Power Backup', 'Visitor Parking', 'Garden',
+        "Children's Play Area", 'Gas Pipeline', 'Rain Water Harvesting',
+    ],
+    flatAmenities: [
+        'Air Conditioner', 'Modular Kitchen', 'Geyser', 'RO System',
+        'Intercom', 'WiFi',
+    ],
+    facing: 'North-East',
+    overlooking: ['Garden', 'Pool'],
+    waterSupply: 'Corporation',
+    gatedCommunity: 'Yes',
+};
 
 export default function PropertyDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
 
     return (
-        <div className="property-details-page">
-            <div className="container mx-auto px-4 py-6">
-                {/* Back Link */}
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 group"
-                >
-                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    <span>Back to listings</span>
-                </button>
+        <div className="pd-page">
+            {/* Breadcrumb */}
+            <div className="pd-breadcrumb-bar">
+                <nav className="pd-breadcrumb">
+                    <Link to="/">Home</Link>
+                    <span className="pd-breadcrumb-sep"><ChevronRight size={12} /></span>
+                    <Link to="/buy">Buy</Link>
+                    <span className="pd-breadcrumb-sep"><ChevronRight size={12} /></span>
+                    <span className="pd-breadcrumb-current">Luxury Villa by the Sea</span>
+                </nav>
+            </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Property Info */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <PropertyGallery />
+            <div className="pd-layout">
+                {/* ─── Left Column ─────────────────────── */}
+                <div className="pd-main">
+                    <button onClick={() => navigate(-1)} className="pd-back-btn">
+                        <ArrowLeft size={16} />
+                        <span>Back to listings</span>
+                    </button>
 
-                        <div className="bg-[#0D1117] rounded-3xl p-6 border border-white/5 shadow-xl">
-                            <PropertyTitleSection />
-                            <PropertyStatsBar />
-                            <PropertyDescription />
-                            <PropertyAmenities />
-                            <BlockchainInfo />
-                            <PropertyMap />
+                    {/* Gallery */}
+                    <PropertyGallery />
+
+                    {/* Title */}
+                    <div className="pd-card pd-delay-1">
+                        <PropertyTitleSection property={mockProperty} />
+                    </div>
+
+                    {/* Key Stats */}
+                    <div className="pd-card pd-delay-2">
+                        <PropertyStatsBar property={mockProperty} />
+                    </div>
+
+                    {/* Description */}
+                    <div className="pd-card pd-delay-3">
+                        <PropertyDescription property={mockProperty} />
+                    </div>
+
+                    {/* ── Property Details (all form fields) ── */}
+                    <div className="pd-card pd-delay-4">
+                        <PropertyInfoPanel property={mockProperty} />
+                    </div>
+
+                    {/* Map */}
+                    <div className="pd-card pd-delay-5">
+                        <PropertyMap property={mockProperty} />
+                    </div>
+                </div>
+
+                {/* ─── Right Sidebar ────────────────────── */}
+                <div className="pd-sidebar">
+                    {/* Price Card */}
+                    <div className="pd-price-card pd-delay-1">
+                        <div className="pd-price-header">
+                            <div>
+                                <div className="pd-price-label">Full Price</div>
+                                <div className="pd-price-amount">
+                                    ₹4,50,00,000<span>.00</span>
+                                </div>
+                                <div className="pd-price-per-sqft">₹14,063 / sq ft &nbsp;·&nbsp; Negotiable</div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button className="pd-icon-btn">
+                                    <Share2 size={18} />
+                                </button>
+                                <button className="pd-icon-btn pd-icon-btn--heart">
+                                    <Heart size={18} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* EMI Mini */}
+                        <div className="pd-emi-row">
+                            <div className="pd-emi-info">
+                                <span className="pd-emi-label">Est. EMI</span>
+                                <span className="pd-emi-value">₹35,420/mo</span>
+                            </div>
+                            <div className="pd-emi-details">
+                                20 yrs · 8.5% p.a.
+                            </div>
+                        </div>
+
+                        <div className="pd-cta-group">
+                            <button className="pd-cta-primary">
+                                Buy Full Property
+                            </button>
+                            <button className="pd-cta-secondary">
+                                Invest in Fractions
+                            </button>
+                        </div>
+
+                        <div className="pd-trust">
+                            <div className="pd-trust-badge">
+                                <div className="pd-trust-icon">
+                                    <ShieldCheck size={16} />
+                                </div>
+                                <span className="pd-trust-label">Verified on Blockchain</span>
+                            </div>
+                            <p className="pd-trust-text">
+                                Every property on Purandar is fully vetted, legally protected,
+                                and tokenized on the Ethereum blockchain for transparency.
+                            </p>
                         </div>
                     </div>
 
-                    {/* Right Column: Sticky Purchase Panel */}
-                    <div className="space-y-6">
-                        <div className="sticky top-24 bg-[#0D1117] rounded-3xl p-8 border border-white/10 shadow-2xl backdrop-blur-xl">
-                            <div className="flex justify-between items-start mb-6">
-                                <div>
-                                    <span className="text-gray-400 text-sm">Full Price</span>
-                                    <div className="flex items-baseline gap-1 mt-1">
-                                        <span className="text-3xl font-bold text-white">$450,000</span>
-                                        <span className="text-gray-500">.00</span>
-                                    </div>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-[#4F8EF7] hover:border-[#4F8EF7]/50 transition-all">
-                                        <Share2 className="w-5 h-5" />
-                                    </button>
-                                    <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-rose-500 hover:border-rose-500/50 transition-all">
-                                        <Heart className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
+                    {/* Contact Card */}
+                    <div className="pd-contact-card pd-delay-2">
+                        <h3>Want to learn more?</h3>
+                        <p>Chat with our real estate experts about this property and investment opportunities.</p>
+                        <button className="pd-contact-btn">
+                            <Phone size={16} />
+                            Contact Agent
+                        </button>
+                    </div>
 
-                            <div className="space-y-4">
-                                <button className="w-full py-4 rounded-2xl bg-[#4F8EF7] hover:bg-[#3D72C2] text-white font-bold text-lg transition-all shadow-[0_0_20px_rgba(79,142,247,0.3)] hover:shadow-[0_0_30px_rgba(79,142,247,0.4)] transform hover:-translate-y-0.5 active:translate-y-0">
-                                    Buy Full Property
-                                </button>
-                                <button className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-lg transition-all">
-                                    Invest in Fractions
-                                </button>
-                            </div>
-
-                            <div className="mt-8 pt-6 border-t border-white/5">
-                                <div className="flex items-center gap-3 text-emerald-400 mb-4 font-medium">
-                                    <ShieldCheck className="w-5 h-5" />
-                                    <span>Verified Asset on Blockchain</span>
-                                </div>
-                                <p className="text-gray-500 text-xs leading-relaxed">
-                                    Every property on Purandar is fully vetted, legally protected, and tokenized on the Ethereum blockchain for transparency and security.
-                                </p>
-                            </div>
+                    {/* Investment Highlights */}
+                    <div className="pd-highlights-card pd-delay-3">
+                        <h3>
+                            <TrendingUp size={18} color="var(--indigo-600)" />
+                            Investment Highlights
+                        </h3>
+                        <div className="pd-highlight-item">
+                            <div className="pd-highlight-dot" />
+                            <span className="pd-highlight-text">Property value appreciated 12.4% YoY in this locality</span>
                         </div>
-
-                        {/* Additional Info Cards on Right */}
-                        <div className="bg-gradient-to-br from-[#4F8EF7]/10 to-[#7B5EF8]/10 rounded-3xl p-6 border border-[#4F8EF7]/20">
-                            <h3 className="text-white font-semibold mb-2">Want to learn more?</h3>
-                            <p className="text-gray-400 text-sm mb-4">Chat with our real estate experts about this property.</p>
-                            <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-all">
-                                Contact Agent
-                            </button>
+                        <div className="pd-highlight-item">
+                            <div className="pd-highlight-dot" />
+                            <span className="pd-highlight-text">Rental yield of 3.8% — higher than city average</span>
+                        </div>
+                        <div className="pd-highlight-item">
+                            <div className="pd-highlight-dot" />
+                            <span className="pd-highlight-text">Upcoming metro connectivity within 1.5 km radius</span>
+                        </div>
+                        <div className="pd-highlight-item">
+                            <div className="pd-highlight-dot" />
+                            <span className="pd-highlight-text">Smart home features add 8–10% resale premium</span>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Similar Properties */}
+            <SimilarProperties />
+
+            {/* Mobile Fixed CTA */}
+            <div className="pd-mobile-cta">
+                <div className="pd-m-cta-price">
+                    <div className="pd-m-cta-label">Total Price</div>
+                    <div className="pd-m-cta-amount">₹4.50 Cr</div>
+                </div>
+                <button className="pd-m-cta-btn">
+                    <Phone size={16} />
+                    <span>Contact Agent</span>
+                </button>
             </div>
         </div>
     );

@@ -16,68 +16,58 @@ export default function PropertyGallery() {
     const next = () => setActiveIdx(i => (i + 1) % images.length);
 
     return (
-        <div className="space-y-3">
+        <div className="pd-gallery">
             {/* Hero Image */}
-            <div className="relative w-full h-[420px] rounded-2xl overflow-hidden group">
+            <div className="pd-gallery-hero">
                 <img
                     src={images[activeIdx]}
                     alt="Property hero"
-                    className="w-full h-full object-cover transition-all duration-700"
+                    key={activeIdx}
                 />
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="pd-gallery-overlay" />
 
-                {/* Left/Right Nav */}
-                <button
-                    onClick={prev}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white/20"
-                >
-                    <ChevronLeft className="w-4 h-4" />
+                {/* Navigation Arrows */}
+                <button onClick={prev} className="pd-gallery-nav pd-gallery-nav--prev">
+                    <ChevronLeft size={18} />
                 </button>
-                <button
-                    onClick={next}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white/20"
-                >
-                    <ChevronRight className="w-4 h-4" />
+                <button onClick={next} className="pd-gallery-nav pd-gallery-nav--next">
+                    <ChevronRight size={18} />
                 </button>
 
                 {/* Top-left: Virtual Tour */}
-                <button className="absolute top-4 left-4 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-all duration-200">
-                    <div className="w-6 h-6 rounded-full bg-[#4F8EF7] flex items-center justify-center">
-                        <Play className="w-3 h-3 text-white fill-white" />
-                    </div>
-                    Virtual Tour
-                </button>
+                <div className="pd-gallery-top-left">
+                    <button className="pd-badge pd-badge--tour">
+                        <span className="pd-tour-icon">
+                            <Play size={10} fill="#fff" />
+                        </span>
+                        Virtual Tour
+                    </button>
+                </div>
 
                 {/* Top-right: Badges */}
-                <div className="absolute top-4 right-4 flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-full bg-[#4F8EF7] text-white text-xs font-semibold shadow-lg">
-                        For Sale
-                    </span>
-                    <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-semibold">
-                        <CheckCircle className="w-3 h-3" />
+                <div className="pd-gallery-top-right">
+                    <span className="pd-badge pd-badge--sale">For Sale</span>
+                    <span className="pd-badge pd-badge--verified">
+                        <CheckCircle size={12} />
                         Verified
                     </span>
                 </div>
 
                 {/* Image count */}
-                <div className="absolute bottom-4 right-4 px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-sm text-white/80 text-xs font-medium">
+                <div className="pd-gallery-counter">
                     {activeIdx + 1} / {images.length}
                 </div>
             </div>
 
             {/* Thumbnails */}
-            <div className="flex gap-3">
+            <div className="pd-gallery-thumbs">
                 {images.map((img, i) => (
                     <button
                         key={i}
                         onClick={() => setActiveIdx(i)}
-                        className={`relative flex-1 h-[72px] rounded-xl overflow-hidden transition-all duration-200 ${i === activeIdx
-                                ? 'ring-2 ring-[#4F8EF7] ring-offset-2 ring-offset-[#0D1117] shadow-[0_0_12px_rgba(79,142,247,0.5)]'
-                                : 'opacity-60 hover:opacity-90'
-                            }`}
+                        className={`pd-gallery-thumb ${i === activeIdx ? 'pd-gallery-thumb--active' : ''}`}
                     >
-                        <img src={img} alt={`thumb-${i}`} className="w-full h-full object-cover" />
+                        <img src={img} alt={`View ${i + 1}`} />
                     </button>
                 ))}
             </div>

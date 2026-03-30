@@ -1,23 +1,35 @@
 import React, { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
-const fullText = `This stunning luxury villa sits on the edge of the Adriatic coastline in Budva, offering unrivalled views of the Montenegro coastline. The open-plan interior features floor-to-ceiling glass walls, premium Italian marble finishes, and a fully integrated smart home system that controls lighting, climate, and security from your phone. The villa's private infinity pool merges seamlessly with the horizon, while the landscaped Mediterranean garden provides both beauty and privacy. A rare offering in one of Europe's most sought-after coastal destinations — properties of this caliber seldom reach the open market.`;
-
-const shortText = fullText.slice(0, 210) + '...';
-
-export default function PropertyDescription() {
+export default function PropertyDescription({ property = {} }) {
     const [expanded, setExpanded] = useState(false);
+    
+    const {
+        locality = 'this area',
+        city = 'Pune',
+        propertyType = 'property',
+        bedrooms = '4'
+    } = property;
+
+    const fullText = `This exceptional ${bedrooms} BHK ${propertyType} is situated in the prime locality of ${locality}, ${city}. Designed with modern urban living in mind, it features high-quality finishes, spacious living areas, and an abundance of natural light. Residents enjoy premium amenities and a strategic location that offers excellent connectivity to major business hubs, educational institutions, and healthcare facilities. Whether you're looking for a comfortable family home or a high-yield investment opportunity, this property offers unmatched value in today's market.`;
+
+    const shortText = fullText.slice(0, 240) + '...';
 
     return (
-        <div className="mt-7">
-            <h2 className="text-base font-semibold text-white mb-3">About this property</h2>
-            <p className="text-gray-400 text-sm leading-relaxed">
+        <div>
+            <h2 className="pd-section-title">About this property</h2>
+            <p className="pd-description-text">
                 {expanded ? fullText : shortText}
             </p>
             <button
                 onClick={() => setExpanded(e => !e)}
-                className="mt-2 text-[#4F8EF7] text-sm font-medium hover:text-[#6BA3FF] transition-colors"
+                className="pd-read-more-btn"
             >
-                {expanded ? 'Show less ↑' : 'Read more ↓'}
+                {expanded ? (
+                    <>Show less <ChevronUp size={14} /></>
+                ) : (
+                    <>Read more <ChevronDown size={14} /></>
+                )}
             </button>
         </div>
     );

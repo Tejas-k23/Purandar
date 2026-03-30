@@ -1,0 +1,495 @@
+/* ============================================
+   POST PROPERTY LANDING PAGE
+   ============================================ */
+
+/* --- Page Background --- */
+.post-property-page {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #eef2ff 0%, #f8faff 40%, #ffffff 100%);
+    font-family: 'Inter', 'DM Sans', sans-serif;
+    padding: var(--space-10) var(--space-4);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+/* --- Two-Column Container --- */
+.pp-container {
+    max-width: 1180px;
+    width: 100%;
+    display: flex;
+    gap: var(--space-10);
+    align-items: flex-start;
+}
+
+/* ========================
+   LEFT COLUMN
+   ======================== */
+.pp-left {
+    flex: 1;
+    padding-top: var(--space-8);
+}
+
+.pp-heading {
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1.22;
+    color: var(--gray-900);
+    margin-bottom: var(--space-8);
+}
+
+.pp-heading .accent {
+    color: var(--indigo-600);
+}
+
+/* Benefits List */
+.pp-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-10) 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.pp-benefits li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    font-size: 1.05rem;
+    color: var(--gray-700);
+    line-height: 1.5;
+}
+
+.pp-benefits .check-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #16a34a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.pp-benefits .note {
+    font-size: 0.82rem;
+    color: var(--gray-400);
+    margin-left: 2px;
+}
+
+/* Illustration */
+.pp-illustration {
+    width: 100%;
+    max-width: 380px;
+}
+
+.pp-illustration svg {
+    width: 100%;
+    height: auto;
+}
+
+/* ========================
+   RIGHT COLUMN — FORM CARD
+   ======================== */
+.pp-right {
+    flex: 0 0 460px;
+    max-width: 460px;
+}
+
+.pp-form-card {
+    background: var(--white);
+    border-radius: var(--radius-2xl);
+    box-shadow: 0 8px 32px rgba(79, 70, 229, 0.08), 0 1.5px 6px rgba(0, 0, 0, 0.04);
+    padding: var(--space-8);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative top gradient bar */
+.pp-form-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--indigo-500), var(--violet-500));
+}
+
+.pp-form-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: var(--space-1);
+}
+
+.pp-form-subtitle {
+    font-size: 0.9rem;
+    color: var(--gray-500);
+    margin-bottom: var(--space-6);
+}
+
+/* --- Step Label --- */
+.pp-step-label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: var(--space-3);
+}
+
+/* --- Pill Toggle Group --- */
+.pp-pill-group {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+}
+
+.pp-pill {
+    padding: var(--space-2) var(--space-5);
+    border: 1.5px solid var(--gray-300);
+    border-radius: var(--radius-full);
+    background: var(--white);
+    color: var(--gray-700);
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    outline: none;
+    user-select: none;
+}
+
+.pp-pill:hover {
+    border-color: var(--indigo-400);
+    color: var(--indigo-600);
+    background: var(--indigo-50);
+}
+
+.pp-pill.active {
+    background: var(--indigo-600);
+    color: var(--white);
+    border-color: var(--indigo-600);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+}
+
+/* --- Radio Group (Residential / Commercial) --- */
+.pp-radio-group {
+    display: flex;
+    gap: var(--space-6);
+    margin-bottom: var(--space-4);
+}
+
+.pp-radio-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.pp-radio-label:hover {
+    color: var(--indigo-600);
+}
+
+.pp-radio-label input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--gray-400);
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pp-radio-label input[type="radio"]:checked {
+    border-color: var(--indigo-600);
+}
+
+.pp-radio-label input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 8px;
+    height: 8px;
+    background: var(--indigo-600);
+    border-radius: 50%;
+}
+
+/* --- Property Type Chips --- */
+.pp-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.pp-chip {
+    padding: var(--space-2) var(--space-4);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-full);
+    background: var(--gray-50);
+    color: var(--gray-600);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.pp-chip:hover {
+    border-color: var(--indigo-400);
+    color: var(--indigo-600);
+    background: var(--indigo-50);
+}
+
+.pp-chip.active {
+    background: var(--indigo-600);
+    color: var(--white);
+    border-color: var(--indigo-600);
+}
+
+.pp-chip.more-btn {
+    background: transparent;
+    border-style: dashed;
+    border-color: var(--indigo-300);
+    color: var(--indigo-600);
+    font-weight: 600;
+}
+
+.pp-chip.more-btn:hover {
+    background: var(--indigo-50);
+}
+
+/* --- Divider --- */
+.pp-divider {
+    border: none;
+    border-top: 1px solid var(--gray-200);
+    margin: var(--space-6) 0;
+}
+
+/* --- Contact Section --- */
+.pp-contact-heading {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: var(--space-4);
+}
+
+.pp-phone-wrapper {
+    position: relative;
+    margin-bottom: var(--space-2);
+}
+
+.pp-phone-prefix {
+    position: absolute;
+    left: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.pp-phone-prefix::after {
+    content: '';
+    width: 1px;
+    height: 22px;
+    background: var(--gray-300);
+}
+
+.pp-phone-input {
+    width: 100%;
+    padding: var(--space-4) var(--space-4) var(--space-4) 5.5rem;
+    border: 1.5px solid var(--gray-300);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    color: var(--gray-800);
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    background: var(--white);
+    font-family: inherit;
+}
+
+.pp-phone-input::placeholder {
+    color: var(--gray-400);
+}
+
+.pp-phone-input:focus {
+    border-color: var(--indigo-500);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.pp-phone-input.error {
+    border-color: var(--red-500);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.pp-phone-error {
+    font-size: 0.8rem;
+    color: var(--red-500);
+    margin-top: var(--space-1);
+    margin-bottom: var(--space-3);
+    min-height: 1.2rem;
+}
+
+/* --- Login Link --- */
+.pp-login-link {
+    font-size: 0.85rem;
+    color: var(--gray-500);
+    margin-bottom: var(--space-6);
+    display: block;
+}
+
+.pp-login-link a {
+    color: var(--indigo-600);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.pp-login-link a:hover {
+    color: var(--indigo-700);
+    text-decoration: underline;
+}
+
+/* --- CTA Button --- */
+.pp-cta-btn {
+    width: 100%;
+    padding: var(--space-4);
+    background: linear-gradient(135deg, var(--indigo-600), var(--violet-600));
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    font-family: inherit;
+    letter-spacing: 0.02em;
+}
+
+.pp-cta-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.pp-cta-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+}
+
+.pp-cta-btn:hover::after {
+    opacity: 1;
+}
+
+.pp-cta-btn:active {
+    transform: translateY(0);
+}
+
+/* ========================
+   RESPONSIVE
+   ======================== */
+
+@media (max-width: 1024px) {
+    .pp-container {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-6);
+    }
+
+    .pp-left {
+        text-align: center;
+        padding-top: 0;
+    }
+
+    .pp-heading {
+        font-size: 2rem;
+    }
+
+    .pp-benefits {
+        align-items: center;
+    }
+
+    .pp-benefits li {
+        justify-content: center;
+    }
+
+    .pp-illustration {
+        margin: 0 auto;
+        max-width: 280px;
+    }
+
+    .pp-right {
+        flex: unset;
+        max-width: 520px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .post-property-page {
+        padding: var(--space-6) var(--space-2);
+    }
+
+    .pp-heading {
+        font-size: 1.6rem;
+    }
+
+    .pp-form-card {
+        padding: var(--space-6) var(--space-4);
+    }
+
+    .pp-pill-group {
+        gap: var(--space-1);
+    }
+
+    .pp-pill {
+        padding: var(--space-2) var(--space-4);
+        font-size: 0.85rem;
+    }
+
+    .pp-radio-group {
+        gap: var(--space-4);
+    }
+}
+
+/* Entrance Animation */
+@keyframes ppSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pp-left {
+    animation: ppSlideUp 0.6s ease-out;
+}
+
+.pp-right {
+    animation: ppSlideUp 0.6s 0.15s ease-out both;
+}

@@ -10,7 +10,9 @@ function App() {
             <div className="app-container">
                 <div className="main-wrapper">
                     <Navbar />
-                    <AppRoutes />
+                    <div className="main-content">
+                        <AppRoutes />
+                    </div>
                 </div>
             </div>
         </BrowserRouter>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Map, { Marker, NavigationControl } from 'react-map-gl/mapbox';
 import './MapPanel.css';
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoidGVqYXNrdW1iaGFya2FyIiwiYSI6ImNtbHM4ZzA2ZjAzdm4zZXNlMGJvNG1idHIifQ.bchatKOS3pHncudL53MNfQ';
+const MAPBOX_TOKEN = 'pk.eyJ1IjoidGVqYXNrdW1iaGFya2FyIiwiYSI6ImNtbjczZmFpNjA5aGcycHBkb241NjZxc3cifQ.WKiUvhVInqaURt9a24nZvw';
 
 const mapLocations = [
     {
