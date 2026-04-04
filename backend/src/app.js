@@ -11,6 +11,8 @@ import { getSitemapXml } from './controllers/blog.controller.js';
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 const allowedOrigins = [
   env.CLIENT_URL,
   'https://purandar-pi.vercel.app',
