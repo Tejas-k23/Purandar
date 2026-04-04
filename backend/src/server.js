@@ -3,14 +3,17 @@ import connectDB from './config/db.js';
 import { env } from './config/env.js';
 
 const startServer = async () => {
-  await connectDB();
+  try {
+    await connectDB();
+    console.log("MongoDB Connected ✅");
+  } catch (error) {
+    console.error("MongoDB Failed ❌:", error.message);
+  }
 
-  app.listen(env.PORT, () => {
+  // ✅ ALWAYS start server
+  app.listen(env.PORT || 5000, () => {
     console.log(`Backend running on port ${env.PORT}`);
   });
 };
 
-startServer().catch((error) => {
-  console.error('Failed to start backend', error);
-  process.exit(1);
-});
+startServer();
