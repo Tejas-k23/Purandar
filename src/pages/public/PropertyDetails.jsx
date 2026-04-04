@@ -13,6 +13,7 @@ import PropertyMap from '../../components/property/PropertyMap';
 import SimilarProperties from '../../components/property/SimilarProperties';
 import { formatCurrency } from '../../utils/formatPrice';
 import ContactCard, { resolveContact } from '../../components/common/ContactCard';
+import SeoManager from '../../components/common/SeoManager';
 import './PropertyDetails.css';
 
 export default function PropertyDetails() {
@@ -95,19 +96,61 @@ export default function PropertyDetails() {
   if (loading) return <Loader label="Loading property details..." />;
   if (!property) return <div style={{ padding: '2rem' }}>{message || 'Property not found'}</div>;
 
-  const visibleContact = resolveContact({
-    ...property,
-    contactPersonName: property.useOriginalSellerContact ? property.owner?.name || property.userName : property.displaySellerName,
-    phoneNumber: property.useOriginalSellerContact ? property.owner?.phone : property.displaySellerPhone,
-    email: property.useOriginalSellerContact ? property.owner?.email : property.displaySellerEmail,
-    useCustomContactDetails: property.useOriginalSellerContact === false,
-    customContactName: property.displaySellerName,
-    customContactPhone: property.displaySellerPhone,
-    customContactEmail: property.displaySellerEmail,
-  });
+  const visibleContact = resolveContact(property);
+  const titleBase = property.title || `${property.propertyType || 'Property'} in ${property.locality || property.city || 'Purandar'}`;
+  const locationLabel = [property.locality, property.city].filter(Boolean).join(', ');
+  const areaValue = property.totalArea || property.plotArea || property.carpetArea;
+  const areaText = areaValue ? `${areaValue} ${property.areaUnit || 'sq.ft'}` : '';
+  const intentLabel = property.intent === 'rent' ? 'Rental' : 'For sale';
+  const summaryBits = [
+    `${intentLabel} ${property.propertyType || 'property'}`,
+    locationLabel ? `in ${locationLabel}` : '',
+    property.bedrooms ? `${property.bedrooms} BHK` : '',
+    areaText ? `• ${areaText}` : '',
+    property.price ? `• Price ${formatCurrency(property.price)}` : '',
+  ].filter(Boolean);
+  const seoDescription = property.description || summaryBits.join(' ');
+  const primaryImage = property.photos?.[0] || '';
+  const pageUrl = `${window.location.origin}/property/${property._id}`;
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Residence',
+    name: titleBase,
+    description: seoDescription,
+    image: primaryImage ? [primaryImage] : [],
+    url: pageUrl,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: property.locality || '',
+      addressRegion: property.city || '',
+      addressCountry: 'IN',
+    },
+    numberOfRooms: property.bedrooms || undefined,
+    floorSize: areaValue ? {
+      '@type': 'QuantitativeValue',
+      value: areaValue,
+      unitText: property.areaUnit || 'sq.ft',
+    } : undefined,
+    offers: property.price ? {
+      '@type': 'Offer',
+      price: property.price,
+      priceCurrency: 'INR',
+      availability: 'https://schema.org/InStock',
+      url: pageUrl,
+    } : undefined,
+  };
 
   return (
     <div className="pd-page" style={{ paddingBottom: '3rem' }}>
+      <SeoManager
+        title={`${titleBase} | Purandar Properties`}
+        description={seoDescription}
+        canonicalPath={`/property/${property._id}`}
+        schema={schema}
+        image={primaryImage}
+        type="product"
+        siteName="Purandar Properties"
+      />
       <div className="pd-layout">
         <div className="pd-main">
           <button onClick={() => navigate(-1)} className="pd-back-btn">Back to listings</button>
@@ -157,14 +200,10 @@ export default function PropertyDetails() {
               contactPersonName: visibleContact.name,
               phoneNumber: visibleContact.phone,
               email: visibleContact.email,
-              useCustomContactDetails: !property.useOriginalSellerContact,
-              customContactName: property.displaySellerName,
-              customContactPhone: property.displaySellerPhone,
-              customContactEmail: property.displaySellerEmail,
             }}
             buttonLabel="Enquire Now"
             onAction={() => document.getElementById('property-enquiry-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-            helperText="Visible contact reflects your original or custom seller settings."
+            helperText="Visible contact reflects your original, company, or custom seller settings."
           />
 
           <div className="pd-contact-card" id="property-enquiry-form">

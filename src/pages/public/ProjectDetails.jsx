@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Bath, Building2, CalendarDays, CarFront, Dumbbell, FileText, Mail, MapPin, MapPinned, Phone, ShieldCheck, Trees, Waves, Users, Building, Lock, Blocks, Sparkles } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import ContactCard from '../../components/common/ContactCard';
+import ContactCard, { resolveContact } from '../../components/common/ContactCard';
 import Loader from '../../components/common/Loader';
 import ProjectCard from '../../components/project/ProjectCard';
 import projectService from '../../services/projectService';
@@ -206,6 +206,7 @@ export default function ProjectDetails() {
   const starting = (project.startingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000);
   const ending = (project.endingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000);
   const profile = getProjectTypeProfile(project.projectType);
+  const visibleContact = resolveContact(project);
 
   return (
     <div className="pd-page" style={{ paddingBottom: '3rem' }}>
@@ -239,7 +240,7 @@ export default function ProjectDetails() {
               <div>
                 <div className="pd-price-label">Price Range</div>
                 <div className="pd-price-amount">{formatCompactPrice(starting)} - {formatCompactPrice(ending)}</div>
-                <div className="pd-price-per-sqft">{project.projectType} • {project.areaRange}</div>
+                <div className="pd-price-per-sqft">{project.projectType} ï¿½ {project.areaRange}</div>
               </div>
             </div>
             <div className="pd-trust">
@@ -254,9 +255,9 @@ export default function ProjectDetails() {
 
           <ContactCard
             item={project}
-            helperText="Contact info reflects the original project contact or your custom contact settings."
+            helperText="Contact info reflects the original, company, or custom contact settings."
             onAction={() => {
-              if (project.phoneNumber) window.location.href = `tel:${project.useCustomContactDetails ? project.customContactPhone || project.phoneNumber : project.phoneNumber}`;
+              if (visibleContact.phone) window.location.href = `tel:${visibleContact.phone}`;
             }}
           />
 
@@ -264,8 +265,8 @@ export default function ProjectDetails() {
             <h3>Quick Contact</h3>
             <p>Reach out directly for brochure, site visit, and latest availability.</p>
             <div className="pd-chip-list">
-              <span className="pd-info-chip"><Phone size={14} /> {(project.useCustomContactDetails ? project.customContactPhone : project.phoneNumber) || '-'}</span>
-              <span className="pd-info-chip"><Mail size={14} /> {(project.useCustomContactDetails ? project.customContactEmail : project.email) || '-'}</span>
+              <span className="pd-info-chip"><Phone size={14} /> {visibleContact.phone || '-'}</span>
+              <span className="pd-info-chip"><Mail size={14} /> {visibleContact.email || '-'}</span>
             </div>
           </div>
         </div>

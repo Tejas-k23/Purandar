@@ -6,6 +6,7 @@ import DataTable from '../../components/admin/DataTable';
 import ToggleSwitch from '../../components/common/ToggleSwitch';
 import projectService from '../../services/projectService';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import { hasCompanyContact } from '../../config/companyContact';
 
 export default function AdminProjects() {
   const [projects, setProjects] = useState([]);
@@ -32,6 +33,33 @@ export default function AdminProjects() {
     await projectService.toggleFeatured(projectId, featuredOnHome);
     await load();
     setBusyId('');
+  };
+
+  const toggleContactMode = async (projectId, nextValue) => {
+    const project = projects.find((item) => item._id === projectId);
+    if (!project) return;
+
+    const currentMode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
+    const nextMode = nextValue
+      ? 'original'
+      : currentMode !== 'original'
+        ? currentMode
+        : (hasCompanyContact ? 'company' : 'custom');
+
+    setBusyId(`${projectId}:contact`);
+    setProjects((current) => current.map((item) => (
+      item._id === projectId ? { ...item, contactDisplayMode: nextMode, useCustomContactDetails: nextMode === 'custom' } : item
+    )));
+
+    try {
+      await projectService.update(projectId, { contactDisplayMode: nextMode, useCustomContactDetails: nextMode === 'custom' });
+    } catch (_error) {
+      setProjects((current) => current.map((item) => (
+        item._id === projectId ? { ...item, contactDisplayMode: currentMode, useCustomContactDetails: currentMode === 'custom' } : item
+      )));
+    } finally {
+      setBusyId('');
+    }
   };
 
   const deleteProject = async (projectId) => {
@@ -77,12 +105,35 @@ export default function AdminProjects() {
               render: (row) => (
                 <div className="admin-cell-stack">
                   <div>{row.developerName}</div>
-                  <div className="admin-cell-subtitle">Contact: {row.useCustomContactDetails ? `${row.customContactName || '-'} • ${row.customContactPhone || '-'}` : `${row.contactPersonName || '-'} • ${row.phoneNumber || '-'}`}</div>
+                  <div className="admin-cell-subtitle">
+                    Contact: {(() => {
+                      const mode = row.contactDisplayMode || (row.useCustomContactDetails ? 'custom' : 'original');
+                      if (mode === 'company') return 'Company contact';
+                      if (mode === 'custom') return `${row.customContactName || '-'} - ${row.customContactPhone || '-'}`;
+                      return `${row.contactPersonName || '-'} - ${row.phoneNumber || '-'}`;
+                    })()}
+                  </div>
                 </div>
               ),
             },
             { key: 'status', label: 'Status', render: (row) => <span className="admin-table-badge success">{row.projectStatus}</span> },
             { key: 'price', label: 'Price', render: (row) => `${formatCompactPrice((row.startingPrice || 0) * (row.priceUnit === 'Crore' ? 10000000 : 100000))} - ${formatCompactPrice((row.endingPrice || 0) * (row.priceUnit === 'Crore' ? 10000000 : 100000))}` },
+            {
+              key: 'contactDisplay',
+              label: 'Show Real Contact',
+              render: (row) => {
+                const mode = row.contactDisplayMode || (row.useCustomContactDetails ? 'custom' : 'original');
+                const checked = mode === 'original';
+                return (
+                  <ToggleSwitch
+                    checked={checked}
+                    onChange={(value) => toggleContactMode(row._id, value)}
+                    label="Toggle real project contact"
+                    disabled={busyId === `${row._id}:contact`}
+                  />
+                );
+              },
+            },
             {
               key: 'visible',
               label: 'Visible',

@@ -58,6 +58,7 @@ const initialState = {
   phoneNumber: '',
   email: '',
   tags: [],
+  contactDisplayMode: 'original',
   useCustomContactDetails: false,
   customContactName: '',
   customContactPhone: '',
@@ -153,7 +154,7 @@ function validateForm(data) {
     errors.email = 'Enter a valid email address';
   }
 
-  if (data.useCustomContactDetails) {
+  if (data.contactDisplayMode === 'custom') {
     if (!data.customContactName.trim()) errors.customContactName = 'Custom contact name is required';
     if (!/^\d{10}$/.test(String(data.customContactPhone).trim())) errors.customContactPhone = 'Enter a valid 10 digit phone number';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.customContactEmail.trim())) errors.customContactEmail = 'Enter a valid email address';
@@ -272,9 +273,12 @@ export default function AddProjectForm() {
       try {
         const response = await projectService.getById(editId);
         const project = response.data.data;
+        const contactDisplayMode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
         setFormData({
           ...initialState,
           ...project,
+          contactDisplayMode,
+          useCustomContactDetails: contactDisplayMode === 'custom',
           projectImages: (project.projectImages || []).map((image, index) => ({
             id: `${project._id || 'project'}-${index}`,
             name: `Project image ${index + 1}`,
@@ -309,6 +313,11 @@ export default function AddProjectForm() {
       delete next[field];
       return next;
     });
+  };
+
+  const setContactDisplayMode = (mode) => {
+    updateField('contactDisplayMode', mode);
+    updateField('useCustomContactDetails', mode === 'custom');
   };
 
   const handleProjectTypeChange = (value) => {
@@ -677,15 +686,46 @@ export default function AddProjectForm() {
               <div className="ppf-admin-contact-card">
                 <div className="ppf-admin-contact-head">
                   <div>
-                    <h3 className="ppf-admin-contact-title">Custom Contact Details</h3>
-                    <p className="ppf-admin-contact-subtitle">Choose whether the project details page should show dedicated custom contact information or the original project contact.</p>
+                    <h3 className="ppf-admin-contact-title">Contact Display on Website</h3>
+                    <p className="ppf-admin-contact-subtitle">Decide whether the project detail page should show the original contact, company contact, or a custom contact.</p>
                   </div>
                 </div>
                 <div className="ppf-toggle-wrapper">
-                  <button type="button" className={`ppf-toggle ${formData.useCustomContactDetails ? 'on' : ''}`} onClick={() => updateField('useCustomContactDetails', !formData.useCustomContactDetails)} aria-pressed={formData.useCustomContactDetails} />
-                  <span className="ppf-toggle-label">Use custom contact details on project pages</span>
+                  <button
+                    type="button"
+                    className={`ppf-toggle ${formData.contactDisplayMode === 'original' ? 'on' : ''}`}
+                    onClick={() => setContactDisplayMode(formData.contactDisplayMode === 'original' ? (isAdminPath ? 'company' : 'custom') : 'original')}
+                    aria-pressed={formData.contactDisplayMode === 'original'}
+                  />
+                  <span className="ppf-toggle-label">Show original project contact details</span>
                 </div>
-                {formData.useCustomContactDetails ? (
+                {formData.contactDisplayMode !== 'original' ? (
+                  <div className="ppf-radio-group" style={{ marginTop: 12 }}>
+                    {isAdminPath ? (
+                      <label className="ppf-radio-label" htmlFor="apf-contact-company">
+                        <input
+                          type="radio"
+                          id="apf-contact-company"
+                          name="apf-contact-mode"
+                          checked={formData.contactDisplayMode === 'company'}
+                          onChange={() => setContactDisplayMode('company')}
+                        />
+                        Use company contact details
+                      </label>
+                    ) : null}
+                    <label className="ppf-radio-label" htmlFor="apf-contact-custom">
+                      <input
+                        type="radio"
+                        id="apf-contact-custom"
+                        name="apf-contact-mode"
+                        checked={formData.contactDisplayMode === 'custom'}
+                        onChange={() => setContactDisplayMode('custom')}
+                      />
+                      Use custom contact details
+                    </label>
+                  </div>
+                ) : null}
+                {formData.contactDisplayMode === 'custom' ? (
                   <div className="ppf-form-row">
                     <Field label="Custom Contact Name" required error={errors.customContactName} icon={UserRound}>
                       <TextInput name="customContactName" type="text" placeholder="Enter custom contact name" value={formData.customContactName} onChange={(event) => updateField('customContactName', event.target.value)} error={errors.customContactName} />

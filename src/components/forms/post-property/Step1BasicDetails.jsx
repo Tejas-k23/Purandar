@@ -24,6 +24,11 @@ const commercialTypes = [
 export default function Step1BasicDetails({ formData, updateField, errors, isAdmin = false }) {
     const types = formData.category === 'residential' ? residentialTypes : commercialTypes;
 
+    const setContactDisplayMode = (mode) => {
+        updateField('contactDisplayMode', mode);
+        updateField('useOriginalSellerContact', mode === 'original');
+    };
+
     return (
         <div className="ppf-step-content" key="step1">
             <h2 className="ppf-heading">
@@ -98,21 +103,48 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
                 <div className="ppf-admin-contact-head">
                     <div>
                         <h3 className="ppf-admin-contact-title">{isAdmin ? 'Seller Display on Website' : 'Contact Details on Website'}</h3>
-                        <p className="ppf-admin-contact-subtitle">Choose whether the website should show the original owner contact or your custom seller details.</p>
+                        <p className="ppf-admin-contact-subtitle">Toggle real seller details, or switch to company or custom contact info for this listing.</p>
                     </div>
                 </div>
 
                 <div className="ppf-toggle-wrapper">
                     <button
                         type="button"
-                        className={`ppf-toggle ${formData.useOriginalSellerContact ? 'on' : ''}`}
-                        onClick={() => updateField('useOriginalSellerContact', !formData.useOriginalSellerContact)}
-                        aria-pressed={formData.useOriginalSellerContact}
+                        className={`ppf-toggle ${formData.contactDisplayMode === 'original' ? 'on' : ''}`}
+                        onClick={() => setContactDisplayMode(formData.contactDisplayMode === 'original' ? (isAdmin ? 'company' : 'custom') : 'original')}
+                        aria-pressed={formData.contactDisplayMode === 'original'}
                     />
-                    <span className="ppf-toggle-label">Use original seller name, phone, and email</span>
+                    <span className="ppf-toggle-label">Show Real Seller Details</span>
                 </div>
 
-                {!formData.useOriginalSellerContact ? (
+                {formData.contactDisplayMode !== 'original' ? (
+                    <div className="ppf-radio-group" style={{ marginTop: 12 }}>
+                        {isAdmin ? (
+                            <label className="ppf-radio-label" htmlFor="ppf-contact-company">
+                                <input
+                                    type="radio"
+                                    id="ppf-contact-company"
+                                    name="ppf-contact-mode"
+                                    checked={formData.contactDisplayMode === 'company'}
+                                    onChange={() => setContactDisplayMode('company')}
+                                />
+                                Use company contact details
+                            </label>
+                        ) : null}
+                        <label className="ppf-radio-label" htmlFor="ppf-contact-custom">
+                            <input
+                                type="radio"
+                                id="ppf-contact-custom"
+                                name="ppf-contact-mode"
+                                checked={formData.contactDisplayMode === 'custom' || (!isAdmin && formData.contactDisplayMode !== 'original')}
+                                onChange={() => setContactDisplayMode('custom')}
+                            />
+                            Use custom seller details
+                        </label>
+                    </div>
+                ) : null}
+
+                {formData.contactDisplayMode === 'custom' ? (
                     <div className="ppf-form-row">
                         <div className="ppf-field">
                             <label className="ppf-field-label"><span className="ppf-field-label-icon"><UserRound size={14} /></span>Custom Seller Name</label>

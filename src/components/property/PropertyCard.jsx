@@ -1,7 +1,8 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MapPin, Heart, ShieldCheck, BedDouble, Bath, Ruler, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import { resolveContact } from '../common/ContactCard';
 import './PropertyCard.css';
 
 const getLocation = (property) => [property.subLocality, property.locality, property.city].filter(Boolean).join(', ');
@@ -11,6 +12,7 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
   const navigate = useNavigate();
   const images = useMemo(() => (property.photos?.length ? property.photos : [getFallbackImage()]), [property]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const contact = useMemo(() => resolveContact(property), [property]);
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -84,7 +86,7 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
           <MapPin className="w-3.5 h-3.5" />
           <span>{getLocation(property)}</span>
         </div>
-        <p className="property-owner-line">Seller: {property.useOriginalSellerContact === false ? (property.displaySellerName || property.owner?.name || property.userName || 'Owner') : (property.owner?.name || property.userName || 'Owner')}</p>
+        <p className="property-owner-line">Seller: {contact.name || 'Owner'}</p>
 
         <div className="property-features property-features-rich">
           {property.bedrooms ? <span className="feature-item"><BedDouble size={15} /> <span className="feature-val">{property.bedrooms} BHK</span></span> : null}

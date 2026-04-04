@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Bookmark, Building2, MessageSquareMore, PlusCircle } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useProperties from '../../hooks/useProperties';
@@ -87,12 +87,77 @@ const SearchWidget = () => {
   );
 };
 
+const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
+  const isPausedRef = useRef(false);
+
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return;
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    let rafId = 0;
+    let lastTime = performance.now();
+
+    const pause = () => {
+      isPausedRef.current = true;
+    };
+    const resume = () => {
+      isPausedRef.current = false;
+    };
+
+    if (pauseOnHover) {
+      row.addEventListener('mouseenter', pause);
+      row.addEventListener('mouseleave', resume);
+    }
+
+    row.addEventListener('pointerdown', pause, { passive: true });
+    row.addEventListener('pointerup', resume, { passive: true });
+    row.addEventListener('touchstart', pause, { passive: true });
+    row.addEventListener('touchend', resume, { passive: true });
+
+    const tick = (now) => {
+      const delta = now - lastTime;
+      lastTime = now;
+
+      if (!isPausedRef.current) {
+        const maxScroll = row.scrollWidth - row.clientWidth;
+        if (maxScroll > 0) {
+          const next = row.scrollLeft + (speed * delta) / 1000;
+          row.scrollLeft = next >= maxScroll ? 0 : next;
+        }
+      }
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (pauseOnHover) {
+        row.removeEventListener('mouseenter', pause);
+        row.removeEventListener('mouseleave', resume);
+      }
+      row.removeEventListener('pointerdown', pause);
+      row.removeEventListener('pointerup', resume);
+      row.removeEventListener('touchstart', pause);
+      row.removeEventListener('touchend', resume);
+    };
+  }, [rowRef, speed, pauseOnHover]);
+};
+
 function PropertySection() {
   const location = useLocation();
   const { properties, loading } = useProperties({ limit: 8, sort: 'newest', featuredOnHome: true });
   const { savedProperties, savedPropertyIds, toggleSavedProperty, isAuthenticated, user } = useAuth();
   const [activity, setActivity] = useState({ properties: 0, leads: 0, loading: false });
   const featured = useMemo(() => properties.slice(0, 4), [properties]);
+  const propertiesRowRef = useRef(null);
+
+  useAutoScrollRow(propertiesRowRef, { speed: 26 });
 
   useEffect(() => {
     let active = true;
@@ -147,7 +212,7 @@ function PropertySection() {
         {loading ? <Loader label="Loading recommended properties..." /> : null}
         {!loading && featured.length === 0 ? <EmptyState title="No properties available yet" /> : null}
 
-        <div className="properties-scroll-row home-live-grid">
+        <div className="properties-scroll-row home-live-grid" ref={propertiesRowRef}>
           {featured.map((property) => (
             <PropertyCard
               key={property._id}
@@ -278,6 +343,9 @@ const NewLaunchProjects = () => {
 
 const InsightsArticles = () => {
   const [articles, setArticles] = useState([]);
+  const insightsRowRef = useRef(null);
+
+  useAutoScrollRow(insightsRowRef, { speed: 22 });
 
   useEffect(() => {
     let active = true;
@@ -300,7 +368,7 @@ const InsightsArticles = () => {
   return (
     <section className="section-container" style={{ paddingTop: '3rem' }}>
       <h3 className="section-title mb-4">Insights & News</h3>
-      <div className="insights-row">
+      <div className="insights-row" ref={insightsRowRef}>
         {articles.map((article) => (
           <Link to={`/news-insights/${article.slug}`} className="insight-card" key={article._id}>
             <img className="insight-img" src={article.featuredImage || 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80'} alt={article.title} loading="lazy" />

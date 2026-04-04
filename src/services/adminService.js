@@ -13,6 +13,10 @@ export const adminService = {
     return api.get(`/admin/properties/${propertyId}`);
   },
 
+  updateProperty(propertyId, payload) {
+    return api.patch(`/properties/${propertyId}`, payload);
+  },
+
   updatePropertyStatus(propertyId, status, moderationMessage = '') {
     return api.patch(`/admin/properties/${propertyId}/status`, { status, moderationMessage });
   },

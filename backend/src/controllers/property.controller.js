@@ -3,6 +3,7 @@ import Property from '../models/Property.js';
 import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { env } from '../config/env.js';
 
 const numericFields = [
   'bedrooms',
@@ -41,6 +42,20 @@ const normalizePayload = (payload) => {
     if (field in data) {
       data[field] = toNumberOrNull(data[field]);
     }
+  }
+
+  if (data.contactDisplayMode) {
+    data.contactDisplayMode = String(data.contactDisplayMode).toLowerCase();
+  } else if (data.useOriginalSellerContact === false) {
+    data.contactDisplayMode = 'custom';
+  } else if (data.useOriginalSellerContact === true) {
+    data.contactDisplayMode = 'original';
+  }
+
+  if (data.contactDisplayMode && data.contactDisplayMode !== 'original') {
+    data.useOriginalSellerContact = false;
+  } else if (data.contactDisplayMode === 'original') {
+    data.useOriginalSellerContact = true;
   }
 
   data.photos = Array.isArray(data.photos) ? data.photos : [];
@@ -198,6 +213,9 @@ export const createProperty = asyncHandler(async (req, res) => {
   }
 
   const isAdmin = req.user.role === 'admin';
+  if (!isAdmin && payload.contactDisplayMode === 'company') {
+    payload.contactDisplayMode = payload.useOriginalSellerContact ? 'original' : 'custom';
+  }
   const property = await Property.create({
     ...payload,
     owner: req.user._id,
@@ -217,6 +235,10 @@ export const createProperty = asyncHandler(async (req, res) => {
 export const updateProperty = asyncHandler(async (req, res) => {
   const property = await getOwnedProperty(req.params.id, req.user);
   const payload = normalizePayload(req.body);
+
+  if (req.user.role !== 'admin' && payload.contactDisplayMode === 'company') {
+    payload.contactDisplayMode = payload.useOriginalSellerContact ? 'original' : 'custom';
+  }
 
   Object.assign(property, payload);
 
@@ -284,13 +306,32 @@ export const unlockSellerDetails = asyncHandler(async (req, res) => {
     );
   }
 
+  const contactDisplayMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
+  const originalContact = {
+    name: property.owner?.name || property.userName || 'Owner',
+    phone: property.owner?.phone || '',
+    email: property.owner?.email || '',
+  };
+  const customContact = {
+    name: property.displaySellerName || originalContact.name,
+    phone: property.displaySellerPhone || originalContact.phone,
+    email: property.displaySellerEmail || originalContact.email,
+  };
+  const companyContact = {
+    name: env.COMPANY_CONTACT_NAME || originalContact.name,
+    phone: env.COMPANY_CONTACT_PHONE || originalContact.phone,
+    email: env.COMPANY_CONTACT_EMAIL || originalContact.email,
+  };
+
+  const resolved = contactDisplayMode === 'company'
+    ? companyContact
+    : contactDisplayMode === 'custom'
+      ? customContact
+      : originalContact;
+
   res.json({
     success: true,
-    data: {
-      name: property.useOriginalSellerContact ? (property.owner?.name || property.userName || 'Owner') : (property.displaySellerName || property.owner?.name || property.userName || 'Owner'),
-      phone: property.useOriginalSellerContact ? (property.owner?.phone || '') : (property.displaySellerPhone || property.owner?.phone || ''),
-      email: property.useOriginalSellerContact ? (property.owner?.email || '') : (property.displaySellerEmail || property.owner?.email || ''),
-    },
+    data: resolved,
   });
 });
 

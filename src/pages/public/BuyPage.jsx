@@ -6,6 +6,7 @@ import MapPanel from '../../components/search/MapPanel';
 import useProperties from '../../hooks/useProperties';
 import useProjects from '../../hooks/useProjects';
 import useAuth from '../../hooks/useAuth';
+import SeoManager from '../../components/common/SeoManager';
 import { buildPropertyApiParams, buildSearchQueryString, parseSearchParams } from '../../utils/queryParams';
 import './BuyPage.css';
 
@@ -22,6 +23,10 @@ export default function BuyPage() {
   }), [routeFilters.city, routeFilters.locality]);
   const { projects, loading: projectsLoading } = useProjects(projectParams);
   const { savedPropertyIds, toggleSavedProperty, isAuthenticated } = useAuth();
+  const locationLabel = routeFilters.locality || routeFilters.city || 'Purandar';
+  const propertyTypeLabel = routeFilters.propertyType ? `${routeFilters.propertyType} ` : '';
+  const seoTitle = `Buy ${propertyTypeLabel}properties in ${locationLabel} | Purandar Properties`;
+  const seoDescription = `Explore verified ${propertyTypeLabel}properties for sale in ${locationLabel}. Compare prices, photos, and map views to find the right home faster.`;
 
   const handleSortChange = React.useCallback((sort) => {
     const queryString = buildSearchQueryString({
@@ -34,6 +39,12 @@ export default function BuyPage() {
 
   return (
     <>
+      <SeoManager
+        title={seoTitle}
+        description={seoDescription}
+        canonicalPath="/buy"
+        siteName="Purandar Properties"
+      />
       <SearchBar intent="sell" />
       <div className="buy-page-content">
         <div className="listings-container">

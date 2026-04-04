@@ -11,7 +11,16 @@ function upsertMeta(name, content, attribute = 'name') {
   element.setAttribute('content', content);
 }
 
-export default function SeoManager({ title, description, schema, canonicalPath = '' }) {
+export default function SeoManager({
+  title,
+  description,
+  schema,
+  canonicalPath = '',
+  image,
+  type = 'website',
+  siteName,
+  twitterCard,
+}) {
   useEffect(() => {
     const previousTitle = document.title;
     document.title = title || previousTitle;
@@ -19,6 +28,7 @@ export default function SeoManager({ title, description, schema, canonicalPath =
     upsertMeta('description', description || '');
     upsertMeta('og:title', title || '', 'property');
     upsertMeta('og:description', description || '', 'property');
+    upsertMeta('og:type', type || 'website', 'property');
     upsertMeta('twitter:title', title || '', 'name');
     upsertMeta('twitter:description', description || '', 'name');
 
@@ -28,7 +38,21 @@ export default function SeoManager({ title, description, schema, canonicalPath =
       canonicalLink.setAttribute('rel', 'canonical');
       document.head.appendChild(canonicalLink);
     }
-    canonicalLink.setAttribute('href', `${window.location.origin}${canonicalPath || window.location.pathname}`);
+    const canonicalUrl = `${window.location.origin}${canonicalPath || window.location.pathname}`;
+    canonicalLink.setAttribute('href', canonicalUrl);
+    upsertMeta('og:url', canonicalUrl, 'property');
+
+    if (siteName) {
+      upsertMeta('og:site_name', siteName, 'property');
+    }
+
+    if (image) {
+      upsertMeta('og:image', image, 'property');
+      upsertMeta('twitter:image', image, 'name');
+      upsertMeta('twitter:card', twitterCard || 'summary_large_image', 'name');
+    } else {
+      upsertMeta('twitter:card', twitterCard || 'summary', 'name');
+    }
 
     let schemaScript = null;
     if (schema) {
@@ -42,7 +66,7 @@ export default function SeoManager({ title, description, schema, canonicalPath =
       document.title = previousTitle;
       if (schemaScript) schemaScript.remove();
     };
-  }, [title, description, schema, canonicalPath]);
+  }, [title, description, schema, canonicalPath, image, type, siteName, twitterCard]);
 
   return null;
 }

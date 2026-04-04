@@ -37,6 +37,9 @@ const delay = (value) => new Promise((resolve) => {
 
 const normalizeProject = (payload) => {
   const slug = slugify(payload.slug || payload.projectName);
+  const contactDisplayMode = payload.contactDisplayMode
+    || (payload.useCustomContactDetails ? 'custom' : 'original');
+
   return {
     ...payload,
     slug,
@@ -44,7 +47,8 @@ const normalizeProject = (payload) => {
     projectImages: payload.projectImages || [],
     visible: payload.visible ?? true,
     featuredOnHome: payload.featuredOnHome ?? false,
-    useCustomContactDetails: payload.useCustomContactDetails ?? false,
+    contactDisplayMode,
+    useCustomContactDetails: contactDisplayMode === 'custom',
     createdAt: payload.createdAt || new Date().toISOString(),
   };
 };

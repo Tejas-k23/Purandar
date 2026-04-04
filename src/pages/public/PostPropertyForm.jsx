@@ -17,6 +17,7 @@ const initialState = {
   displaySellerPhone: '',
   displaySellerEmail: '',
   useOriginalSellerContact: true,
+  contactDisplayMode: 'original',
   intent: 'sell', category: 'residential', propertyType: '', city: '', locality: '', subLocality: '', landmark: '', flatNo: '', totalFloors: '', floorNo: '',
   bedrooms: '', bathrooms: '', balconies: '', totalArea: '', areaUnit: 'sq.ft', carpetArea: '', furnishing: '', availability: '', possessionMonth: '', possessionYear: '', propertyAge: '', ownership: '', price: '', priceNegotiable: false,
   securityDeposit: '', maintenance: '', mealsIncluded: false, plotArea: '', plotLength: '', plotWidth: '', boundaryWall: '', openSides: '', constructionDone: '', superBuiltUpArea: '', washroom: '', personalWashroom: '', pantry: '', coveredParking: '', openParking: '', warehouseHeight: '', loadingUnloading: '', floorsInProperty: '', floorArea: '',
@@ -46,7 +47,7 @@ const validateStep = (step, data) => {
   const errors = {};
   if (step === 1) {
     if (!data.propertyType) errors.propertyType = 'Please select a property type';
-    if (!data.useOriginalSellerContact) {
+    if (data.contactDisplayMode === 'custom') {
       if (!data.displaySellerName?.trim()) errors.displaySellerName = 'Seller name is required';
       if (!data.displaySellerPhone?.trim()) errors.displaySellerPhone = 'Seller phone is required';
       if (!data.displaySellerEmail?.trim()) errors.displaySellerEmail = 'Seller email is required';
@@ -69,6 +70,8 @@ const mapPhotosForForm = (photos = []) => photos.map((photo, index) => ({
 
 const buildPayload = (formData) => ({
   ...formData,
+  contactDisplayMode: formData.contactDisplayMode || (formData.useOriginalSellerContact ? 'original' : 'custom'),
+  useOriginalSellerContact: (formData.contactDisplayMode || (formData.useOriginalSellerContact ? 'original' : 'custom')) === 'original',
   intent: formData.intent === 'pg' ? 'rent' : formData.intent,
   photos: (formData.photos || []).map((photo) => (typeof photo === 'string' ? photo : photo.url)).filter(Boolean),
 });
@@ -94,7 +97,17 @@ export default function PostPropertyForm() {
       setLoading(true);
       try {
         const response = isAdminPath ? await adminService.getProperty(editId) : await propertyService.getById(editId);
-        dispatch({ type: 'bulk', value: { ...response.data.data, photos: mapPhotosForForm(response.data.data.photos) } });
+        const property = response.data.data;
+        const contactDisplayMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
+        dispatch({
+          type: 'bulk',
+          value: {
+            ...property,
+            contactDisplayMode,
+            useOriginalSellerContact: contactDisplayMode === 'original',
+            photos: mapPhotosForForm(property.photos),
+          },
+        });
       } finally {
         setLoading(false);
       }

@@ -23,5 +23,8 @@ export const env = {
   ADMIN_NAME: process.env.ADMIN_NAME || 'Purandar Admin',
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@purandar.local',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'ChangeMe123!',
+  COMPANY_CONTACT_NAME: process.env.COMPANY_CONTACT_NAME || 'Purandar Properties',
+  COMPANY_CONTACT_PHONE: process.env.COMPANY_CONTACT_PHONE || '',
+  COMPANY_CONTACT_EMAIL: process.env.COMPANY_CONTACT_EMAIL || '',
 };
 

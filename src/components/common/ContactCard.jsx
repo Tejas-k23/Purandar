@@ -1,18 +1,33 @@
 import React from 'react';
 import { Mail, Phone, UserRound } from 'lucide-react';
+import { companyContact, hasCompanyContact } from '../../config/companyContact';
 
 function resolveContact(item = {}) {
-  return item.useCustomContactDetails
-    ? {
-        name: item.customContactName || item.contactPersonName || item.displaySellerName || item.owner?.name || item.userName || 'Contact',
-        phone: item.customContactPhone || item.phoneNumber || item.displaySellerPhone || item.owner?.phone || '',
-        email: item.customContactEmail || item.email || item.displaySellerEmail || item.owner?.email || '',
-      }
-    : {
-        name: item.contactPersonName || item.owner?.name || item.userName || 'Contact',
-        phone: item.phoneNumber || item.owner?.phone || '',
-        email: item.email || item.owner?.email || '',
-      };
+  const contactDisplayMode = item.contactDisplayMode
+    || (item.useCustomContactDetails ? 'custom' : null)
+    || (item.useOriginalSellerContact === false ? 'custom' : 'original');
+
+  const original = {
+    name: item.contactPersonName || item.owner?.name || item.userName || item.developerName || 'Contact',
+    phone: item.phoneNumber || item.owner?.phone || '',
+    email: item.email || item.owner?.email || '',
+  };
+
+  const custom = {
+    name: item.customContactName || item.displaySellerName || original.name,
+    phone: item.customContactPhone || item.displaySellerPhone || original.phone,
+    email: item.customContactEmail || item.displaySellerEmail || original.email,
+  };
+
+  const company = {
+    name: companyContact.name || original.name,
+    phone: companyContact.phone || original.phone,
+    email: companyContact.email || original.email,
+  };
+
+  if (contactDisplayMode === 'company' && hasCompanyContact) return company;
+  if (contactDisplayMode === 'custom') return custom;
+  return original;
 }
 
 export default function ContactCard({ item = {}, buttonLabel = 'Enquire Now', onAction, helperText = 'Get in touch for floor plans, pricing, and site visits.' }) {

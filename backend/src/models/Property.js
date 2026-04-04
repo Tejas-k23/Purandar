@@ -31,6 +31,11 @@ const propertySchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    contactDisplayMode: {
+      type: String,
+      enum: ['original', 'company', 'custom'],
+      default: 'original',
+    },
     intent: {
       type: String,
       enum: ['sell', 'rent'],

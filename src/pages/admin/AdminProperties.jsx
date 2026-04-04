@@ -7,6 +7,7 @@ import DataTable from '../../components/admin/DataTable';
 import Loader from '../../components/common/Loader';
 import ToggleSwitch from '../../components/common/ToggleSwitch';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import { hasCompanyContact } from '../../config/companyContact';
 
 export default function AdminProperties() {
   const [properties, setProperties] = useState([]);
@@ -52,6 +53,33 @@ export default function AdminProperties() {
         property._id === propertyId
           ? { ...property, featuredOnHome: currentValue }
           : property
+      )));
+    } finally {
+      setBusyId('');
+    }
+  };
+
+  const toggleContactMode = async (propertyId, nextValue) => {
+    const property = properties.find((item) => item._id === propertyId);
+    if (!property) return;
+
+    const currentMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
+    const nextMode = nextValue
+      ? 'original'
+      : currentMode !== 'original'
+        ? currentMode
+        : (hasCompanyContact ? 'company' : 'custom');
+
+    setBusyId(`${propertyId}:contact`);
+    setProperties((current) => current.map((item) => (
+      item._id === propertyId ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: nextMode === 'original' } : item
+    )));
+
+    try {
+      await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
+    } catch (_error) {
+      setProperties((current) => current.map((item) => (
+        item._id === propertyId ? { ...item, contactDisplayMode: currentMode, useOriginalSellerContact: currentMode === 'original' } : item
       )));
     } finally {
       setBusyId('');
@@ -109,13 +137,36 @@ export default function AdminProperties() {
                 <div className="admin-cell-stack">
                   <div>{row.owner?.name || row.userName}</div>
                   <div className="admin-cell-subtitle">Original: {row.owner?.phone || row.owner?.email || '-'}</div>
-                  <div className="admin-cell-subtitle">Display: {row.useOriginalSellerContact ? 'Original seller contact' : `${row.displaySellerName || '-'} • ${row.displaySellerPhone || '-'} • ${row.displaySellerEmail || '-'}`}</div>
+                  <div className="admin-cell-subtitle">
+                    Display: {(() => {
+                      const mode = row.contactDisplayMode || (row.useOriginalSellerContact === false ? 'custom' : 'original');
+                      if (mode === 'company') return 'Company contact';
+                      if (mode === 'custom') return `${row.displaySellerName || '-'} • ${row.displaySellerPhone || '-'} • ${row.displaySellerEmail || '-'}`;
+                      return 'Original seller contact';
+                    })()}
+                  </div>
                 </div>
               ),
             },
             { key: 'status', label: 'Status', render: (row) => <span className={`admin-table-badge ${row.status === 'approved' ? 'success' : row.status === 'archived' ? 'muted' : 'warning'}`}>{row.status}</span> },
             { key: 'price', label: 'Price', render: (row) => formatCompactPrice(row.price) },
             { key: 'featuredOnHome', label: 'Home', render: (row) => <span className={`admin-table-badge ${row.featuredOnHome ? 'success' : 'muted'}`}>{row.featuredOnHome ? 'Recommended' : 'Normal'}</span> },
+            {
+              key: 'contactDisplay',
+              label: 'Show Real Seller Details',
+              render: (row) => {
+                const mode = row.contactDisplayMode || (row.useOriginalSellerContact === false ? 'custom' : 'original');
+                const checked = mode === 'original';
+                return (
+                  <ToggleSwitch
+                    checked={checked}
+                    onChange={(value) => toggleContactMode(row._id, value)}
+                    label="Toggle real seller details"
+                    disabled={busyId === `${row._id}:contact`}
+                  />
+                );
+              },
+            },
             {
               key: 'visible',
               label: 'Visible',
