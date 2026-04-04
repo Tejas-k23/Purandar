@@ -5,6 +5,7 @@ import projectService from '../../services/projectService';
 import { getAmenityMeta } from '../../utils/amenityMeta';
 import { getProjectTypeProfile, PROJECT_TYPE_PROFILES } from '../../utils/projectTypeConfig';
 import MapPickerModal from '../../components/common/MapPickerModal';
+import useAuth from '../../hooks/useAuth';
 import env from '../../config/env';
 import './PostPropertyForm.css';
 import './AddProjectForm.css';
@@ -280,6 +281,8 @@ export default function AddProjectForm() {
   const [loading, setLoading] = useState(false);
   const editId = searchParams.get('edit');
   const isAdminPath = location.pathname.startsWith('/admin');
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const typeProfile = useMemo(() => getProjectTypeProfile(formData.projectType), [formData.projectType]);
   const allowedConfigurations = typeProfile.configurationOptions;
   const allowedAmenities = typeProfile.amenities;
@@ -309,6 +312,7 @@ export default function AddProjectForm() {
             name: `Project image ${index + 1}`,
             preview: image,
             existing: true,
+            isLocal: false,
           })),
         });
       } finally {
@@ -395,6 +399,7 @@ export default function AddProjectForm() {
         file,
         name: file.name,
         preview: URL.createObjectURL(file),
+        isLocal: true,
       }));
     updateField('projectImages', [...formData.projectImages, ...mappedFiles]);
   };
@@ -444,17 +449,34 @@ export default function AddProjectForm() {
     setSubmitting(true);
     setStatusMessage('');
     try {
+      if (!isAdmin && formData.projectImages.some((image) => image?.isLocal)) {
+        setStatusMessage('Only admin can upload images.');
+        return;
+      }
+
       const payload = {
         ...formData,
-        projectImages: formData.projectImages.map((image) => image.preview),
+        projectImages: formData.projectImages
+          .filter((image) => image?.existing)
+          .map((image) => image.preview),
       };
+
+      let projectId = editId;
       if (editId) {
-        await projectService.update(editId, payload);
+        const response = await projectService.update(editId, payload);
+        projectId = response?.data?.data?._id || editId;
         setStatusMessage('Project updated successfully.');
       } else {
-        await projectService.create(payload);
+        const response = await projectService.create(payload);
+        projectId = response?.data?.data?._id;
         setStatusMessage('Project created successfully.');
       }
+
+      const newImages = formData.projectImages.filter((image) => image?.isLocal && image?.file);
+      if (isAdmin && projectId && newImages.length) {
+        await projectService.uploadMedia(projectId, { images: newImages.map((image) => image.file) });
+      }
+
       window.setTimeout(() => navigate(isAdminPath ? '/admin/projects' : '/projects'), 700);
     } catch (error) {
       setStatusMessage(error.message || 'Unable to save project.');

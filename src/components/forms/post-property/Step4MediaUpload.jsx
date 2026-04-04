@@ -2,8 +2,8 @@ import React, { useState, useRef, useCallback } from 'react';
 import { ImagePlus } from 'lucide-react';
 
 const PHOTO_CATEGORIES = ['All', 'Living Room', 'Bedroom', 'Kitchen', 'Bathroom', 'Exterior', 'Other'];
-const MAX_PHOTOS = 10;
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_PHOTOS = 8;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 export default function Step4MediaUpload({ formData, updateField }) {
     const [activeTab, setActiveTab] = useState('All');
@@ -32,6 +32,7 @@ export default function Step4MediaUpload({ formData, updateField }) {
             url: URL.createObjectURL(file),
             category: activeTab === 'All' ? 'Other' : activeTab,
             isCover: photos.length === 0 && i === 0,
+            isLocal: true,
         }));
 
         updateField('photos', [...photos, ...newPhotos]);
@@ -119,7 +120,7 @@ export default function Step4MediaUpload({ formData, updateField }) {
                     Drag & drop photos here or <strong>browse</strong>
                 </p>
                 <p className="ppf-upload-hint">
-                    JPG, PNG or WebP • Max 10 MB per photo • Up to {MAX_PHOTOS} photos
+                    JPG, PNG or WebP • Max 5 MB per photo • Up to {MAX_PHOTOS} photos
                 </p>
                 <input
                     ref={fileInputRef}

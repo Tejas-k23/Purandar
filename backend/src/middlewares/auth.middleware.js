@@ -31,6 +31,28 @@ export const protect = asyncHandler(async (req, _res, next) => {
   next();
 });
 
+export const optionalProtect = asyncHandler(async (req, _res, next) => {
+  const bearerToken = getBearerToken(req.headers.authorization);
+  const cookieToken = req.cookies?.accessToken;
+  const token = bearerToken || cookieToken;
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded = verifyAccessToken(token);
+    const user = await User.findById(decoded.sub).select('-password -refreshTokenHash');
+    if (user && user.isActive) {
+      req.user = user;
+    }
+  } catch (_error) {
+    // Ignore invalid tokens for optional auth.
+  }
+
+  return next();
+});
+
 export const authorize = (...roles) => (req, _res, next) => {
   if (!req.user) {
     throw new ApiError(401, 'Authentication required');

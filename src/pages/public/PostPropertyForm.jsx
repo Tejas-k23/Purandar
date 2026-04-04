@@ -69,6 +69,7 @@ const mapPhotosForForm = (photos = []) => photos.map((photo, index) => ({
   url: typeof photo === 'string' ? photo : photo.url,
   category: 'Other',
   isCover: index === 0,
+  isLocal: false,
 }));
 
 const buildPayload = (formData) => ({
@@ -76,7 +77,10 @@ const buildPayload = (formData) => ({
   contactDisplayMode: formData.contactDisplayMode || (formData.useOriginalSellerContact ? 'original' : 'custom'),
   useOriginalSellerContact: (formData.contactDisplayMode || (formData.useOriginalSellerContact ? 'original' : 'custom')) === 'original',
   intent: formData.intent === 'pg' ? 'rent' : formData.intent,
-  photos: (formData.photos || []).map((photo) => (typeof photo === 'string' ? photo : photo.url)).filter(Boolean),
+  photos: (formData.photos || [])
+    .filter((photo) => !photo?.isLocal)
+    .map((photo) => (typeof photo === 'string' ? photo : photo.url))
+    .filter(Boolean),
 });
 
 export default function PostPropertyForm() {
@@ -147,14 +151,28 @@ export default function PostPropertyForm() {
     setSubmitting(true);
     setStatusMessage('');
     try {
+      if (!isAdmin && (formData.photos || []).some((photo) => photo?.isLocal)) {
+        setStatusMessage('Only admin can upload images.');
+        return;
+      }
+
       const payload = buildPayload(formData);
+      let propertyId = editId;
       if (editId) {
-        await propertyService.update(editId, payload);
+        const response = await propertyService.update(editId, payload);
+        propertyId = response?.data?.data?._id || editId;
         setStatusMessage('Property updated successfully.');
       } else {
-        await propertyService.create(payload);
+        const response = await propertyService.create(payload);
+        propertyId = response?.data?.data?._id;
         setStatusMessage('Property submitted successfully.');
       }
+
+      const newImages = (formData.photos || []).filter((photo) => photo?.isLocal && photo?.file);
+      if (isAdmin && propertyId && newImages.length) {
+        await propertyService.uploadImages(propertyId, newImages.map((photo) => photo.file));
+      }
+
       setTimeout(() => navigate(isAdminPath ? '/admin/properties' : '/profile/properties'), 800);
     } catch (error) {
       setStatusMessage(error.message);

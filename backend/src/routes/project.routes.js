@@ -1,6 +1,15 @@
 import { Router } from 'express';
-import { deleteProject, uploadProjectMedia } from '../controllers/project.controller.js';
-import { authorize, protect } from '../middlewares/auth.middleware.js';
+import {
+  createProject,
+  deleteProject,
+  getProjectById,
+  listProjects,
+  toggleProjectFeatured,
+  toggleProjectVisibility,
+  updateProject,
+  uploadProjectMedia,
+} from '../controllers/project.controller.js';
+import { authorize, optionalProtect, protect } from '../middlewares/auth.middleware.js';
 import { uploadRateLimit } from '../middlewares/rateLimit.middleware.js';
 import { requireMultipart, requireStandardHeaders } from '../middlewares/security.middleware.js';
 import { createUpload } from '../middlewares/upload.middleware.js';
@@ -14,6 +23,12 @@ const upload = createUpload({
   maxFiles: 14,
 });
 
+router.get('/', optionalProtect, listProjects);
+router.get('/:id', optionalProtect, getProjectById);
+router.post('/', protect, authorize('admin'), createProject);
+router.patch('/:id', protect, authorize('admin'), updateProject);
+router.patch('/:id/visibility', protect, authorize('admin'), toggleProjectVisibility);
+router.patch('/:id/featured', protect, authorize('admin'), toggleProjectFeatured);
 router.post(
   '/:id/upload-media',
   protect,

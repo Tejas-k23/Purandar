@@ -21,6 +21,14 @@ export const propertyService = {
     return api.patch(`/properties/${propertyId}`, payload);
   },
 
+  uploadImages(propertyId, files) {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('images', file));
+    return api.post(`/properties/${propertyId}/upload-images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
   remove(propertyId) {
     return api.delete(`/properties/${propertyId}`);
   },
