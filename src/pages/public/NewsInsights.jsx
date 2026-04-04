@@ -60,7 +60,7 @@ export default function NewsInsights() {
       <section className="ni-hero">
         <div>
           <p className="ni-eyebrow">News & Insights</p>
-          <h1 className="ni-title">Fresh real estate thinking for Purandar, Pune, and beyond.</h1>
+          <h1 className="ni-title"><span className="heading-accent">Fresh</span> real estate thinking for Purandar, Pune, and beyond.</h1>
           <p className="ni-subtitle">Search practical market updates, investment ideas, and development insights without disturbing the rest of the site experience.</p>
         </div>
       </section>

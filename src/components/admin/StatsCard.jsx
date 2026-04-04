@@ -1,6 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 
-export default function StatsCard({ label, value, tone = '#0f172a', accent = 'default' }) {
+export default function StatsCard({ label, value, tone = 'var(--navy-blue)', accent = 'default' }) {
   return (
     <article className={`admin-stat-card admin-stat-card-${accent}`}>
       <div className="admin-stat-label">{label}</div>
@@ -8,3 +8,4 @@ export default function StatsCard({ label, value, tone = '#0f172a', accent = 'de
     </article>
   );
 }
+

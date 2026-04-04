@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { MapPin, Star } from 'lucide-react';
 
 export default function PropertyTitleSection({ property = {} }) {
@@ -24,7 +24,7 @@ export default function PropertyTitleSection({ property = {} }) {
               <span>{[property.subLocality, property.locality, property.city].filter(Boolean).join(', ')}</span>
             </div>
             <div className="pd-rating">
-              <Star size={14} className="pd-rating-star" fill="#f0b429" />
+              <Star size={14} className="pd-rating-star" fill="var(--orange)" />
               <span className="pd-rating-value">4.8</span>
               <span className="pd-rating-count">MongoDB listing</span>
             </div>
@@ -40,4 +40,5 @@ export default function PropertyTitleSection({ property = {} }) {
     </div>
   );
 }
+
 

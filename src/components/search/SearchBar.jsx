@@ -153,13 +153,15 @@ export default function SearchBar({ intent = 'sell' }) {
     navigate(`${intent === 'rent' ? '/rent' : '/buy'}`);
   };
 
+  const cityControl = (extraClass = '') => (
+    <div className={`filter-city-input ${extraClass}`.trim()}>
+      <MapPin className="icon" />
+      <input value={city} onChange={(event) => setCity(event.target.value)} placeholder="Search city" className="filter-city-field" />
+    </div>
+  );
+
   const filterControls = (
     <>
-      <div className="filter-city-input">
-        <MapPin className="icon" />
-        <input value={city} onChange={(event) => setCity(event.target.value)} placeholder="Search city" className="filter-city-field" />
-      </div>
-
       <div className="filter-dropdown-container">
         <FilterChip icon={Building} label={propertyType || 'Property Type'} hasDropdown active={!!propertyType} onClick={() => setActiveDropdown(activeDropdown === 'type' ? null : 'type')} hasClose={!!propertyType} onDelete={() => clearField('propertyType')} />
         {activeDropdown === 'type' ? (
@@ -230,7 +232,12 @@ export default function SearchBar({ intent = 'sell' }) {
     <div className="search-bar-wrapper" ref={searchRef}>
       <div className="search-bar">
         <div className="filter-row filter-row-desktop scrollbar-hide">
+          {cityControl('filter-city-input--desktop')}
           {filterControls}
+        </div>
+
+        <div className="mobile-city-row">
+          {cityControl('filter-city-input--mobile')}
         </div>
 
         <div className="search-actions">

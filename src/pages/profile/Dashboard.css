@@ -9,8 +9,8 @@
     align-items: flex-start;
     gap: var(--space-4);
     padding: var(--space-6);
-    background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%);
-    border: 1px solid rgba(99, 102, 241, 0.12);
+    background: linear-gradient(135deg, var(--white) 0%, var(--indigo-50) 100%);
+    border: 1px solid rgba(255, 107, 0, 0.12);
     border-radius: var(--radius-2xl);
     box-shadow: var(--shadow-sm);
 }
@@ -49,9 +49,16 @@
 }
 
 .profile-action-btn-primary {
-    color: var(--white);
-    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 65%, #7c3aed 100%);
-    box-shadow: 0 14px 26px rgba(79, 70, 229, 0.2);
+    color: #ffffff;
+    background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
+    border-radius: 50px;
+    padding: 12px 28px;
+    font-weight: 500;
+    box-shadow: 0 14px 26px rgba(255, 107, 0, 0.2);
+}
+
+.profile-action-btn-primary:hover {
+    background: linear-gradient(90deg, #ff6b00 0%, #e85500 100%);
 }
 
 .profile-action-btn-secondary {
@@ -123,7 +130,7 @@
 }
 
 .dashboard-panel-accent {
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    background: linear-gradient(180deg, var(--white) 0%, var(--warm-white) 100%);
 }
 
 .dashboard-panel-head {
@@ -168,7 +175,7 @@
     border: 1px solid var(--gray-100);
     border-radius: 20px;
     padding: var(--space-4);
-    background: #fcfdff;
+    background: var(--warm-white);
 }
 
 .dashboard-lead-main {
@@ -214,18 +221,18 @@
 }
 
 .dashboard-status-badge.new {
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--indigo-50);
+    color: var(--indigo-600);
 }
 
 .dashboard-status-badge.contacted {
-    background: #ecfdf5;
-    color: #059669;
+    background: var(--indigo-50);
+    color: var(--navy-blue);
 }
 
 .dashboard-status-badge.closed {
-    background: #f3f4f6;
-    color: #4b5563;
+    background: var(--gray-100);
+    color: var(--gray-600);
 }
 
 .dashboard-snapshot-list {
@@ -241,7 +248,7 @@
     padding: var(--space-4);
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(255, 107, 0, 0.08);
 }
 
 .dashboard-snapshot-item span {
@@ -284,3 +291,6 @@
         width: 100%;
     }
 }
+
+
+

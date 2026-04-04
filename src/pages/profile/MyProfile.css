@@ -17,8 +17,8 @@
     margin-bottom: var(--space-6);
     padding: var(--space-6);
     border-radius: var(--radius-2xl);
-    border: 1px solid rgba(99, 102, 241, 0.12);
-    background: linear-gradient(135deg, #ffffff 0%, #eef5ff 100%);
+    border: 1px solid rgba(255, 107, 0, 0.12);
+    background: linear-gradient(135deg, var(--white) 0%, var(--indigo-50) 100%);
     box-shadow: var(--shadow-sm);
 }
 
@@ -39,7 +39,7 @@
     color: var(--white);
     font-size: 2rem;
     font-weight: 800;
-    box-shadow: 0 16px 30px rgba(79, 70, 229, 0.22);
+    box-shadow: 0 16px 30px rgba(255, 107, 0, 0.22);
     flex-shrink: 0;
 }
 
@@ -57,7 +57,7 @@
     padding: 0.62rem 0.9rem;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(148, 163, 184, 0.18);
+    border: 1px solid rgba(232, 232, 232, 0.18);
     color: var(--gray-700);
     font-size: 0.84rem;
     font-weight: 600;
@@ -91,8 +91,8 @@
 
 .profile-cta-primary {
     color: var(--white);
-    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 65%, #7c3aed 100%);
-    box-shadow: 0 14px 28px rgba(79, 70, 229, 0.22);
+    background: linear-gradient(135deg, var(--indigo-600) 0%, var(--indigo-700) 65%, var(--indigo-800) 100%);
+    box-shadow: 0 14px 28px rgba(255, 107, 0, 0.22);
 }
 
 .profile-cta-secondary {
@@ -229,7 +229,7 @@
 
 .styled-input:focus {
     border-color: var(--indigo-500);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
     outline: none;
 }
 
@@ -254,7 +254,7 @@
 
 .styled-textarea:focus {
     border-color: var(--indigo-500);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
     outline: none;
 }
 
@@ -277,3 +277,6 @@
         width: 100%;
     }
 }
+
+
+

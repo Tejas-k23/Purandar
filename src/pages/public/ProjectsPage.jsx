@@ -13,7 +13,7 @@ export default function ProjectsPage() {
     <section className="section-container" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
       <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap' }}>
         <div>
-          <h1 className="section-title">All Projects</h1>
+          <h1 className="section-title">All <span className="heading-accent">Projects</span></h1>
           <p className="section-subtitle">Explore featured launches, ready inventory, and plotted communities from Purandar Properties.</p>
         </div>
         <Link to="/" className="activity-btn" style={{ textDecoration: 'none' }}>

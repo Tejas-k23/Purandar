@@ -28,7 +28,7 @@ export default function AppInstallBanner() {
               Faster access
             </span>
           </div>
-          <h2>{isInstalled ? 'Purandar Properties is installed' : 'Install Purandar Properties'}</h2>
+          <h2>{isInstalled ? <>Purandar Properties is <span className="heading-accent heading-accent--dark">installed</span></> : <><span className="heading-accent heading-accent--dark">Install</span> Purandar Properties</>}</h2>
           <p>{isInstalled ? message.secondary : message.description}</p>
         </div>
 

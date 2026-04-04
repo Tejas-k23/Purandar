@@ -25,7 +25,7 @@ const HeroBanner = () => (
       </div>
       <div className="hero-right">
         <span className="hero-builder-logo">PURANDAR ESTATE</span>
-        <h2 className="hero-headline">DISCOVER VERIFIED PROPERTIES IN PURANDAR AND GREATER PUNE</h2>
+        <h2 className="hero-headline"><span className="heading-accent heading-accent--dark">DISCOVER</span> VERIFIED PROPERTIES IN PURANDAR AND GREATER PUNE</h2>
         <p className="hero-subtext">Live listings, favourites, enquiries, and posting flows powered by MongoDB.</p>
         <Link to="/buy" className="hero-btn">Explore Now</Link>
       </div>
@@ -205,7 +205,7 @@ function PropertySection() {
         </div>
 
         <div className="section-head">
-          <h3 className="section-title">Recommended Properties</h3>
+          <h3 className="section-title"><span className="heading-accent">Recommended</span> Properties</h3>
           <p className="section-subtitle">Your live listings from the database</p>
         </div>
 
@@ -291,7 +291,7 @@ const CategoriesGrid = () => {
 
   return (
     <section className="section-container">
-      <h3 className="section-title mb-4">Browse by Category</h3>
+      <h3 className="section-title mb-4"><span className="heading-accent">Browse</span> by Category</h3>
       <div className="category-grid">
         {cats.map((cat) => (
           <div className="category-card" key={cat.label}>
@@ -308,7 +308,7 @@ const PopularLocalities = () => {
   const locs = ['Saswad', 'Jejuri', 'Narayanpur', 'Belsar', 'Dive', 'Purandar Hills', 'Temple View', 'Market Yard'];
   return (
     <section className="section-container" style={{ paddingTop: '3rem' }}>
-      <h3 className="section-title">Properties in Popular Localities</h3>
+      <h3 className="section-title">Properties in <span className="heading-accent">Popular</span> Localities</h3>
       <p className="section-subtitle mb-4">Purandar and nearby Pune belt</p>
       <div className="localities-row">
         {locs.map((loc) => (
@@ -326,7 +326,7 @@ const NewLaunchProjects = () => {
     <section className="section-container" style={{ paddingTop: '3rem' }}>
       <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h3 className="section-title">Featured Projects</h3>
+          <h3 className="section-title"><span className="heading-accent">Featured</span> Projects</h3>
           <p className="section-subtitle">Same premium card feel, now for new launches and communities.</p>
         </div>
         <Link to="/projects" style={{ color: 'var(--indigo-600)', fontWeight: 600, textDecoration: 'none' }}>View All Projects &rarr;</Link>
@@ -367,7 +367,7 @@ const InsightsArticles = () => {
 
   return (
     <section className="section-container" style={{ paddingTop: '3rem' }}>
-      <h3 className="section-title mb-4">Insights & News</h3>
+      <h3 className="section-title mb-4"><span className="heading-accent">Insights</span> & News</h3>
       <div className="insights-row" ref={insightsRowRef}>
         {articles.map((article) => (
           <Link to={`/news-insights/${article.slug}`} className="insight-card" key={article._id}>

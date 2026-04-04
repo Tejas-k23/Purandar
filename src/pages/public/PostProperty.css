@@ -5,7 +5,7 @@
 /* --- Page Background --- */
 .post-property-page {
     min-height: 100vh;
-    background: linear-gradient(160deg, #eef2ff 0%, #f8faff 40%, #ffffff 100%);
+    background: linear-gradient(160deg, var(--indigo-50) 0%, var(--warm-white) 40%, var(--white) 100%);
     font-family: 'Inter', 'DM Sans', sans-serif;
     padding: var(--space-10) var(--space-4);
     display: flex;
@@ -66,8 +66,8 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: #dcfce7;
-    color: #16a34a;
+    background: var(--indigo-50);
+    color: var(--navy-blue);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -142,7 +142,7 @@
 }
 
 .pp-choice-card {
-    background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
+    background: linear-gradient(180deg, var(--white) 0%, var(--warm-white) 100%);
     border-radius: var(--radius-2xl);
     box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
     padding: var(--space-8);
@@ -184,14 +184,14 @@
     height: 9px;
     margin-top: 0.45rem;
     border-radius: 999px;
-    background: linear-gradient(135deg, #d97706, #f59e0b);
+    background: linear-gradient(135deg, var(--orange), var(--orange));
     flex: 0 0 auto;
 }
 
 .pp-form-card {
     background: var(--white);
     border-radius: var(--radius-2xl);
-    box-shadow: 0 8px 32px rgba(79, 70, 229, 0.08), 0 1.5px 6px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 8px 32px rgba(255, 107, 0, 0.08), 0 1.5px 6px rgba(0, 0, 0, 0.04);
     padding: var(--space-8);
     position: relative;
     overflow: hidden;
@@ -261,7 +261,7 @@
     background: var(--indigo-600);
     color: var(--white);
     border-color: var(--indigo-600);
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    box-shadow: 0 2px 8px rgba(255, 107, 0, 0.25);
 }
 
 /* --- Radio Group (Residential / Commercial) --- */
@@ -418,12 +418,12 @@
 
 .pp-phone-input:focus {
     border-color: var(--indigo-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
 }
 
 .pp-phone-input.error {
     border-color: var(--red-500);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
 }
 
 .pp-phone-error {
@@ -457,13 +457,13 @@
 /* --- CTA Button --- */
 .pp-cta-btn {
     width: 100%;
-    padding: var(--space-4);
-    background: linear-gradient(135deg, var(--indigo-600), var(--violet-600));
+    padding: 12px 28px;
+    background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
     color: var(--white);
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: 50px;
     font-size: 1.05rem;
-    font-weight: 700;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
@@ -483,7 +483,8 @@
 
 .pp-cta-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+    box-shadow: 0 6px 20px rgba(255, 107, 0, 0.35);
+    background: linear-gradient(90deg, #ff6b00 0%, #e85500 100%);
 }
 
 .pp-cta-btn:hover::after {
@@ -585,3 +586,6 @@
 .pp-right {
     animation: ppSlideUp 0.6s 0.15s ease-out both;
 }
+
+
+

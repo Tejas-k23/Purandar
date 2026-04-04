@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Download, FileDown } from 'lucide-react';
 import adminService from '../../services/adminService';
 import AdminHeader from '../../components/admin/AdminHeader';
@@ -75,12 +75,12 @@ export default function AdminUsers() {
         <head>
           <title>Admin Users</title>
           <style>
-            body{font-family:Arial,sans-serif;padding:24px;color:#0f172a}
+            body{font-family:Arial,sans-serif;padding:24px;color:var(--navy-blue)}
             h1{margin-bottom:8px}
-            p{color:#64748b;margin-bottom:20px}
+            p{color:var(--gray-600);margin-bottom:20px}
             table{width:100%;border-collapse:collapse}
-            th,td{border:1px solid #cbd5e1;padding:10px;text-align:left;font-size:13px}
-            th{background:#f8fafc}
+            th,td{border:1px solid var(--gray-300);padding:10px;text-align:left;font-size:13px}
+            th{background:var(--warm-white)}
           </style>
         </head>
         <body>
@@ -138,3 +138,4 @@ export default function AdminUsers() {
     </div>
   );
 }
+

@@ -93,17 +93,17 @@
 
 .ni-card {
   background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(232, 232, 232, 0.16);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 16px 30px rgba(26, 26, 26, 0.06);
   transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
 }
 
 .ni-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.2);
-  box-shadow: 0 22px 40px rgba(79, 70, 229, 0.12);
+  border-color: rgba(255, 107, 0, 0.2);
+  box-shadow: 0 22px 40px rgba(255, 107, 0, 0.12);
 }
 
 .ni-card-image-link {
@@ -184,13 +184,19 @@
 
 .ni-load-btn {
   min-height: 46px;
-  padding: 0.8rem 1.2rem;
+  padding: 12px 28px;
   border: none;
-  border-radius: 999px;
-  color: white;
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 65%, #7c3aed 100%);
-  font-weight: 700;
+  border-radius: 50px;
+  color: #ffffff;
+  background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
+  font-weight: 500;
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.ni-load-btn:hover {
+  background: linear-gradient(90deg, #ff6b00 0%, #e85500 100%);
+  transform: translateY(-1px);
 }
 
 .ni-detail {
@@ -201,8 +207,8 @@
   background: rgba(255, 255, 255, 0.92);
   border-radius: 28px;
   padding: 1.5rem;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(232, 232, 232, 0.16);
+  box-shadow: 0 18px 34px rgba(26, 26, 26, 0.06);
 }
 
 .ni-detail-title {
@@ -227,8 +233,8 @@
 .ni-share-card {
   background: rgba(255, 255, 255, 0.92);
   border-radius: 28px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(232, 232, 232, 0.16);
+  box-shadow: 0 18px 34px rgba(26, 26, 26, 0.06);
 }
 
 .ni-detail-content {
@@ -308,7 +314,7 @@
   flex-wrap: wrap;
   padding: 0.75rem;
   border-bottom: 1px solid var(--gray-100);
-  background: #fbfcfe;
+  background: var(--warm-white);
 }
 
 .rte-btn {
@@ -362,3 +368,5 @@
     padding: 1rem;
   }
 }
+
+

@@ -62,6 +62,14 @@
     min-width: 220px;
 }
 
+.filter-city-input--desktop {
+    display: flex;
+}
+
+.mobile-city-row {
+    display: none;
+}
+
 .filter-city-input .icon {
     width: 16px;
     height: 16px;
@@ -104,9 +112,9 @@
 }
 
 .filter-chip.active {
-    border-color: rgba(21, 101, 192, 0.28);
-    background-color: #eff6ff;
-    box-shadow: 0 6px 14px rgba(21, 101, 192, 0.08);
+    border-color: var(--color-primary);
+    background-color: var(--color-primary);
+    box-shadow: 0 6px 14px rgba(255, 107, 0, 0.18);
 }
 
 .filter-chip .icon {
@@ -116,7 +124,7 @@
 }
 
 .filter-chip.active .icon {
-    color: #1565c0;
+    color: var(--white);
 }
 
 .filter-chip span {
@@ -126,7 +134,7 @@
 }
 
 .filter-chip.active span {
-    color: #0f4ea3;
+    color: var(--white);
 }
 
 .btn-close {
@@ -141,8 +149,8 @@
 }
 
 .btn-close:hover {
-    background-color: rgba(21, 101, 192, 0.1);
-    color: #1565c0;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
 }
 
 .chevron-down {
@@ -255,9 +263,9 @@
 }
 
 .btn-icon.active {
-    color: var(--indigo-600);
-    border-color: var(--indigo-200);
-    background: var(--indigo-50);
+    color: var(--color-primary);
+    border-color: var(--color-primary-light);
+    background: var(--color-primary-light);
 }
 
 .btn-icon-label {
@@ -271,18 +279,18 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    background-color: var(--gray-900);
+    background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
     color: var(--white);
-    padding: var(--space-3) var(--space-8);
-    border-radius: var(--radius-full);
-    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-weight: 500;
     font-size: 15px;
     box-shadow: var(--shadow-md);
     transition: all 0.2s;
 }
 
 .btn-search:hover {
-    background-color: var(--black);
+    background: linear-gradient(90deg, #ff6b00 0%, #e85500 100%);
     box-shadow: var(--shadow-lg);
     transform: translateY(-1px);
 }
@@ -302,9 +310,30 @@
         display: none;
     }
 
+    .filter-city-input--desktop {
+        display: none;
+    }
+
+    .mobile-city-row {
+        display: block;
+        width: 100%;
+    }
+
+    .mobile-city-row .filter-city-input {
+        width: 100%;
+        min-width: 0;
+        padding: 0.75rem 0.9rem;
+        border-radius: 18px;
+        box-shadow: 0 8px 18px rgba(26, 26, 26, 0.08);
+    }
+
+    .mobile-city-row .filter-city-field {
+        font-size: 0.92rem;
+    }
+
     .search-actions {
         display: grid;
-        grid-template-columns: minmax(0, 92px) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 84px) minmax(0, 1fr);
         width: 100%;
         gap: 0.6rem;
     }
@@ -317,8 +346,10 @@
     .btn-icon {
         display: flex;
         justify-content: center;
-        min-height: 44px;
-        padding: 0.7rem;
+        min-height: 40px;
+        padding: 0.55rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
     }
 
     .btn-icon-label {
@@ -326,10 +357,10 @@
     }
 
     .btn-search {
-        padding: 0.7rem 0.9rem;
-        border-radius: 18px;
-        min-height: 44px;
-        font-size: 0.92rem;
+        padding: 12px 28px;
+        border-radius: 50px;
+        min-height: 40px;
+        font-size: 0.88rem;
     }
 
     .mobile-filter-sheet {
@@ -355,7 +386,6 @@
 
     .mobile-filter-grid .filter-city-input {
         min-width: 0;
-        grid-column: 1 / -1;
         width: 100%;
     }
 
@@ -409,16 +439,28 @@
     }
 
     .mobile-clear-btn {
-        border: 1px solid var(--gray-200);
-        background: var(--white);
-        color: var(--gray-700);
+        border: 1px solid var(--color-heading);
+        background: transparent;
+        color: var(--color-heading);
     }
 
     .mobile-apply-btn {
         border: none;
-        background: var(--gray-900);
+        background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
         color: var(--white);
         box-shadow: var(--shadow-md);
+    }
+
+    .mobile-clear-btn:hover {
+        background: var(--color-heading);
+        color: var(--white);
+        border-color: var(--color-heading);
+    }
+
+    .mobile-apply-btn:hover {
+        background: linear-gradient(90deg, #ff6b00 0%, #e85500 100%);
+        color: var(--white);
+        border-color: var(--color-primary-hover);
     }
 }
 
@@ -445,3 +487,6 @@
         font-size: 0.9rem;
     }
 }
+
+
+

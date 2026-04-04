@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock3 } from 'lucide-react';
 import adminService from '../../services/adminService';
@@ -37,8 +37,8 @@ export default function AdminDashboard() {
         <StatsCard label="Users" value={data?.totals?.users || 0} accent="blue" />
         <StatsCard label="Properties" value={data?.totals?.properties || 0} accent="slate" />
         <StatsCard label="Enquiries" value={data?.totals?.enquiries || 0} accent="violet" />
-        <StatsCard label="Featured Homes" value={data?.totals?.featuredHomes || 0} accent="emerald" tone="#047857" />
-        <StatsCard label="Pending Approval" value={data?.propertiesByStatus?.pending || 0} tone="#b45309" accent="amber" />
+        <StatsCard label="Featured Homes" value={data?.totals?.featuredHomes || 0} accent="emerald" tone="var(--navy-blue)" />
+        <StatsCard label="Pending Approval" value={data?.propertiesByStatus?.pending || 0} tone="var(--orange)" accent="amber" />
       </section>
 
       <section className="admin-hero-card">
@@ -56,3 +56,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

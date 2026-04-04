@@ -1,5 +1,5 @@
-﻿/* ============================================
-   POST PROPERTY FORM â€” MULTI-STEP WIZARD
+/* ============================================
+   POST PROPERTY FORM — MULTI-STEP WIZARD
    ============================================ */
 
 /* --- Page Shell --- */
@@ -104,15 +104,15 @@
     background: var(--indigo-600);
     border: 2px solid var(--indigo-600);
     color: var(--white);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.15);
     animation: ppfActiveStepEnter 0.55s ease-out both;
 }
 
 .ppf-step-item.completed .ppf-step-circle {
     background: linear-gradient(135deg, var(--indigo-600), var(--violet-600));
-    border: 2px solid rgba(99, 102, 241, 0.18);
+    border: 2px solid rgba(255, 107, 0, 0.18);
     color: var(--white);
-    box-shadow: 0 12px 30px rgba(79, 70, 229, 0.24), 0 0 0 6px rgba(99, 102, 241, 0.08);
+    box-shadow: 0 12px 30px rgba(255, 107, 0, 0.24), 0 0 0 6px rgba(255, 107, 0, 0.08);
     overflow: hidden;
     animation: ppfCompletedGlow 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -122,7 +122,7 @@
     position: absolute;
     inset: -3px;
     border-radius: inherit;
-    background: radial-gradient(circle, rgba(129, 140, 248, 0.42) 0%, rgba(139, 92, 246, 0.08) 58%, transparent 72%);
+    background: radial-gradient(circle, rgba(255, 107, 0, 0.32) 0%, rgba(255, 107, 0, 0.08) 58%, transparent 72%);
     z-index: -1;
     opacity: 0.9;
     animation: ppfCompletedHalo 0.75s ease-out both;
@@ -142,7 +142,7 @@
 
 .ppf-step-item.completed .ppf-step-label {
     color: var(--indigo-700);
-    text-shadow: 0 0 18px rgba(99, 102, 241, 0.12);
+    text-shadow: 0 0 18px rgba(255, 107, 0, 0.12);
 }
 
 .ppf-step-item.completed {
@@ -269,7 +269,7 @@
 .ppf-form-card {
     background: var(--white);
     border-radius: var(--radius-2xl);
-    box-shadow: 0 8px 32px rgba(79, 70, 229, 0.06), 0 1.5px 6px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 8px 32px rgba(255, 107, 0, 0.06), 0 1.5px 6px rgba(0, 0, 0, 0.03);
     padding: var(--space-8);
     position: relative;
     overflow: hidden;
@@ -315,8 +315,8 @@
     align-items: center;
     justify-content: center;
     color: var(--indigo-700);
-    background: linear-gradient(135deg, var(--indigo-100), #ede9fe);
-    box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.08);
+    background: linear-gradient(135deg, var(--indigo-100), var(--indigo-50));
+    box-shadow: inset 0 0 0 1px rgba(255, 107, 0, 0.08);
     flex-shrink: 0;
 }
 
@@ -547,12 +547,12 @@
 
 .ppf-input:focus {
     border-color: var(--indigo-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
 }
 
 .ppf-input.error {
     border-color: var(--red-500);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.08);
 }
 
 .ppf-input-error {
@@ -584,7 +584,7 @@
 
 .ppf-select:focus {
     border-color: var(--indigo-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
 }
 
 .ppf-select.error {
@@ -637,7 +637,7 @@
 
 .ppf-area-input-group:focus-within {
     border-color: var(--indigo-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
 }
 
 .ppf-area-input-group.error {
@@ -735,8 +735,8 @@
     margin-top: var(--space-6);
     padding: var(--space-5);
     border-radius: var(--radius-2xl);
-    border: 1px solid rgba(99, 102, 241, 0.16);
-    background: linear-gradient(180deg, #ffffff 0%, #f7f9ff 100%);
+    border: 1px solid rgba(255, 107, 0, 0.16);
+    background: linear-gradient(180deg, var(--white) 0%, var(--warm-white) 100%);
 }
 
 .ppf-admin-contact-head {
@@ -784,7 +784,7 @@
 }
 
 /* ========================
-   STEP 4 â€” MEDIA UPLOAD
+   STEP 4 — MEDIA UPLOAD
    ======================== */
 
 /* Upload zone */
@@ -810,7 +810,7 @@
 
 .ppf-upload-zone.drag-over {
     border-color: var(--indigo-500);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
 }
 
 .ppf-upload-icon {
@@ -835,19 +835,20 @@
 }
 
 .ppf-upload-btn {
-    padding: var(--space-2) var(--space-5);
-    background: var(--indigo-600);
-    color: var(--white);
+    padding: 12px 28px;
+    background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
+    color: #ffffff;
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: 50px;
     font-size: 0.88rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .ppf-upload-btn:hover {
-    background: var(--indigo-700);
+    background: linear-gradient(90deg, #ff6b00 0%, #e85500 100%);
+    transform: translateY(-1px);
 }
 
 /* Photo category tabs */
@@ -941,7 +942,7 @@
 }
 
 .ppf-photo-delete {
-    background: rgba(239, 68, 68, 0.9);
+    background: rgba(255, 107, 0, 0.9);
     color: var(--white);
 }
 
@@ -1028,12 +1029,12 @@
 }
 
 .ppf-record-btn:hover {
-    background: rgba(239, 68, 68, 0.08);
+    background: rgba(255, 107, 0, 0.08);
 }
 
 /* Tips card */
 .ppf-tips-card {
-    background: linear-gradient(135deg, var(--indigo-50), #f5f0ff);
+    background: linear-gradient(135deg, var(--indigo-50), var(--indigo-50));
     border-radius: var(--radius-xl);
     padding: var(--space-4);
     margin-top: var(--space-6);
@@ -1054,7 +1055,7 @@
 }
 
 /* ========================
-   STEP 5 â€” AMENITIES
+   STEP 5 — AMENITIES
    ======================== */
 
 .ppf-amenity-section {
@@ -1105,17 +1106,21 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.ppf-amenity-icon--amber { color: #b45309; background: rgba(251, 191, 36, 0.16); border-color: rgba(245, 158, 11, 0.18); }
-.ppf-amenity-icon--blue { color: #1d4ed8; background: rgba(96, 165, 250, 0.14); border-color: rgba(59, 130, 246, 0.18); }
-.ppf-amenity-icon--cyan { color: #0f766e; background: rgba(45, 212, 191, 0.16); border-color: rgba(20, 184, 166, 0.18); }
-.ppf-amenity-icon--emerald { color: #047857; background: rgba(52, 211, 153, 0.16); border-color: rgba(16, 185, 129, 0.18); }
-.ppf-amenity-icon--green { color: #15803d; background: rgba(74, 222, 128, 0.16); border-color: rgba(34, 197, 94, 0.18); }
-.ppf-amenity-icon--indigo { color: #4338ca; background: rgba(129, 140, 248, 0.16); border-color: rgba(99, 102, 241, 0.18); }
-.ppf-amenity-icon--orange { color: #c2410c; background: rgba(251, 146, 60, 0.16); border-color: rgba(249, 115, 22, 0.18); }
-.ppf-amenity-icon--red { color: #b91c1c; background: rgba(248, 113, 113, 0.16); border-color: rgba(239, 68, 68, 0.18); }
-.ppf-amenity-icon--rose { color: #be185d; background: rgba(244, 114, 182, 0.16); border-color: rgba(236, 72, 153, 0.18); }
-.ppf-amenity-icon--slate { color: #475569; background: rgba(148, 163, 184, 0.18); border-color: rgba(100, 116, 139, 0.18); }
-.ppf-amenity-icon--violet { color: #7c3aed; background: rgba(167, 139, 250, 0.16); border-color: rgba(139, 92, 246, 0.18); }
+.ppf-amenity-icon--amber,
+.ppf-amenity-icon--blue,
+.ppf-amenity-icon--cyan,
+.ppf-amenity-icon--emerald,
+.ppf-amenity-icon--green,
+.ppf-amenity-icon--indigo,
+.ppf-amenity-icon--orange,
+.ppf-amenity-icon--red,
+.ppf-amenity-icon--rose,
+.ppf-amenity-icon--slate,
+.ppf-amenity-icon--violet {
+    color: var(--color-primary);
+    background: rgba(255, 107, 0, 0.12);
+    border-color: rgba(255, 107, 0, 0.22);
+}
 
 .ppf-amenity-chip:hover {
     border-color: var(--indigo-400);
@@ -1124,7 +1129,7 @@
 
 .ppf-amenity-chip:hover .ppf-amenity-icon {
     transform: translateY(-1px) scale(1.05);
-    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 6px 16px rgba(26, 26, 26, 0.08);
 }
 
 .ppf-amenity-chip.selected {
@@ -1135,7 +1140,7 @@
 }
 
 .ppf-amenity-chip.selected .ppf-amenity-icon {
-    box-shadow: 0 8px 18px rgba(99, 102, 241, 0.14);
+    box-shadow: 0 8px 18px rgba(255, 107, 0, 0.14);
 }
 
 .ppf-amenity-chip .chip-check {
@@ -1202,7 +1207,7 @@
 
 .ppf-textarea:focus {
     border-color: var(--indigo-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
     outline: none;
 }
 
@@ -1244,13 +1249,13 @@
 }
 
 .ppf-btn-continue {
-    padding: 10px 32px;
-    background: linear-gradient(135deg, var(--indigo-600), var(--violet-600));
+    padding: 12px 28px;
+    background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
     color: var(--white);
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: 50px;
     font-size: 0.92rem;
-    font-weight: 700;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
     font-family: inherit;
@@ -1272,7 +1277,8 @@
 
 .ppf-btn-continue:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+    background: linear-gradient(90deg, #ff6b00 0%, #e85500 100%);
+    box-shadow: 0 6px 20px rgba(255, 107, 0, 0.3);
 }
 
 .ppf-btn-continue:hover::after {
@@ -1291,13 +1297,13 @@
 }
 
 .ppf-btn-submit {
-    padding: 12px 36px;
-    background: linear-gradient(135deg, var(--indigo-600), var(--violet-600));
+    padding: 12px 28px;
+    background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
     color: var(--white);
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: 50px;
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
     font-family: inherit;
@@ -1308,7 +1314,8 @@
 
 .ppf-btn-submit:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
+    background: linear-gradient(90deg, #ff6b00 0%, #e85500 100%);
+    box-shadow: 0 8px 24px rgba(255, 107, 0, 0.35);
 }
 
 /* ========================
@@ -1370,7 +1377,7 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    background: linear-gradient(135deg, var(--indigo-50), var(--indigo-50));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1380,7 +1387,7 @@
 .ppf-success-icon svg {
     width: 40px;
     height: 40px;
-    color: #16a34a;
+    color: var(--navy-blue);
 }
 
 .ppf-success h2 {
@@ -1399,19 +1406,19 @@
 }
 
 .ppf-success-btn {
-    padding: 12px 32px;
-    background: var(--indigo-600);
-    color: var(--white);
+    padding: 12px 28px;
+    background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
+    color: #ffffff;
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: 50px;
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .ppf-success-btn:hover {
-    background: var(--indigo-700);
+    background: linear-gradient(90deg, #ff6b00 0%, #e85500 100%);
 }
 
 /* ========================
@@ -1431,32 +1438,32 @@
 @keyframes ppfActiveStepEnter {
     0% {
         transform: scale(0.92);
-        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.24);
+        box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.24);
     }
     60% {
         transform: scale(1.08);
-        box-shadow: 0 0 0 10px rgba(99, 102, 241, 0.08);
+        box-shadow: 0 0 0 10px rgba(255, 107, 0, 0.08);
     }
     100% {
         transform: scale(1);
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.15);
     }
 }
 
 @keyframes ppfCompletedGlow {
     0% {
         transform: translateY(0) scale(0.88);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12), 0 0 0 0 rgba(99, 102, 241, 0);
+        box-shadow: 0 4px 12px rgba(255, 107, 0, 0.12), 0 0 0 0 rgba(255, 107, 0, 0);
         filter: saturate(1);
     }
     65% {
         transform: translateY(-2px) scale(1.11);
-        box-shadow: 0 18px 40px rgba(124, 58, 237, 0.34), 0 0 0 10px rgba(99, 102, 241, 0.12);
+        box-shadow: 0 18px 40px rgba(255, 107, 0, 0.34), 0 0 0 10px rgba(255, 107, 0, 0.12);
         filter: saturate(1.18);
     }
     100% {
         transform: translateY(0) scale(1);
-        box-shadow: 0 12px 30px rgba(79, 70, 229, 0.24), 0 0 0 6px rgba(99, 102, 241, 0.08);
+        box-shadow: 0 12px 30px rgba(255, 107, 0, 0.24), 0 0 0 6px rgba(255, 107, 0, 0.08);
         filter: saturate(1);
     }
 }
@@ -1583,18 +1590,18 @@
     }
 
     .ppf-step-item.active {
-        background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(124, 58, 237, 0.08));
-        border-color: rgba(79, 70, 229, 0.16);
+        background: linear-gradient(135deg, rgba(255, 107, 0, 0.12), rgba(255, 107, 0, 0.08));
+        border-color: rgba(255, 107, 0, 0.16);
     }
 
     .ppf-step-item.completed {
-        background: rgba(238, 242, 255, 0.9);
-        border-color: rgba(99, 102, 241, 0.14);
-        box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.06);
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(255, 107, 0, 0.14);
+        box-shadow: inset 0 0 0 1px rgba(255, 107, 0, 0.06);
     }
 
     .ppf-step-item.completed .ppf-step-circle {
-        box-shadow: 0 8px 18px rgba(79, 70, 229, 0.15);
+        box-shadow: 0 8px 18px rgba(255, 107, 0, 0.15);
     }
 }
 
@@ -1667,4 +1674,7 @@
         font-size: 0.88rem;
     }
 }
+
+
+
 
