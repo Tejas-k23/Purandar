@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { MapPin, Building, Wallet, Bed, SlidersHorizontal, Search, X, ChevronDown, MoveHorizontal } from 'lucide-react';
+import { MapPin, Building, Wallet, Bed, SlidersHorizontal, Search, X, ChevronDown, MoveHorizontal, Users } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { buildSearchQueryString, getAreaParams, getBudgetParams, parseSearchParams } from '../../utils/queryParams';
 import './SearchBar.css';
@@ -11,6 +11,7 @@ const propertyTypes = [
   { label: 'Plot / Land', category: 'residential', needsBhk: false },
   { label: '1 RK / Studio Apartment', category: 'residential', needsBhk: true },
   { label: 'Serviced Apartment', category: 'residential', needsBhk: true },
+  { label: 'PG / Hostel', category: 'residential', needsBhk: false },
   { label: 'Farmhouse', category: 'residential', needsBhk: true },
   { label: 'Office Space', category: 'commercial', needsBhk: false },
   { label: 'Shop / Showroom', category: 'commercial', needsBhk: false },
@@ -43,6 +44,11 @@ const areaOptions = [
   { label: 'Above 5000 sq.ft', value: 'above5000' },
 ];
 
+const tenantOptions = [
+  { label: 'Bachelors', value: 'bachelors' },
+  { label: 'Family', value: 'family' },
+];
+
 const FilterChip = ({ icon: Icon, label, hasClose, hasDropdown, active, onClick, onDelete }) => (
   <div className={`filter-chip ${active ? 'active' : ''}`} onClick={onClick}>
     {Icon ? <Icon className="icon" /> : null}
@@ -66,6 +72,7 @@ export default function SearchBar({ intent = 'sell' }) {
   const [bhk, setBhk] = useState(routeFilters.bedrooms || '');
   const [budget, setBudget] = useState(routeFilters.budget || '');
   const [area, setArea] = useState(routeFilters.area || '');
+  const [tenantPreference, setTenantPreference] = useState(routeFilters.tenantPreference || '');
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -75,7 +82,8 @@ export default function SearchBar({ intent = 'sell' }) {
     setBhk(routeFilters.bedrooms || '');
     setBudget(routeFilters.budget || '');
     setArea(routeFilters.area || '');
-  }, [routeFilters.city, routeFilters.propertyType, routeFilters.bedrooms, routeFilters.budget, routeFilters.area]);
+    setTenantPreference(routeFilters.tenantPreference || '');
+  }, [routeFilters.city, routeFilters.propertyType, routeFilters.bedrooms, routeFilters.budget, routeFilters.area, routeFilters.tenantPreference]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -91,8 +99,23 @@ export default function SearchBar({ intent = 'sell' }) {
   const selectedTypeObj = propertyTypes.find((type) => type.label === propertyType);
   const showBhk = !propertyType || selectedTypeObj?.needsBhk;
   const showArea = !propertyType || !selectedTypeObj?.needsBhk || selectedTypeObj?.category === 'commercial';
+  const showTenantPreference = intent === 'rent'
+    && ['Flat / Apartment', '1 RK / Studio Apartment', 'Serviced Apartment'].includes(propertyType);
 
-  const navigateWithFilters = ({ nextCity = city, nextPropertyType = propertyType, nextBhk = bhk, nextBudget = budget, nextArea = area } = {}) => {
+  useEffect(() => {
+    if (!showTenantPreference && tenantPreference) {
+      setTenantPreference('');
+    }
+  }, [showTenantPreference, tenantPreference]);
+
+  const navigateWithFilters = ({
+    nextCity = city,
+    nextPropertyType = propertyType,
+    nextBhk = bhk,
+    nextBudget = budget,
+    nextArea = area,
+    nextTenantPreference = tenantPreference,
+  } = {}) => {
     const targetPath = intent === 'rent' ? '/rent' : '/buy';
     const queryString = buildSearchQueryString({
       city: nextCity,
@@ -101,6 +124,7 @@ export default function SearchBar({ intent = 'sell' }) {
       budget: nextBudget,
       area: nextArea,
       intent,
+      tenantPreference: nextTenantPreference,
       sort: routeFilters.sort || 'newest',
       ...getBudgetParams(nextBudget),
       ...getAreaParams(nextArea),
@@ -119,8 +143,9 @@ export default function SearchBar({ intent = 'sell' }) {
       setPropertyType('');
       setBhk('');
       setArea('');
+      setTenantPreference('');
       setActiveDropdown(null);
-      navigateWithFilters({ nextPropertyType: '', nextBhk: '', nextArea: '' });
+      navigateWithFilters({ nextPropertyType: '', nextBhk: '', nextArea: '', nextTenantPreference: '' });
       return;
     }
     if (field === 'bhk') {
@@ -139,6 +164,12 @@ export default function SearchBar({ intent = 'sell' }) {
       setBudget('');
       setActiveDropdown(null);
       navigateWithFilters({ nextBudget: '' });
+      return;
+    }
+    if (field === 'tenantPreference') {
+      setTenantPreference('');
+      setActiveDropdown(null);
+      navigateWithFilters({ nextTenantPreference: '' });
     }
   };
 
@@ -148,6 +179,7 @@ export default function SearchBar({ intent = 'sell' }) {
     setBhk('');
     setBudget('');
     setArea('');
+    setTenantPreference('');
     setActiveDropdown(null);
     setMobileFiltersOpen(false);
     navigate(`${intent === 'rent' ? '/rent' : '/buy'}`);
@@ -205,6 +237,33 @@ export default function SearchBar({ intent = 'sell' }) {
             <div className="dropdown-menu">
               {areaOptions.map((option) => (
                 <div key={option.value} className={`dropdown-item ${area === option.value ? 'active' : ''}`} onClick={() => { setArea(option.value); setActiveDropdown(null); }}>
+                  {option.label}
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {showTenantPreference ? (
+        <div className="filter-dropdown-container">
+          <FilterChip
+            icon={Users}
+            label={tenantOptions.find((option) => option.value === tenantPreference)?.label || 'Tenant'}
+            hasDropdown
+            active={!!tenantPreference}
+            onClick={() => setActiveDropdown(activeDropdown === 'tenant' ? null : 'tenant')}
+            hasClose={!!tenantPreference}
+            onDelete={() => clearField('tenantPreference')}
+          />
+          {activeDropdown === 'tenant' ? (
+            <div className="dropdown-menu">
+              {tenantOptions.map((option) => (
+                <div
+                  key={option.value}
+                  className={`dropdown-item ${tenantPreference === option.value ? 'active' : ''}`}
+                  onClick={() => { setTenantPreference(option.value); setActiveDropdown(null); }}
+                >
                   {option.label}
                 </div>
               ))}

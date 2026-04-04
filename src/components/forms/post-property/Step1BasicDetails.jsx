@@ -8,6 +8,7 @@ const residentialTypes = [
     'Plot / Land',
     '1 RK / Studio Apartment',
     'Serviced Apartment',
+    'PG / Hostel',
     'Farmhouse',
     'Other',
 ];

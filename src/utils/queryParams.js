@@ -37,6 +37,7 @@ export const parseSearchParams = (searchParams) => {
     minArea: entries.minArea || '',
     maxArea: entries.maxArea || '',
     intent: entries.intent || '',
+    tenantPreference: entries.tenantPreference || '',
     sort: entries.sort || 'newest',
   };
 };
@@ -54,6 +55,7 @@ export const buildPropertyApiParams = (filters = {}) => sanitizeQueryParams({
   minArea: filters.minArea || getAreaParams(filters.area).minArea,
   maxArea: filters.maxArea || getAreaParams(filters.area).maxArea,
   intent: filters.intent,
+  tenantPreference: filters.tenantPreference,
   sort: filters.sort || 'newest',
   limit: filters.limit,
 });

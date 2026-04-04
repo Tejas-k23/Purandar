@@ -6,6 +6,7 @@ export default function PropertyTitleSection({ property = {} }) {
     const base = [
       property.intent === 'rent' ? 'For Rent' : 'For Sale',
       property.propertyType,
+      (property.propertyType === 'PG / Hostel' || property.tenantPreference === 'bachelors') ? 'Bachelors Allowed' : null,
       ...(property.flatAmenities || []).slice(0, 2),
       ...(property.societyAmenities || []).slice(0, 1),
     ];

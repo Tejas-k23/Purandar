@@ -18,6 +18,17 @@ const SECTION_ITEMS = [
   { id: 'contact', label: 'Contact Details', subtitle: 'Section 8' },
 ];
 
+const STEP_FIELDS = {
+  basic: ['projectName', 'projectType', 'developerName', 'projectStatus', 'launchDate', 'possessionDate'],
+  location: ['address', 'city', 'area', 'pincode', 'mapLink'],
+  pricing: ['startingPrice', 'endingPrice', 'priceUnit', 'configurationTypes', 'areaRange'],
+  amenities: [],
+  media: ['projectImages', 'videoUrl'],
+  description: ['shortDescription', 'detailedDescription'],
+  additional: ['totalTowers', 'totalUnits', 'totalFloors', 'openSpace', 'approvalAuthority'],
+  contact: ['contactPersonName', 'phoneNumber', 'email', 'customContactName', 'customContactPhone', 'customContactEmail'],
+};
+
 const PROJECT_TYPES = Object.keys(PROJECT_TYPE_PROFILES);
 const PROJECT_STATUS = ['Upcoming', 'Under Construction', 'Ready to Move'];
 const PRICE_UNITS = ['Lakh', 'Crore'];
@@ -163,6 +174,14 @@ function validateForm(data) {
   return errors;
 }
 
+function getStepErrors(stepIndex, data) {
+  const stepId = SECTION_ITEMS[stepIndex - 1]?.id;
+  const stepFields = new Set(STEP_FIELDS[stepId] || []);
+  if (stepFields.size === 0) return {};
+  const allErrors = validateForm(data);
+  return Object.fromEntries(Object.entries(allErrors).filter(([field]) => stepFields.has(field)));
+}
+
 function SectionCard({ id, title, description, children }) {
   return (
     <section id={id} className="apf-section-card">
@@ -249,6 +268,7 @@ export default function AddProjectForm() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState(initialState);
+  const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
@@ -304,6 +324,24 @@ export default function AddProjectForm() {
     const withImages = formData.projectImages.length > 0 ? 1 : 0;
     return Math.round(((filled + withImages) / (trackedFields.length + 1)) * 100);
   }, [formData]);
+
+  const totalSteps = SECTION_ITEMS.length;
+
+  const goNext = () => {
+    const stepErrors = getStepErrors(currentStep, formData);
+    if (Object.keys(stepErrors).length) {
+      setErrors(stepErrors);
+      const firstErrorField = Object.keys(stepErrors)[0];
+      const fieldElement = document.querySelector(`[name="${firstErrorField}"]`);
+      fieldElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      fieldElement?.focus?.();
+      return;
+    }
+    setErrors({});
+    setCurrentStep((current) => Math.min(totalSteps, current + 1));
+  };
+
+  const goBack = () => setCurrentStep((current) => Math.max(1, current - 1));
 
   const updateField = (field, value) => {
     setFormData((current) => ({ ...current, [field]: value }));
@@ -385,16 +423,6 @@ export default function AddProjectForm() {
     updateField('extraConfigurations', formData.extraConfigurations.filter((_, itemIndex) => itemIndex !== index));
   };
 
-  const resetForm = () => {
-    formData.projectImages.forEach((image) => {
-      if (image.preview && !image.existing) URL.revokeObjectURL(image.preview);
-    });
-    if (formData.brochure?.preview) URL.revokeObjectURL(formData.brochure.preview);
-    setFormData(initialState);
-    setErrors({});
-    setStatusMessage('');
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     const nextErrors = validateForm(formData);
@@ -430,6 +458,297 @@ export default function AddProjectForm() {
     }
   };
 
+  const renderStep = () => {
+    const stepId = SECTION_ITEMS[currentStep - 1]?.id;
+    switch (stepId) {
+      case 'basic':
+        return (
+          <SectionCard id="basic" title="1. Project Basic Details" description="Core identity, status, launch timeline, and project tags.">
+            <div className="ppf-form-row">
+              <Field label="Project Name" required error={errors.projectName} icon={Building2}>
+                <TextInput name="projectName" type="text" placeholder="Enter project name" value={formData.projectName} onChange={(event) => updateField('projectName', event.target.value)} error={errors.projectName} />
+              </Field>
+              <Field label="Project Type" required error={errors.projectType} hint={typeProfile.helper}>
+                <SelectInput name="projectType" value={formData.projectType} onChange={(event) => handleProjectTypeChange(event.target.value)} error={errors.projectType}>
+                  <option value="">Select type</option>
+                  {PROJECT_TYPES.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </SelectInput>
+              </Field>
+            </div>
+
+            <div className="ppf-form-row">
+              <Field label={typeProfile.labels.developer} required error={errors.developerName} icon={UserRound}>
+                <TextInput name="developerName" type="text" placeholder="Enter developer or builder name" value={formData.developerName} onChange={(event) => updateField('developerName', event.target.value)} error={errors.developerName} />
+              </Field>
+              <Field label={typeProfile.labels.rera} error={errors.reraNumber} icon={ShieldCheck}>
+                <TextInput name="reraNumber" type="text" placeholder={`Enter ${typeProfile.labels.rera.toLowerCase()}`} value={formData.reraNumber} onChange={(event) => updateField('reraNumber', event.target.value)} error={errors.reraNumber} />
+              </Field>
+            </div>
+
+            <div className="ppf-form-row">
+              <Field label="Project Status" required error={errors.projectStatus} icon={ShieldCheck}>
+                <SelectInput name="projectStatus" value={formData.projectStatus} onChange={(event) => updateField('projectStatus', event.target.value)} error={errors.projectStatus}>
+                  <option value="">Select status</option>
+                  {PROJECT_STATUS.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </SelectInput>
+              </Field>
+              <Field label="Launch Date" required error={errors.launchDate} icon={CalendarDays}>
+                <TextInput name="launchDate" type="date" value={formData.launchDate} onChange={(event) => updateField('launchDate', event.target.value)} error={errors.launchDate} />
+              </Field>
+              <Field label={typeProfile.labels.possessionDate} required error={errors.possessionDate} icon={CalendarDays}>
+                <TextInput name="possessionDate" type="date" value={formData.possessionDate} onChange={(event) => updateField('possessionDate', event.target.value)} error={errors.possessionDate} />
+              </Field>
+            </div>
+
+            <Field label="Project Tags">
+              <div className="ppf-amenity-grid">
+                {TAGS.map((tag) => (
+                  <ToggleChip key={tag} label={tag} selected={formData.tags.includes(tag)} onClick={() => toggleArrayValue('tags', tag)} />
+                ))}
+              </div>
+            </Field>
+          </SectionCard>
+        );
+      case 'location':
+        return (
+          <SectionCard id="location" title="2. Location Details" description="Address, city, locality, pincode, and optional map coordinates.">
+            <Field label="Address" required error={errors.address} icon={MapPin}>
+              <TextAreaInput name="address" rows="4" placeholder="Enter full project address" value={formData.address} onChange={(event) => updateField('address', event.target.value)} error={errors.address} />
+            </Field>
+
+            <div className="ppf-form-row">
+              <Field label="City" required error={errors.city}>
+                <TextInput name="city" type="text" placeholder="Enter city" value={formData.city} onChange={(event) => updateField('city', event.target.value)} error={errors.city} />
+              </Field>
+              <Field label="Area / Locality" required error={errors.area}>
+                <TextInput name="area" type="text" placeholder="Enter area or locality" value={formData.area} onChange={(event) => updateField('area', event.target.value)} error={errors.area} />
+              </Field>
+              <Field label="Pincode" required error={errors.pincode}>
+                <TextInput name="pincode" type="number" placeholder="Enter pincode" value={formData.pincode} onChange={(event) => updateField('pincode', event.target.value)} error={errors.pincode} />
+              </Field>
+            </div>
+
+            <Field label="Google Map Link / Coordinates" error={errors.mapLink} hint="Optional. Paste a Google Maps URL or coordinates like `18.4529, 73.9777`." icon={MapPin}>
+              <TextInput name="mapLink" type="text" placeholder="https://maps.google.com/... or 18.4529, 73.9777" value={formData.mapLink} onChange={(event) => updateField('mapLink', event.target.value)} error={errors.mapLink} />
+            </Field>
+          </SectionCard>
+        );
+      case 'pricing':
+        return (
+          <SectionCard id="pricing" title="3. Pricing & Configurations" description={typeProfile.labels.pricingDescription}>
+            <div className="ppf-form-row">
+              <Field label={formData.projectType === 'Plots' ? 'Starting Plot Price' : 'Starting Price'} required error={errors.startingPrice} icon={IndianRupee}>
+                <TextInput name="startingPrice" type="number" placeholder="Enter starting price" value={formData.startingPrice} onChange={(event) => updateField('startingPrice', event.target.value)} error={errors.startingPrice} />
+              </Field>
+              <Field label={formData.projectType === 'Plots' ? 'Ending Plot Price' : 'Ending Price'} required error={errors.endingPrice} icon={IndianRupee}>
+                <TextInput name="endingPrice" type="number" placeholder="Enter ending price" value={formData.endingPrice} onChange={(event) => updateField('endingPrice', event.target.value)} error={errors.endingPrice} />
+              </Field>
+              <Field label="Price Unit" required error={errors.priceUnit}>
+                <SelectInput name="priceUnit" value={formData.priceUnit} onChange={(event) => updateField('priceUnit', event.target.value)} error={errors.priceUnit}>
+                  {PRICE_UNITS.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </SelectInput>
+              </Field>
+            </div>
+
+            <Field label={typeProfile.labels.configuration} required error={errors.configurationTypes} hint={typeProfile.labels.configurationHint}>
+              <div className="ppf-amenity-grid">
+                {allowedConfigurations.map((configuration) => (
+                  <ToggleChip key={configuration} label={configuration} selected={formData.configurationTypes.includes(configuration)} onClick={() => toggleArrayValue('configurationTypes', configuration)} />
+                ))}
+              </div>
+            </Field>
+
+            <div className="apf-dynamic-grid">
+              {formData.extraConfigurations.map((value, index) => (
+                <DynamicConfigInput key={`config-${index}`} value={value} onChange={(event) => updateConfigurationRow(index, event.target.value)} onRemove={() => removeConfigurationRow(index)} disabledRemove={formData.extraConfigurations.length === 1 && !value} />
+              ))}
+            </div>
+
+            <button type="button" className="ppf-btn-continue apf-inline-btn" onClick={addConfigurationRow}>
+              {typeProfile.labels.addConfiguration}
+            </button>
+
+            <div className="ppf-form-row">
+              <Field label={typeProfile.labels.areaRange} required error={errors.areaRange}>
+                <TextInput name="areaRange" type="text" placeholder={typeProfile.labels.areaRangePlaceholder} value={formData.areaRange} onChange={(event) => updateField('areaRange', event.target.value)} error={errors.areaRange} />
+              </Field>
+            </div>
+          </SectionCard>
+        );
+      case 'amenities':
+        return (
+          <SectionCard id="amenities" title="4. Project Amenities" description={typeProfile.labels.amenitiesDescription}>
+            <Field label="Amenities">
+              <div className="ppf-amenity-grid">
+                {allowedAmenities.map((amenity) => (
+                  <ToggleChip key={amenity} label={amenity} selected={formData.amenities.includes(amenity)} onClick={() => toggleArrayValue('amenities', amenity)} showIcon />
+                ))}
+              </div>
+            </Field>
+          </SectionCard>
+        );
+      case 'media':
+        return (
+          <SectionCard id="media" title="5. Project Media" description="Upload images with preview, add brochure PDF, and attach project video.">
+            <Field label="Upload Project Images" required error={errors.projectImages}>
+              <label className="ppf-upload-zone apf-upload-zone">
+                <input name="projectImages" type="file" accept="image/*" multiple className="apf-hidden-input" onChange={handleImageUpload} />
+                <svg className="ppf-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <p className="ppf-upload-text">Drop project images here or <strong>browse</strong></p>
+                <p className="ppf-upload-hint">Multiple uploads supported with instant preview.</p>
+              </label>
+            </Field>
+
+            {formData.projectImages.length > 0 ? (
+              <div className="ppf-photo-grid">
+                {formData.projectImages.map((image) => (
+                  <div key={image.id} className="ppf-photo-thumb cover">
+                    <img src={image.preview} alt={image.name} />
+                    <div className="ppf-photo-overlay apf-always-visible">
+                      <button type="button" className="ppf-photo-delete" onClick={() => removeImage(image.id)}>
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="ppf-form-row">
+              <Field label="Upload Brochure (PDF)" icon={FileBadge2}>
+                <TextInput name="brochure" type="file" accept="application/pdf" onChange={handleBrochureUpload} />
+                {formData.brochure ? <p className="apf-file-badge">{formData.brochure.name}</p> : null}
+              </Field>
+              <Field label="Project Video URL" error={errors.videoUrl}>
+                <TextInput name="videoUrl" type="url" placeholder="https://youtube.com/watch?v=..." value={formData.videoUrl} onChange={(event) => updateField('videoUrl', event.target.value)} error={errors.videoUrl} />
+              </Field>
+            </div>
+          </SectionCard>
+        );
+      case 'description':
+        return (
+          <SectionCard id="description" title="6. Project Description" description="Add crisp marketing copy plus a detailed project overview.">
+            <Field label="Short Description" required error={errors.shortDescription}>
+              <TextAreaInput name="shortDescription" rows="4" placeholder="Write a short summary of the project" value={formData.shortDescription} onChange={(event) => updateField('shortDescription', event.target.value)} error={errors.shortDescription} />
+            </Field>
+            <Field label="Detailed Description" required error={errors.detailedDescription}>
+              <TextAreaInput name="detailedDescription" rows="8" placeholder="Write a detailed description covering highlights, access, amenities, and value proposition" value={formData.detailedDescription} onChange={(event) => updateField('detailedDescription', event.target.value)} error={errors.detailedDescription} />
+            </Field>
+          </SectionCard>
+        );
+      case 'additional':
+        return (
+          <SectionCard id="additional" title="7. Additional Details" description={typeProfile.labels.additionalDescription}>
+            <div className="ppf-form-row">
+              <Field label={typeProfile.labels.totalTowers} required error={errors.totalTowers}>
+                <TextInput name="totalTowers" type="number" placeholder="0" value={formData.totalTowers} onChange={(event) => updateField('totalTowers', event.target.value)} error={errors.totalTowers} />
+              </Field>
+              <Field label={typeProfile.labels.totalUnits} required error={errors.totalUnits}>
+                <TextInput name="totalUnits" type="number" placeholder="0" value={formData.totalUnits} onChange={(event) => updateField('totalUnits', event.target.value)} error={errors.totalUnits} />
+              </Field>
+              <Field label={typeProfile.labels.totalFloors} required error={errors.totalFloors}>
+                <TextInput name="totalFloors" type="number" placeholder="0" value={formData.totalFloors} onChange={(event) => updateField('totalFloors', event.target.value)} error={errors.totalFloors} />
+              </Field>
+            </div>
+
+            <div className="ppf-form-row">
+              <Field label={typeProfile.labels.openSpace} required error={errors.openSpace}>
+                <TextInput name="openSpace" type="number" placeholder={`Enter ${typeProfile.labels.openSpace.toLowerCase()}`} value={formData.openSpace} onChange={(event) => updateField('openSpace', event.target.value)} error={errors.openSpace} />
+              </Field>
+              <Field label={typeProfile.labels.approvalAuthority} required error={errors.approvalAuthority}>
+                <TextInput name="approvalAuthority" type="text" placeholder={`Enter ${typeProfile.labels.approvalAuthority.toLowerCase()}`} value={formData.approvalAuthority} onChange={(event) => updateField('approvalAuthority', event.target.value)} error={errors.approvalAuthority} />
+              </Field>
+            </div>
+          </SectionCard>
+        );
+      case 'contact':
+        return (
+          <SectionCard id="contact" title="8. Contact Details" description="Capture the person responsible for project-level enquiries.">
+            <div className="ppf-form-row">
+              <Field label="Contact Person Name" required error={errors.contactPersonName} icon={UserRound}>
+                <TextInput name="contactPersonName" type="text" placeholder="Enter contact person name" value={formData.contactPersonName} onChange={(event) => updateField('contactPersonName', event.target.value)} error={errors.contactPersonName} />
+              </Field>
+              <Field label="Phone Number" required error={errors.phoneNumber} icon={Phone}>
+                <TextInput name="phoneNumber" type="tel" placeholder="Enter phone number" value={formData.phoneNumber} onChange={(event) => updateField('phoneNumber', event.target.value)} error={errors.phoneNumber} />
+              </Field>
+              <Field label="Email" required error={errors.email} icon={Mail}>
+                <TextInput name="email" type="email" placeholder="Enter email address" value={formData.email} onChange={(event) => updateField('email', event.target.value)} error={errors.email} />
+              </Field>
+            </div>
+
+            <div className="ppf-admin-contact-card">
+              <div className="ppf-admin-contact-head">
+                <div>
+                  <h3 className="ppf-admin-contact-title">Contact Display on Website</h3>
+                  <p className="ppf-admin-contact-subtitle">Decide whether the project detail page should show the original contact, company contact, or a custom contact.</p>
+                </div>
+              </div>
+              <div className="ppf-toggle-wrapper">
+                <button
+                  type="button"
+                  className={`ppf-toggle ${formData.contactDisplayMode === 'original' ? 'on' : ''}`}
+                  onClick={() => setContactDisplayMode(formData.contactDisplayMode === 'original' ? (isAdminPath ? 'company' : 'custom') : 'original')}
+                  aria-pressed={formData.contactDisplayMode === 'original'}
+                />
+                <span className="ppf-toggle-label">Show original project contact details</span>
+              </div>
+              {formData.contactDisplayMode !== 'original' ? (
+                <div className="ppf-radio-group" style={{ marginTop: 12 }}>
+                  {isAdminPath ? (
+                    <label className="ppf-radio-label" htmlFor="apf-contact-company">
+                      <input
+                        type="radio"
+                        id="apf-contact-company"
+                        name="apf-contact-mode"
+                        checked={formData.contactDisplayMode === 'company'}
+                        onChange={() => setContactDisplayMode('company')}
+                      />
+                      Use company contact details
+                    </label>
+                  ) : null}
+                  <label className="ppf-radio-label" htmlFor="apf-contact-custom">
+                    <input
+                      type="radio"
+                      id="apf-contact-custom"
+                      name="apf-contact-mode"
+                      checked={formData.contactDisplayMode === 'custom'}
+                      onChange={() => setContactDisplayMode('custom')}
+                    />
+                    Use custom contact details
+                  </label>
+                </div>
+              ) : null}
+              {formData.contactDisplayMode === 'custom' ? (
+                <div className="ppf-form-row">
+                  <Field label="Custom Contact Name" required error={errors.customContactName} icon={UserRound}>
+                    <TextInput name="customContactName" type="text" placeholder="Enter custom contact name" value={formData.customContactName} onChange={(event) => updateField('customContactName', event.target.value)} error={errors.customContactName} />
+                  </Field>
+                  <Field label="Custom Phone" required error={errors.customContactPhone} icon={Phone}>
+                    <TextInput name="customContactPhone" type="tel" placeholder="Enter custom phone number" value={formData.customContactPhone} onChange={(event) => updateField('customContactPhone', event.target.value)} error={errors.customContactPhone} />
+                  </Field>
+                  <Field label="Custom Email" required error={errors.customContactEmail} icon={Mail}>
+                    <TextInput name="customContactEmail" type="email" placeholder="Enter custom email address" value={formData.customContactEmail} onChange={(event) => updateField('customContactEmail', event.target.value)} error={errors.customContactEmail} />
+                  </Field>
+                </div>
+              ) : null}
+            </div>
+          </SectionCard>
+        );
+      default:
+        return null;
+    }
+  };
+
   if (loading) {
     return <section className="ppf-page apf-page"><div className="ppf-layout"><main className="ppf-main"><div className="ppf-form-card apf-form-card"><p className="apf-status-message">Loading project details...</p></div></main></div></section>;
   }
@@ -441,7 +760,10 @@ export default function AddProjectForm() {
           <div className="ppf-stepper">
             <ul className="ppf-stepper-list">
               {SECTION_ITEMS.map((section, index) => (
-                <li key={section.id} className="ppf-step-item completed">
+                <li
+                  key={section.id}
+                  className={`ppf-step-item ${index + 1 === currentStep ? 'active' : index + 1 < currentStep ? 'completed' : 'upcoming'}`}
+                >
                   <div className="ppf-step-circle">{index + 1}</div>
                   <div className="ppf-step-text">
                     <span className="ppf-step-label">{section.label}</span>
@@ -468,291 +790,30 @@ export default function AddProjectForm() {
                 </h1>
                 <p className="apf-hero-copy">Built to match the same admin form language as your existing property flow with clean sections, soft cards, and focused interactions.</p>
               </div>
-              <div className="apf-slug-box">
-                <span className="apf-slug-label">Auto-generated slug</span>
-                <code className="apf-slug-value">{formData.slug || 'project-slug-preview'}</code>
-              </div>
             </div>
 
-            <SectionCard id="basic" title="1. Project Basic Details" description="Core identity, status, launch timeline, and project tags.">
-              <div className="ppf-form-row">
-                <Field label="Project Name" required error={errors.projectName} icon={Building2}>
-                  <TextInput name="projectName" type="text" placeholder="Enter project name" value={formData.projectName} onChange={(event) => updateField('projectName', event.target.value)} error={errors.projectName} />
-                </Field>
-                <Field label="Project Type" required error={errors.projectType} hint={typeProfile.helper}>
-                  <SelectInput name="projectType" value={formData.projectType} onChange={(event) => handleProjectTypeChange(event.target.value)} error={errors.projectType}>
-                    <option value="">Select type</option>
-                    {PROJECT_TYPES.map((item) => (
-                      <option key={item} value={item}>{item}</option>
-                    ))}
-                  </SelectInput>
-                </Field>
-              </div>
-
-              <div className="ppf-form-row">
-                <Field label={typeProfile.labels.developer} required error={errors.developerName} icon={UserRound}>
-                  <TextInput name="developerName" type="text" placeholder="Enter developer or builder name" value={formData.developerName} onChange={(event) => updateField('developerName', event.target.value)} error={errors.developerName} />
-                </Field>
-                <Field label={typeProfile.labels.rera} error={errors.reraNumber} icon={ShieldCheck}>
-                  <TextInput name="reraNumber" type="text" placeholder={`Enter ${typeProfile.labels.rera.toLowerCase()}`} value={formData.reraNumber} onChange={(event) => updateField('reraNumber', event.target.value)} error={errors.reraNumber} />
-                </Field>
-              </div>
-
-              <div className="ppf-form-row">
-                <Field label="Project Status" required error={errors.projectStatus} icon={ShieldCheck}>
-                  <SelectInput name="projectStatus" value={formData.projectStatus} onChange={(event) => updateField('projectStatus', event.target.value)} error={errors.projectStatus}>
-                    <option value="">Select status</option>
-                    {PROJECT_STATUS.map((item) => (
-                      <option key={item} value={item}>{item}</option>
-                    ))}
-                  </SelectInput>
-                </Field>
-                <Field label="Launch Date" required error={errors.launchDate} icon={CalendarDays}>
-                  <TextInput name="launchDate" type="date" value={formData.launchDate} onChange={(event) => updateField('launchDate', event.target.value)} error={errors.launchDate} />
-                </Field>
-                <Field label={typeProfile.labels.possessionDate} required error={errors.possessionDate} icon={CalendarDays}>
-                  <TextInput name="possessionDate" type="date" value={formData.possessionDate} onChange={(event) => updateField('possessionDate', event.target.value)} error={errors.possessionDate} />
-                </Field>
-              </div>
-
-              <Field label="Project Tags">
-                <div className="ppf-amenity-grid">
-                  {TAGS.map((tag) => (
-                    <ToggleChip key={tag} label={tag} selected={formData.tags.includes(tag)} onClick={() => toggleArrayValue('tags', tag)} />
-                  ))}
-                </div>
-              </Field>
-            </SectionCard>
-
-            <SectionCard id="location" title="2. Location Details" description="Address, city, locality, pincode, and optional map coordinates.">
-              <Field label="Address" required error={errors.address} icon={MapPin}>
-                <TextAreaInput name="address" rows="4" placeholder="Enter full project address" value={formData.address} onChange={(event) => updateField('address', event.target.value)} error={errors.address} />
-              </Field>
-
-              <div className="ppf-form-row">
-                <Field label="City" required error={errors.city}>
-                  <TextInput name="city" type="text" placeholder="Enter city" value={formData.city} onChange={(event) => updateField('city', event.target.value)} error={errors.city} />
-                </Field>
-                <Field label="Area / Locality" required error={errors.area}>
-                  <TextInput name="area" type="text" placeholder="Enter area or locality" value={formData.area} onChange={(event) => updateField('area', event.target.value)} error={errors.area} />
-                </Field>
-                <Field label="Pincode" required error={errors.pincode}>
-                  <TextInput name="pincode" type="number" placeholder="Enter pincode" value={formData.pincode} onChange={(event) => updateField('pincode', event.target.value)} error={errors.pincode} />
-                </Field>
-              </div>
-
-              <Field label="Google Map Link / Coordinates" error={errors.mapLink} hint="Optional. Paste a Google Maps URL or coordinates like `18.4529, 73.9777`." icon={MapPin}>
-                <TextInput name="mapLink" type="text" placeholder="https://maps.google.com/... or 18.4529, 73.9777" value={formData.mapLink} onChange={(event) => updateField('mapLink', event.target.value)} error={errors.mapLink} />
-              </Field>
-            </SectionCard>
-
-            <SectionCard id="pricing" title="3. Pricing & Configurations" description={typeProfile.labels.pricingDescription}>
-              <div className="ppf-form-row">
-                <Field label={formData.projectType === 'Plots' ? 'Starting Plot Price' : 'Starting Price'} required error={errors.startingPrice} icon={IndianRupee}>
-                  <TextInput name="startingPrice" type="number" placeholder="Enter starting price" value={formData.startingPrice} onChange={(event) => updateField('startingPrice', event.target.value)} error={errors.startingPrice} />
-                </Field>
-                <Field label={formData.projectType === 'Plots' ? 'Ending Plot Price' : 'Ending Price'} required error={errors.endingPrice} icon={IndianRupee}>
-                  <TextInput name="endingPrice" type="number" placeholder="Enter ending price" value={formData.endingPrice} onChange={(event) => updateField('endingPrice', event.target.value)} error={errors.endingPrice} />
-                </Field>
-                <Field label="Price Unit" required error={errors.priceUnit}>
-                  <SelectInput name="priceUnit" value={formData.priceUnit} onChange={(event) => updateField('priceUnit', event.target.value)} error={errors.priceUnit}>
-                    {PRICE_UNITS.map((item) => (
-                      <option key={item} value={item}>{item}</option>
-                    ))}
-                  </SelectInput>
-                </Field>
-              </div>
-
-              <Field label={typeProfile.labels.configuration} required error={errors.configurationTypes} hint={typeProfile.labels.configurationHint}>
-                <div className="ppf-amenity-grid">
-                  {allowedConfigurations.map((configuration) => (
-                    <ToggleChip key={configuration} label={configuration} selected={formData.configurationTypes.includes(configuration)} onClick={() => toggleArrayValue('configurationTypes', configuration)} />
-                  ))}
-                </div>
-              </Field>
-
-              <div className="apf-dynamic-grid">
-                {formData.extraConfigurations.map((value, index) => (
-                  <DynamicConfigInput key={`config-${index}`} value={value} onChange={(event) => updateConfigurationRow(index, event.target.value)} onRemove={() => removeConfigurationRow(index)} disabledRemove={formData.extraConfigurations.length === 1 && !value} />
-                ))}
-              </div>
-
-              <button type="button" className="ppf-btn-continue apf-inline-btn" onClick={addConfigurationRow}>
-                {typeProfile.labels.addConfiguration}
-              </button>
-
-              <div className="ppf-form-row">
-                <Field label={typeProfile.labels.areaRange} required error={errors.areaRange}>
-                  <TextInput name="areaRange" type="text" placeholder={typeProfile.labels.areaRangePlaceholder} value={formData.areaRange} onChange={(event) => updateField('areaRange', event.target.value)} error={errors.areaRange} />
-                </Field>
-              </div>
-            </SectionCard>
-
-            <SectionCard id="amenities" title="4. Project Amenities" description={typeProfile.labels.amenitiesDescription}>
-              <Field label="Amenities">
-                <div className="ppf-amenity-grid">
-                  {allowedAmenities.map((amenity) => (
-                    <ToggleChip key={amenity} label={amenity} selected={formData.amenities.includes(amenity)} onClick={() => toggleArrayValue('amenities', amenity)} showIcon />
-                  ))}
-                </div>
-              </Field>
-            </SectionCard>
-
-            <SectionCard id="media" title="5. Project Media" description="Upload images with preview, add brochure PDF, and attach project video.">
-              <Field label="Upload Project Images" required error={errors.projectImages}>
-                <label className="ppf-upload-zone apf-upload-zone">
-                  <input name="projectImages" type="file" accept="image/*" multiple className="apf-hidden-input" onChange={handleImageUpload} />
-                  <svg className="ppf-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  <p className="ppf-upload-text">Drop project images here or <strong>browse</strong></p>
-                  <p className="ppf-upload-hint">Multiple uploads supported with instant preview.</p>
-                </label>
-              </Field>
-
-              {formData.projectImages.length > 0 ? (
-                <div className="ppf-photo-grid">
-                  {formData.projectImages.map((image) => (
-                    <div key={image.id} className="ppf-photo-thumb cover">
-                      <img src={image.preview} alt={image.name} />
-                      <div className="ppf-photo-overlay apf-always-visible">
-                        <button type="button" className="ppf-photo-delete" onClick={() => removeImage(image.id)}>
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-
-              <div className="ppf-form-row">
-                <Field label="Upload Brochure (PDF)" icon={FileBadge2}>
-                  <TextInput name="brochure" type="file" accept="application/pdf" onChange={handleBrochureUpload} />
-                  {formData.brochure ? <p className="apf-file-badge">{formData.brochure.name}</p> : null}
-                </Field>
-                <Field label="Project Video URL" error={errors.videoUrl}>
-                  <TextInput name="videoUrl" type="url" placeholder="https://youtube.com/watch?v=..." value={formData.videoUrl} onChange={(event) => updateField('videoUrl', event.target.value)} error={errors.videoUrl} />
-                </Field>
-              </div>
-            </SectionCard>
-
-            <SectionCard id="description" title="6. Project Description" description="Add crisp marketing copy plus a detailed project overview.">
-              <Field label="Short Description" required error={errors.shortDescription}>
-                <TextAreaInput name="shortDescription" rows="4" placeholder="Write a short summary of the project" value={formData.shortDescription} onChange={(event) => updateField('shortDescription', event.target.value)} error={errors.shortDescription} />
-              </Field>
-              <Field label="Detailed Description" required error={errors.detailedDescription}>
-                <TextAreaInput name="detailedDescription" rows="8" placeholder="Write a detailed description covering highlights, access, amenities, and value proposition" value={formData.detailedDescription} onChange={(event) => updateField('detailedDescription', event.target.value)} error={errors.detailedDescription} />
-              </Field>
-            </SectionCard>
-
-            <SectionCard id="additional" title="7. Additional Details" description={typeProfile.labels.additionalDescription}>
-              <div className="ppf-form-row">
-                <Field label={typeProfile.labels.totalTowers} required error={errors.totalTowers}>
-                  <TextInput name="totalTowers" type="number" placeholder="0" value={formData.totalTowers} onChange={(event) => updateField('totalTowers', event.target.value)} error={errors.totalTowers} />
-                </Field>
-                <Field label={typeProfile.labels.totalUnits} required error={errors.totalUnits}>
-                  <TextInput name="totalUnits" type="number" placeholder="0" value={formData.totalUnits} onChange={(event) => updateField('totalUnits', event.target.value)} error={errors.totalUnits} />
-                </Field>
-                <Field label={typeProfile.labels.totalFloors} required error={errors.totalFloors}>
-                  <TextInput name="totalFloors" type="number" placeholder="0" value={formData.totalFloors} onChange={(event) => updateField('totalFloors', event.target.value)} error={errors.totalFloors} />
-                </Field>
-              </div>
-
-              <div className="ppf-form-row">
-                <Field label={typeProfile.labels.openSpace} required error={errors.openSpace}>
-                  <TextInput name="openSpace" type="number" placeholder={`Enter ${typeProfile.labels.openSpace.toLowerCase()}`} value={formData.openSpace} onChange={(event) => updateField('openSpace', event.target.value)} error={errors.openSpace} />
-                </Field>
-                <Field label={typeProfile.labels.approvalAuthority} required error={errors.approvalAuthority}>
-                  <TextInput name="approvalAuthority" type="text" placeholder={`Enter ${typeProfile.labels.approvalAuthority.toLowerCase()}`} value={formData.approvalAuthority} onChange={(event) => updateField('approvalAuthority', event.target.value)} error={errors.approvalAuthority} />
-                </Field>
-              </div>
-            </SectionCard>
-
-            <SectionCard id="contact" title="8. Contact Details" description="Capture the person responsible for project-level enquiries.">
-              <div className="ppf-form-row">
-                <Field label="Contact Person Name" required error={errors.contactPersonName} icon={UserRound}>
-                  <TextInput name="contactPersonName" type="text" placeholder="Enter contact person name" value={formData.contactPersonName} onChange={(event) => updateField('contactPersonName', event.target.value)} error={errors.contactPersonName} />
-                </Field>
-                <Field label="Phone Number" required error={errors.phoneNumber} icon={Phone}>
-                  <TextInput name="phoneNumber" type="tel" placeholder="Enter phone number" value={formData.phoneNumber} onChange={(event) => updateField('phoneNumber', event.target.value)} error={errors.phoneNumber} />
-                </Field>
-                <Field label="Email" required error={errors.email} icon={Mail}>
-                  <TextInput name="email" type="email" placeholder="Enter email address" value={formData.email} onChange={(event) => updateField('email', event.target.value)} error={errors.email} />
-                </Field>
-              </div>
-
-              <div className="ppf-admin-contact-card">
-                <div className="ppf-admin-contact-head">
-                  <div>
-                    <h3 className="ppf-admin-contact-title">Contact Display on Website</h3>
-                    <p className="ppf-admin-contact-subtitle">Decide whether the project detail page should show the original contact, company contact, or a custom contact.</p>
-                  </div>
-                </div>
-                <div className="ppf-toggle-wrapper">
-                  <button
-                    type="button"
-                    className={`ppf-toggle ${formData.contactDisplayMode === 'original' ? 'on' : ''}`}
-                    onClick={() => setContactDisplayMode(formData.contactDisplayMode === 'original' ? (isAdminPath ? 'company' : 'custom') : 'original')}
-                    aria-pressed={formData.contactDisplayMode === 'original'}
-                  />
-                  <span className="ppf-toggle-label">Show original project contact details</span>
-                </div>
-                {formData.contactDisplayMode !== 'original' ? (
-                  <div className="ppf-radio-group" style={{ marginTop: 12 }}>
-                    {isAdminPath ? (
-                      <label className="ppf-radio-label" htmlFor="apf-contact-company">
-                        <input
-                          type="radio"
-                          id="apf-contact-company"
-                          name="apf-contact-mode"
-                          checked={formData.contactDisplayMode === 'company'}
-                          onChange={() => setContactDisplayMode('company')}
-                        />
-                        Use company contact details
-                      </label>
-                    ) : null}
-                    <label className="ppf-radio-label" htmlFor="apf-contact-custom">
-                      <input
-                        type="radio"
-                        id="apf-contact-custom"
-                        name="apf-contact-mode"
-                        checked={formData.contactDisplayMode === 'custom'}
-                        onChange={() => setContactDisplayMode('custom')}
-                      />
-                      Use custom contact details
-                    </label>
-                  </div>
-                ) : null}
-                {formData.contactDisplayMode === 'custom' ? (
-                  <div className="ppf-form-row">
-                    <Field label="Custom Contact Name" required error={errors.customContactName} icon={UserRound}>
-                      <TextInput name="customContactName" type="text" placeholder="Enter custom contact name" value={formData.customContactName} onChange={(event) => updateField('customContactName', event.target.value)} error={errors.customContactName} />
-                    </Field>
-                    <Field label="Custom Phone" required error={errors.customContactPhone} icon={Phone}>
-                      <TextInput name="customContactPhone" type="tel" placeholder="Enter custom phone number" value={formData.customContactPhone} onChange={(event) => updateField('customContactPhone', event.target.value)} error={errors.customContactPhone} />
-                    </Field>
-                    <Field label="Custom Email" required error={errors.customContactEmail} icon={Mail}>
-                      <TextInput name="customContactEmail" type="email" placeholder="Enter custom email address" value={formData.customContactEmail} onChange={(event) => updateField('customContactEmail', event.target.value)} error={errors.customContactEmail} />
-                    </Field>
-                  </div>
-                ) : null}
-              </div>
-            </SectionCard>
+            {renderStep()}
 
             {statusMessage ? <p className="apf-status-message">{statusMessage}</p> : null}
 
             <div className="ppf-nav-buttons">
               <div>
-                <button type="button" className="ppf-btn-back" onClick={resetForm}>
-                  Reset Form
-                </button>
+                {currentStep > 1 ? (
+                  <button type="button" className="ppf-btn-back" onClick={goBack}>
+                    Back
+                  </button>
+                ) : null}
               </div>
               <div>
-                <button type="submit" className="ppf-btn-submit" disabled={submitting}>
-                  {submitting ? 'Saving Project...' : 'Submit Project'}
-                </button>
+                {currentStep < totalSteps ? (
+                  <button type="button" className="ppf-btn-continue" onClick={goNext}>
+                    Continue
+                  </button>
+                ) : (
+                  <button type="submit" className="ppf-btn-submit" disabled={submitting}>
+                    {submitting ? 'Saving Project...' : 'Submit Project'}
+                  </button>
+                )}
               </div>
             </div>
           </form>

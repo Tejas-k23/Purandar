@@ -25,31 +25,6 @@
   color: var(--gray-500);
 }
 
-.apf-slug-box {
-  min-width: 240px;
-  padding: var(--space-4);
-  border-radius: var(--radius-xl);
-  background: linear-gradient(180deg, var(--white) 0%, var(--warm-white) 100%);
-  border: 1px solid rgba(255, 107, 0, 0.14);
-  box-shadow: var(--shadow-sm);
-}
-
-.apf-slug-label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 0.76rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-  color: var(--gray-500);
-}
-
-.apf-slug-value {
-  display: block;
-  font-size: 0.88rem;
-  word-break: break-word;
-  color: var(--indigo-700);
-}
 
 .apf-section-card {
   padding: var(--space-6);
@@ -156,11 +131,6 @@
 @media (max-width: 900px) {
   .apf-hero {
     flex-direction: column;
-  }
-
-  .apf-slug-box {
-    min-width: 0;
-    width: 100%;
   }
 }
 

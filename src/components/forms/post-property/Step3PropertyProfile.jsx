@@ -69,7 +69,7 @@ function Toggle({ label, value, onChange }) {
 }
 
 /* property type classifiers */
-const FLAT_TYPES = ['Flat / Apartment', '1 RK / Studio Apartment', 'Builder Floor', 'Serviced Apartment'];
+const FLAT_TYPES = ['Flat / Apartment', '1 RK / Studio Apartment', 'Builder Floor', 'Serviced Apartment', 'PG / Hostel'];
 const HOUSE_TYPES = ['Independent House / Villa', 'Farmhouse'];
 const PLOT_TYPES = ['Plot / Land', 'Commercial Land'];
 const COMMERCIAL_TYPES = ['Office Space', 'Shop / Showroom'];
@@ -90,6 +90,7 @@ export default function Step3PropertyProfile({ formData, updateField, errors }) 
     const isRent = formData.intent === 'rent';
     const isPG = formData.intent === 'pg';
     const isSell = formData.intent === 'sell';
+    const isApartmentType = ['Flat / Apartment', '1 RK / Studio Apartment', 'Serviced Apartment'].includes(formData.propertyType);
 
     const autoPerSqFt = (formData.price && formData.totalArea)
         ? Math.round(Number(formData.price) / Number(formData.totalArea))
@@ -269,6 +270,28 @@ export default function Step3PropertyProfile({ formData, updateField, errors }) 
                             </button>
                         ))}
                     </div>
+
+                    {isRent && isApartmentType ? (
+                        <>
+                            <p className="ppf-section-label">Tenant Preference</p>
+                            <div className="ppf-pill-group">
+                                {[
+                                    { label: 'Family', value: 'family' },
+                                    { label: 'Bachelors', value: 'bachelors' },
+                                    { label: 'Anyone', value: '' },
+                                ].map((option) => (
+                                    <button
+                                        key={option.label}
+                                        type="button"
+                                        className={`ppf-pill ${formData.tenantPreference === option.value ? 'active' : ''}`}
+                                        onClick={() => updateField('tenantPreference', option.value)}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    ) : null}
                 </>
             )}
 

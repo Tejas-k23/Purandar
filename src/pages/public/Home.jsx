@@ -74,6 +74,7 @@ const SearchWidget = () => {
             <option value="Flat / Apartment">Apartments</option>
             <option value="Independent House / Villa">Villas</option>
             <option value="Plot / Land">Plots</option>
+            <option value="PG / Hostel">PG / Hostel</option>
             <option value="Office Space">Office Space</option>
             <option value="Shop / Showroom">Shop / Showroom</option>
           </select>

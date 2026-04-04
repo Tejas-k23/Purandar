@@ -13,6 +13,7 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
   const images = useMemo(() => (property.photos?.length ? property.photos : [getFallbackImage()]), [property]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const contact = useMemo(() => resolveContact(property), [property]);
+  const showBachelorsBadge = property.propertyType === 'PG / Hostel' || property.tenantPreference === 'bachelors';
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -66,6 +67,7 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
           <div className="card-badges-stack">
             {property.status === 'approved' ? <div className="verified-badge"><ShieldCheck className="w-3.5 h-3.5" /><span>Verified</span></div> : null}
             <div className="listing-mode-badge">{property.intent === 'rent' ? 'For Rent' : 'For Sale'}</div>
+            {showBachelorsBadge ? <div className="listing-mode-badge listing-mode-badge--bachelors">Bachelors Allowed</div> : null}
           </div>
           {onToggleSave ? (
             <button className={`save-btn ${isSaved ? 'saved' : ''}`} onClick={(event) => { event.stopPropagation(); onToggleSave(property._id); }}>
