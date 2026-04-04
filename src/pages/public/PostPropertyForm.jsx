@@ -22,6 +22,8 @@ const initialState = {
   bedrooms: '', bathrooms: '', balconies: '', totalArea: '', areaUnit: 'sq.ft', carpetArea: '', furnishing: '', availability: '', possessionMonth: '', possessionYear: '', propertyAge: '', ownership: '', price: '', priceNegotiable: false,
   securityDeposit: '', maintenance: '', mealsIncluded: false, plotArea: '', plotLength: '', plotWidth: '', boundaryWall: '', openSides: '', constructionDone: '', superBuiltUpArea: '', washroom: '', personalWashroom: '', pantry: '', coveredParking: '', openParking: '', warehouseHeight: '', loadingUnloading: '', floorsInProperty: '', floorArea: '',
   tenantPreference: '',
+  latitude: '',
+  longitude: '',
   photos: [], videoUrl: '', audioURL: '', societyAmenities: [], flatAmenities: [], facing: '', overlooking: [], waterSupply: '', gatedCommunity: '', description: '',
 };
 

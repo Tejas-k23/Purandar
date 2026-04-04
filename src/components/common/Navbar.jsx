@@ -43,8 +43,8 @@ export default function Navbar() {
   const mobileTabs = [
     { label: 'Home', to: '/', icon: Home, end: true },
     { label: 'Buy', to: '/buy', icon: Building2 },
+    { label: 'Add', to: '/post-property', icon: PlusCircle, action: true },
     { label: 'Rent', to: '/rent', icon: KeyRound },
-    { label: 'Saved', to: isAuthenticated ? '/profile/saved' : '/login', icon: Heart, state: isAuthenticated ? undefined : authRouteState },
     { label: isAuthenticated ? 'Profile' : 'Login', to: isAuthenticated ? '/profile' : '/login', icon: User, state: isAuthenticated ? undefined : authRouteState },
   ];
 
@@ -116,8 +116,8 @@ export default function Navbar() {
       </nav>
 
       <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
-        {mobileTabs.map(({ label, to, icon: Icon, end, state }) => (
-          <NavLink key={label} to={to} state={state} end={end} className={({ isActive }) => `mobile-tab-link ${isActive ? 'active' : ''}`}>
+        {mobileTabs.map(({ label, to, icon: Icon, end, state, action }) => (
+          <NavLink key={label} to={to} state={state} end={end} className={({ isActive }) => `mobile-tab-link ${action ? 'mobile-tab-link--action' : ''} ${isActive ? 'active' : ''}`}>
             <Icon className="w-5 h-5" />
             <span>{label}</span>
           </NavLink>

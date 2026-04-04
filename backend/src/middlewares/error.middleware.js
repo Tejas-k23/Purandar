@@ -1,3 +1,5 @@
+import { env } from '../config/env.js';
+
 export const notFound = (req, res) => {
   res.status(404).json({
     success: false,
@@ -5,8 +7,43 @@ export const notFound = (req, res) => {
   });
 };
 
-export const errorHandler = (error, _req, res, _next) => {
+export const errorHandler = (error, req, res, _next) => {
   const statusCode = error.statusCode || 500;
+
+  if (error.name === 'MulterError') {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      const isPropertyUpload = req.originalUrl?.includes('/properties/') && req.originalUrl?.includes('upload-images');
+      const message = isPropertyUpload
+        ? `File size exceeds ${env.MEDIA_IMAGE_MAX_MB}MB`
+        : `File size exceeds ${env.MEDIA_VIDEO_MAX_MB}MB`;
+      return res.status(413).json({
+        success: false,
+        message,
+      });
+    }
+
+    if (error.code === 'LIMIT_FILE_COUNT' || error.code === 'LIMIT_UNEXPECTED_FILE') {
+      const isPropertyUpload = req.originalUrl?.includes('/properties/') && req.originalUrl?.includes('upload-images');
+      const isProjectUpload = req.originalUrl?.includes('/projects/') && req.originalUrl?.includes('upload-media');
+      let message = 'Too many files';
+
+      if (isPropertyUpload) {
+        message = 'Max 8 images allowed';
+      } else if (isProjectUpload) {
+        message = error.field === 'videos' ? 'Max 2 videos allowed' : 'Max 12 images allowed';
+      }
+
+      return res.status(400).json({
+        success: false,
+        message,
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: error.message || 'Upload failed',
+    });
+  }
 
   if (error.name === 'ValidationError') {
     return res.status(400).json({

@@ -4,6 +4,8 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import projectService from '../../services/projectService';
 import { getAmenityMeta } from '../../utils/amenityMeta';
 import { getProjectTypeProfile, PROJECT_TYPE_PROFILES } from '../../utils/projectTypeConfig';
+import MapPickerModal from '../../components/common/MapPickerModal';
+import env from '../../config/env';
 import './PostPropertyForm.css';
 import './AddProjectForm.css';
 
@@ -48,6 +50,8 @@ const initialState = {
   area: '',
   pincode: '',
   mapLink: '',
+  latitude: '',
+  longitude: '',
   startingPrice: '',
   endingPrice: '',
   priceUnit: 'Lakh',
@@ -270,6 +274,7 @@ export default function AddProjectForm() {
   const [formData, setFormData] = useState(initialState);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
+  const [mapOpen, setMapOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -535,6 +540,32 @@ export default function AddProjectForm() {
             <Field label="Google Map Link / Coordinates" error={errors.mapLink} hint="Optional. Paste a Google Maps URL or coordinates like `18.4529, 73.9777`." icon={MapPin}>
               <TextInput name="mapLink" type="text" placeholder="https://maps.google.com/... or 18.4529, 73.9777" value={formData.mapLink} onChange={(event) => updateField('mapLink', event.target.value)} error={errors.mapLink} />
             </Field>
+
+            <div className="ppf-field">
+              <button
+                type="button"
+                className="ppf-pill"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                onClick={() => setMapOpen(true)}
+                disabled={!env.mapboxAccessToken}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                Mark on map
+              </button>
+              {formData.latitude && formData.longitude ? (
+                <p className="ppf-field-hint" style={{ marginTop: 8 }}>
+                  Selected: {Number(formData.latitude).toFixed(6)}, {Number(formData.longitude).toFixed(6)}
+                </p>
+              ) : null}
+              {!env.mapboxAccessToken ? (
+                <p className="ppf-input-error" style={{ marginTop: 8 }}>
+                  Mapbox token missing. Add `VITE_MAPBOX_ACCESS_TOKEN` to enable map selection.
+                </p>
+              ) : null}
+            </div>
           </SectionCard>
         );
       case 'pricing':
@@ -795,6 +826,21 @@ export default function AddProjectForm() {
             {renderStep()}
 
             {statusMessage ? <p className="apf-status-message">{statusMessage}</p> : null}
+
+            <MapPickerModal
+              open={mapOpen}
+              title="Mark project on map"
+              initialLocation={(formData.latitude && formData.longitude)
+                ? { latitude: Number(formData.latitude), longitude: Number(formData.longitude) }
+                : undefined}
+              onClose={() => setMapOpen(false)}
+              onSelect={({ latitude, longitude }) => {
+                updateField('latitude', latitude);
+                updateField('longitude', longitude);
+                updateField('mapLink', `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+                setMapOpen(false);
+              }}
+            />
 
             <div className="ppf-nav-buttons">
               <div>

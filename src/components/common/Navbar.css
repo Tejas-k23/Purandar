@@ -369,6 +369,19 @@
     transition: background-color 0.2s, color 0.2s, transform 0.2s;
 }
 
+.mobile-tab-link--action {
+    background: linear-gradient(135deg, #ff8c38 0%, #ff6b00 100%);
+    color: var(--white);
+    box-shadow: 0 10px 24px rgba(255, 107, 0, 0.35);
+    transform: translateY(-8px);
+    border: 1px solid rgba(255, 107, 0, 0.35);
+}
+
+.mobile-tab-link--action.active {
+    background: linear-gradient(135deg, #ff6b00 0%, #e85500 100%);
+    color: var(--white);
+}
+
 .mobile-tab-link.active {
     color: var(--white);
     background: var(--color-primary);

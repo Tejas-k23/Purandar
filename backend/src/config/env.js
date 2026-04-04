@@ -2,7 +2,16 @@
 
 dotenv.config();
 
-const required = ['MONGODB_URI', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
+const required = [
+  'MONGODB_URI',
+  'JWT_ACCESS_SECRET',
+  'JWT_REFRESH_SECRET',
+  'R2_ACCOUNT_ID',
+  'R2_ACCESS_KEY_ID',
+  'R2_SECRET_ACCESS_KEY',
+  'R2_BUCKET_NAME',
+  'R2_PUBLIC_URL',
+];
 
 for (const key of required) {
   if (!process.env[key]) {
@@ -26,5 +35,13 @@ export const env = {
   COMPANY_CONTACT_NAME: process.env.COMPANY_CONTACT_NAME || 'Purandar Properties',
   COMPANY_CONTACT_PHONE: process.env.COMPANY_CONTACT_PHONE || '',
   COMPANY_CONTACT_EMAIL: process.env.COMPANY_CONTACT_EMAIL || '',
+  R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
+  R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
+  R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
+  R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
+  R2_PUBLIC_URL: process.env.R2_PUBLIC_URL,
+  R2_ENDPOINT: process.env.R2_ENDPOINT || `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  MEDIA_IMAGE_MAX_MB: Number(process.env.MEDIA_IMAGE_MAX_MB || 5),
+  MEDIA_VIDEO_MAX_MB: Number(process.env.MEDIA_VIDEO_MAX_MB || 50),
 };
 

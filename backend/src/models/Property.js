@@ -105,6 +105,16 @@ const propertySchema = new mongoose.Schema(
     floorsInProperty: { type: Number, default: null },
     floorArea: { type: Number, default: null },
     photos: { type: [String], default: [] },
+    images: {
+      type: [
+        {
+          url: { type: String, trim: true, required: true },
+          key: { type: String, trim: true, required: true },
+          type: { type: String, enum: ['image'], default: 'image' },
+        },
+      ],
+      default: [],
+    },
     videoUrl: { type: String, trim: true, default: '' },
     audioURL: { type: String, trim: true, default: '' },
     societyAmenities: { type: [String], default: [] },

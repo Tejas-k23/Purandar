@@ -11,9 +11,20 @@ import { getSitemapXml } from './controllers/blog.controller.js';
 
 const app = express();
 
+const allowedOrigins = [
+  env.CLIENT_URL,
+  'https://purandar-pi.vercel.app',
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   }),
 );

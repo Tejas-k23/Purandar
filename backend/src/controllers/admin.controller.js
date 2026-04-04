@@ -3,6 +3,7 @@ import Property from '../models/Property.js';
 import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { deleteManyFromR2 } from '../utils/r2.js';
 export {
   listAdminBlogs,
   getAdminBlogById,
@@ -138,6 +139,9 @@ export const deleteAdminProperty = asyncHandler(async (req, res) => {
   if (!property) {
     throw new ApiError(404, 'Property not found');
   }
+
+  const imageKeys = (property.images || []).map((image) => image.key).filter(Boolean);
+  await deleteManyFromR2(imageKeys);
 
   await Enquiry.deleteMany({ property: property._id });
 

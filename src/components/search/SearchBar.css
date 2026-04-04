@@ -113,7 +113,7 @@
 
 .filter-chip.active {
     border-color: var(--color-primary);
-    background-color: var(--color-primary);
+    background-color: #ff6b0073;
     box-shadow: 0 6px 14px rgba(255, 107, 0, 0.18);
 }
 
@@ -470,7 +470,6 @@
     }
 
     .search-actions {
-        grid-template-columns: 1fr;
         gap: 0.5rem;
     }
 

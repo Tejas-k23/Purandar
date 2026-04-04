@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { MapPinned } from 'lucide-react';
+import MapPickerModal from '../../common/MapPickerModal';
+import env from '../../../config/env';
 
 const cityData = {
     'Pune': [
@@ -98,6 +100,9 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
     const isPlot = formData.propertyType === 'Plot / Land' || formData.propertyType === 'Commercial Land';
     const isHouse = formData.propertyType === 'Independent House / Villa';
     const showFloorNo = !isPlot && !isHouse;
+    const [mapOpen, setMapOpen] = useState(false);
+    const hasCoords = formData.latitude && formData.longitude;
+    const mapDisabled = !env.mapboxAccessToken;
 
     return (
         <div className="ppf-step-content" key="step2">
@@ -206,7 +211,8 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                     type="button"
                     className="ppf-pill"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
-                    onClick={() => {/* Map integration placeholder */}}
+                    onClick={() => setMapOpen(true)}
+                    disabled={mapDisabled}
                 >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -214,7 +220,29 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                     </svg>
                     Mark on map
                 </button>
+                {hasCoords ? (
+                    <p className="ppf-field-hint" style={{ marginTop: 8 }}>
+                        Selected: {Number(formData.latitude).toFixed(6)}, {Number(formData.longitude).toFixed(6)}
+                    </p>
+                ) : null}
+                {mapDisabled ? (
+                    <p className="ppf-input-error" style={{ marginTop: 8 }}>
+                        Mapbox token missing. Add `VITE_MAPBOX_ACCESS_TOKEN` to enable map selection.
+                    </p>
+                ) : null}
             </div>
+
+            <MapPickerModal
+                open={mapOpen}
+                title="Mark property on map"
+                initialLocation={hasCoords ? { latitude: Number(formData.latitude), longitude: Number(formData.longitude) } : undefined}
+                onClose={() => setMapOpen(false)}
+                onSelect={({ latitude, longitude }) => {
+                    updateField('latitude', latitude);
+                    updateField('longitude', longitude);
+                    setMapOpen(false);
+                }}
+            />
         </div>
     );
 }

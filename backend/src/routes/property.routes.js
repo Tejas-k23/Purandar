@@ -7,10 +7,16 @@ import {
   getPropertyStats,
   listProperties,
   listPropertyEnquiries,
+  uploadPropertyImages,
   unlockSellerDetails,
   updateProperty,
 } from '../controllers/property.controller.js';
 import { authorize, protect } from '../middlewares/auth.middleware.js';
+import { uploadRateLimit } from '../middlewares/rateLimit.middleware.js';
+import { requireMultipart, requireStandardHeaders } from '../middlewares/security.middleware.js';
+import { createUpload } from '../middlewares/upload.middleware.js';
+import { env } from '../config/env.js';
+import { MEGABYTE } from '../utils/media.js';
 
 const router = Router();
 
@@ -19,7 +25,20 @@ router.get('/stats/mine', protect, getPropertyStats);
 router.get('/:id', getPropertyById);
 router.post('/', protect, authorize('user', 'agent', 'admin'), createProperty);
 router.patch('/:id', protect, authorize('user', 'agent', 'admin'), updateProperty);
-router.delete('/:id', protect, authorize('user', 'agent', 'admin'), deleteProperty);
+router.post(
+  '/:id/upload-images',
+  protect,
+  authorize('admin'),
+  uploadRateLimit,
+  requireStandardHeaders,
+  requireMultipart,
+  createUpload({
+    maxFileSizeBytes: env.MEDIA_IMAGE_MAX_MB * MEGABYTE,
+    maxFiles: 8,
+  }).array('images', 8),
+  uploadPropertyImages,
+);
+router.delete('/:id', protect, authorize('admin'), deleteProperty);
 router.post('/:id/seller-details', protect, authorize('user', 'agent', 'admin'), unlockSellerDetails);
 router.post('/:id/enquiries', createEnquiry);
 router.get('/:id/enquiries', protect, authorize('user', 'agent', 'admin'), listPropertyEnquiries);
