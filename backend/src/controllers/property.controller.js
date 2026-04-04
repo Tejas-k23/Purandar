@@ -303,11 +303,20 @@ export const uploadPropertyImages = asyncHandler(async (req, res) => {
   const uploads = files.map(async (file) => {
     const filename = buildFileName(file.originalname);
     const key = `properties/${property._id}/images/${filename}`;
-    await uploadToR2({
-      key,
-      body: file.buffer,
-      contentType: file.mimetype,
-    });
+    try {
+      await uploadToR2({
+        key,
+        body: file.buffer,
+        contentType: file.mimetype,
+      });
+    } catch (error) {
+      console.error('R2 upload failed:', error);
+      throw new ApiError(502, 'Upload failed', {
+        code: error?.code,
+        name: error?.name,
+        message: error?.message,
+      });
+    }
 
     return {
       url: toPublicUrl(key),

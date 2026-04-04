@@ -175,11 +175,20 @@ export const uploadProjectMedia = asyncHandler(async (req, res) => {
   const imageUploads = imageFiles.map(async (file) => {
     const filename = buildFileName(file.originalname);
     const key = `projects/${project._id}/images/${filename}`;
-    await uploadToR2({
-      key,
-      body: file.buffer,
-      contentType: file.mimetype,
-    });
+    try {
+      await uploadToR2({
+        key,
+        body: file.buffer,
+        contentType: file.mimetype,
+      });
+    } catch (error) {
+      console.error('R2 image upload failed:', error);
+      throw new ApiError(502, 'Upload failed', {
+        code: error?.code,
+        name: error?.name,
+        message: error?.message,
+      });
+    }
 
     return {
       url: toPublicUrl(key),
@@ -191,11 +200,20 @@ export const uploadProjectMedia = asyncHandler(async (req, res) => {
   const videoUploads = videoFiles.map(async (file) => {
     const filename = buildFileName(file.originalname);
     const key = `projects/${project._id}/videos/${filename}`;
-    await uploadToR2({
-      key,
-      body: file.buffer,
-      contentType: file.mimetype,
-    });
+    try {
+      await uploadToR2({
+        key,
+        body: file.buffer,
+        contentType: file.mimetype,
+      });
+    } catch (error) {
+      console.error('R2 video upload failed:', error);
+      throw new ApiError(502, 'Upload failed', {
+        code: error?.code,
+        name: error?.name,
+        message: error?.message,
+      });
+    }
 
     return {
       url: toPublicUrl(key),
