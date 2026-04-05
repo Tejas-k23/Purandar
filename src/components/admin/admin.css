@@ -531,5 +531,68 @@
     color: var(--gray-600);
 }
 
+.admin-table-link {
+    color: var(--indigo-600);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.admin-table-link:hover {
+    text-decoration: underline;
+}
+
+.admin-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.admin-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.admin-filter-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.admin-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.admin-filter-chip {
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    color: var(--gray-600);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-filter-chip:hover {
+    border-color: var(--indigo-400);
+    color: var(--indigo-600);
+    background: var(--indigo-50);
+}
+
+.admin-filter-chip.active {
+    border-color: var(--indigo-600);
+    color: var(--indigo-600);
+    background: var(--indigo-50);
+}
+
 
 

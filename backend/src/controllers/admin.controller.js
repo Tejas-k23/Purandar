@@ -141,7 +141,8 @@ export const deleteAdminProperty = asyncHandler(async (req, res) => {
   }
 
   const imageKeys = (property.images || []).map((image) => image.key).filter(Boolean);
-  await deleteManyFromR2(imageKeys);
+  const videoKeys = (property.videos || []).map((video) => video.key).filter(Boolean);
+  await deleteManyFromR2([...imageKeys, ...videoKeys]);
 
   await Enquiry.deleteMany({ property: property._id });
 
@@ -163,6 +164,7 @@ export const getEnquiries = asyncHandler(async (_req, res) => {
   const enquiries = await Enquiry.find()
     .sort({ createdAt: -1 })
     .populate('property', 'title city locality')
+    .populate('project', 'projectName city area slug')
     .populate('propertyOwner', 'name email phone')
     .populate('user', 'name email phone');
 

@@ -4,7 +4,14 @@ import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { env } from '../config/env.js';
-import { buildFileName, getImageUrl, getPropertyImagePath, validateImageFile } from '../utils/media.js';
+import {
+  buildFileName,
+  getImageUrl,
+  getPropertyImagePath,
+  getPropertyVideoPath,
+  validateImageFile,
+  validateVideoFile,
+} from '../utils/media.js';
 import { deleteManyFromR2, uploadToR2 } from '../utils/r2.js';
 
 const numericFields = [
@@ -263,9 +270,12 @@ export const updateProperty = asyncHandler(async (req, res) => {
 export const deleteProperty = asyncHandler(async (req, res) => {
   const property = await getOwnedProperty(req.params.id, req.user);
   const imageKeys = (property.images || []).map((image) => image.key).filter(Boolean);
-  await deleteManyFromR2(imageKeys);
+  const videoKeys = (property.videos || []).map((video) => video.key).filter(Boolean);
+  await deleteManyFromR2([...imageKeys, ...videoKeys]);
   property.images = [];
   property.photos = [];
+  property.videos = [];
+  property.videoUrl = '';
   property.status = 'archived';
   await property.save();
 
@@ -335,6 +345,72 @@ export const uploadPropertyImages = asyncHandler(async (req, res) => {
     message: 'Images uploaded successfully',
     data: {
       images: property.images,
+    },
+  });
+});
+
+export const uploadPropertyVideos = asyncHandler(async (req, res) => {
+  const property = await Property.findById(req.params.id);
+
+  if (!property) {
+    throw new ApiError(404, 'Property not found');
+  }
+
+  const files = req.files || [];
+  if (!files.length) {
+    throw new ApiError(400, 'No files uploaded');
+  }
+
+  const existingCount = property.videos?.length || 0;
+  const totalCount = existingCount + files.length;
+  if (totalCount > 2) {
+    throw new ApiError(400, 'Max 2 videos allowed');
+  }
+
+  for (const file of files) {
+    const error = validateVideoFile(file);
+    if (error) {
+      throw new ApiError(400, error);
+    }
+  }
+
+  const uploads = files.map(async (file) => {
+    const filename = buildFileName(file.originalname);
+    const key = getPropertyVideoPath(property._id, filename);
+    try {
+      await uploadToR2({
+        key,
+        body: file.buffer,
+        contentType: file.mimetype,
+      });
+    } catch (error) {
+      console.error('R2 video upload failed:', error);
+      throw new ApiError(502, 'Upload failed', {
+        code: error?.code,
+        name: error?.name,
+        message: error?.message,
+      });
+    }
+
+    return {
+      url: getImageUrl(key),
+      key,
+      type: 'video',
+    };
+  });
+
+  const uploaded = await Promise.all(uploads);
+  property.videos = [...(property.videos || []), ...uploaded];
+  if (property.videos.length) {
+    property.videoUrl = property.videos[0].url;
+  }
+  await property.save();
+
+  res.status(201).json({
+    success: true,
+    message: 'Videos uploaded successfully',
+    data: {
+      videos: property.videos,
     },
   });
 });

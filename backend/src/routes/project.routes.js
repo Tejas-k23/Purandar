@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createProject,
+  createProjectEnquiry,
   deleteProject,
   getProjectById,
   listProjects,
@@ -29,6 +30,7 @@ router.post('/', protect, authorize('admin'), createProject);
 router.patch('/:id', protect, authorize('admin'), updateProject);
 router.patch('/:id/visibility', protect, authorize('admin'), toggleProjectVisibility);
 router.patch('/:id/featured', protect, authorize('admin'), toggleProjectFeatured);
+router.post('/:id/enquiries', createProjectEnquiry);
 router.post(
   '/:id/upload-media',
   protect,

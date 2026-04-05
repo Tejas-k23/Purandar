@@ -315,6 +315,8 @@ export default function AddProjectForm() {
             isLocal: false,
           })),
         });
+      } catch (error) {
+        setStatusMessage(error.message || 'Unable to load project details.');
       } finally {
         setLoading(false);
       }

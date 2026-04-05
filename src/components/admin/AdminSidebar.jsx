@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { BarChart3, CheckSquare, FileText, PlusSquare, ShieldCheck } from 'lucide-react';
+import { BarChart3, CheckSquare, FileText, Mail, PlusSquare, ShieldCheck } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const items = [
@@ -7,6 +7,7 @@ const items = [
   { label: 'Add Property', to: '/admin/properties/form', icon: PlusSquare },
   { label: 'Projects', to: '/admin/projects', icon: PlusSquare },
   { label: 'Add Project', to: '/admin/add-project', icon: PlusSquare },
+  { label: 'Enquiries', to: '/admin/enquiries', icon: Mail },
   { label: 'Blogs', to: '/admin/blogs', icon: FileText },
   { label: 'Property Approval', to: '/admin/properties/pending', icon: CheckSquare },
 ];

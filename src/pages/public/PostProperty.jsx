@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, Building2, FolderKanban, ShieldCheck, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
@@ -24,6 +24,7 @@ const options = [
 export default function PostProperty() {
   const { isAuthenticated } = useAuth();
   const loginTarget = '/login';
+  const [activeIndex, setActiveIndex] = useState(0);
 
   return (
     <section className="post-property-page" id="post-property-page">
@@ -40,8 +41,26 @@ export default function PostProperty() {
         </div>
 
         <div className="pp-right pp-choice-grid">
-          {options.map(({ title, description, points, to, icon: Icon }) => (
-            <article key={title} className="pp-choice-card">
+          <div className="pp-mobile-toggle" role="tablist" aria-label="Choose listing type">
+            {options.map(({ title }, index) => (
+              <button
+                key={title}
+                type="button"
+                className={`pp-mobile-toggle-btn ${activeIndex === index ? 'active' : ''}`}
+                onClick={() => setActiveIndex(index)}
+                role="tab"
+                aria-selected={activeIndex === index}
+              >
+                {title}
+              </button>
+            ))}
+          </div>
+          {options.map(({ title, description, points, to, icon: Icon }, index) => (
+            <article
+              key={title}
+              className={`pp-choice-card ${activeIndex === index ? 'pp-choice-card-active' : 'pp-choice-card-inactive'}`}
+              data-active={activeIndex === index ? 'true' : 'false'}
+            >
               <div className="pp-choice-icon"><Icon size={22} /></div>
               <h2 className="pp-form-title"><span className="heading-accent">{title.split(' ')[0]}</span> {title.split(' ').slice(1).join(' ')}</h2>
               <p className="pp-form-subtitle">{description}</p>

@@ -17,6 +17,25 @@ import ContactCard, { resolveContact } from '../../components/common/ContactCard
 import SeoManager from '../../components/common/SeoManager';
 import './PropertyDetails.css';
 
+const getYoutubeEmbedUrl = (rawUrl = '') => {
+  if (!rawUrl) return '';
+  try {
+    const url = new URL(rawUrl);
+    const host = url.hostname.replace('www.', '');
+    if (host === 'youtu.be') {
+      return url.pathname.length > 1 ? `https://www.youtube.com/embed/${url.pathname.slice(1)}` : '';
+    }
+    if (host.endsWith('youtube.com')) {
+      if (url.pathname.startsWith('/embed/')) return rawUrl;
+      const id = url.searchParams.get('v');
+      return id ? `https://www.youtube.com/embed/${id}` : '';
+    }
+  } catch (_error) {
+    return '';
+  }
+  return '';
+};
+
 export default function PropertyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -112,6 +131,7 @@ export default function PropertyDetails() {
   ].filter(Boolean);
   const seoDescription = property.description || summaryBits.join(' ');
   const primaryImage = getPropertyImageUrls(property)[0] || '';
+  const videoEmbedUrl = getYoutubeEmbedUrl(property.videoUrl || '');
   const pageUrl = `${window.location.origin}/property/${property._id}`;
   const schema = {
     '@context': 'https://schema.org',
@@ -156,6 +176,23 @@ export default function PropertyDetails() {
         <div className="pd-main">
           <button onClick={() => navigate(-1)} className="pd-back-btn">Back to listings</button>
           <PropertyGallery photos={property.photos} images={property.images} intent={property.intent} />
+          {property.videoUrl ? (
+            <div className="pd-card">
+              <h2 className="pd-section-title">Property Video</h2>
+              <div className="pd-video">
+                {videoEmbedUrl ? (
+                  <iframe
+                    title="Property video"
+                    src={videoEmbedUrl}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video controls src={property.videoUrl} />
+                )}
+              </div>
+            </div>
+          ) : null}
           <div className="pd-card"><PropertyTitleSection property={property} /></div>
           <div className="pd-card"><PropertyStatsBar property={property} /></div>
           <div className="pd-card"><PropertyDescription property={property} /></div>

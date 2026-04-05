@@ -9,6 +9,25 @@ import { getProjectTypeProfile } from '../../utils/projectTypeConfig';
 import { formatCompactPrice } from '../../utils/formatPrice';
 import './PropertyDetails.css';
 
+const getYoutubeEmbedUrl = (rawUrl = '') => {
+  if (!rawUrl) return '';
+  try {
+    const url = new URL(rawUrl);
+    const host = url.hostname.replace('www.', '');
+    if (host === 'youtu.be') {
+      return url.pathname.length > 1 ? `https://www.youtube.com/embed/${url.pathname.slice(1)}` : '';
+    }
+    if (host.endsWith('youtube.com')) {
+      if (url.pathname.startsWith('/embed/')) return rawUrl;
+      const id = url.searchParams.get('v');
+      return id ? `https://www.youtube.com/embed/${id}` : '';
+    }
+  } catch (_error) {
+    return '';
+  }
+  return '';
+};
+
 const AMENITY_ICONS = {
   Parking: CarFront,
   Gym: Dumbbell,
@@ -178,6 +197,8 @@ export default function ProjectDetails() {
   const [project, setProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [enquiry, setEnquiry] = useState({ name: '', email: '', phone: '', message: '' });
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -198,6 +219,17 @@ export default function ProjectDetails() {
     };
   }, [id]);
 
+  const submitEnquiry = async (event) => {
+    event.preventDefault();
+    try {
+      await projectService.createEnquiry(id, enquiry);
+      setMessage('Enquiry submitted successfully.');
+      setEnquiry({ name: '', email: '', phone: '', message: '' });
+    } catch (error) {
+      setMessage(error.message || 'Unable to submit enquiry.');
+    }
+  };
+
   const similar = useMemo(() => projects.filter((item) => item._id !== project?._id).slice(0, 3), [projects, project]);
 
   if (loading) return <Loader label="Loading project details..." />;
@@ -207,6 +239,7 @@ export default function ProjectDetails() {
   const ending = (project.endingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000);
   const profile = getProjectTypeProfile(project.projectType);
   const visibleContact = resolveContact(project);
+  const videoEmbedUrl = getYoutubeEmbedUrl(project.videoUrl || '');
 
   return (
     <div className="pd-page" style={{ paddingBottom: '3rem' }}>
@@ -214,6 +247,23 @@ export default function ProjectDetails() {
         <div className="pd-main">
           <button onClick={() => navigate(-1)} className="pd-back-btn"><ArrowLeft size={16} /> Back to projects</button>
           <Gallery images={project.projectImages} status={project.projectStatus} />
+          {project.videoUrl ? (
+            <div className="pd-card">
+              <h2 className="pd-section-title">Project Video</h2>
+              <div className="pd-video">
+                {videoEmbedUrl ? (
+                  <iframe
+                    title="Project video"
+                    src={videoEmbedUrl}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video controls src={project.videoUrl} />
+                )}
+              </div>
+            </div>
+          ) : null}
           <div className="pd-card">
             <div className="pd-title-row">
               <div className="pd-title">
@@ -260,6 +310,18 @@ export default function ProjectDetails() {
               if (visibleContact.phone) window.location.href = `tel:${visibleContact.phone}`;
             }}
           />
+
+          <div className="pd-contact-card">
+            <h3>Send an enquiry</h3>
+            <form onSubmit={submitEnquiry} style={{ display: 'grid', gap: 10 }}>
+              <input value={enquiry.name} onChange={(e) => setEnquiry({ ...enquiry, name: e.target.value })} placeholder="Your name" className="styled-input" />
+              <input value={enquiry.email} onChange={(e) => setEnquiry({ ...enquiry, email: e.target.value })} placeholder="Email" className="styled-input" />
+              <input value={enquiry.phone} onChange={(e) => setEnquiry({ ...enquiry, phone: e.target.value })} placeholder="Phone" className="styled-input" />
+              <textarea value={enquiry.message} onChange={(e) => setEnquiry({ ...enquiry, message: e.target.value })} placeholder="Message" className="styled-textarea" rows={4} />
+              <button type="submit" className="pd-contact-btn"><Phone size={16} /> Contact Developer</button>
+            </form>
+            {message ? <p style={{ marginTop: 12 }}>{message}</p> : null}
+          </div>
 
           <div className="pd-contact-card">
             <h3>Quick Contact</h3>

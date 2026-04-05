@@ -8,20 +8,20 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 export default function Step4MediaUpload({ formData, updateField }) {
     const [activeTab, setActiveTab] = useState('All');
     const [dragOver, setDragOver] = useState(false);
-    const [isRecording, setIsRecording] = useState(false);
-    const [audioURL, setAudioURL] = useState(formData.audioURL || '');
+    const [uploadError, setUploadError] = useState('');
     const fileInputRef = useRef(null);
-    const mediaRecorder = useRef(null);
-    const audioChunks = useRef([]);
 
     const photos = formData.photos || [];
 
     const handleFiles = useCallback((files) => {
+        setUploadError('');
         const validFiles = Array.from(files).filter(f => {
             if (!['image/jpeg', 'image/png', 'image/webp'].includes(f.type)) return false;
             if (f.size > MAX_FILE_SIZE) return false;
             return true;
         });
+
+        const rejectedCount = Array.from(files).length - validFiles.length;
 
         const remainingSlots = MAX_PHOTOS - photos.length;
         const toAdd = validFiles.slice(0, remainingSlots);
@@ -34,6 +34,12 @@ export default function Step4MediaUpload({ formData, updateField }) {
             isCover: photos.length === 0 && i === 0,
             isLocal: true,
         }));
+
+        if (rejectedCount > 0) {
+            setUploadError('Some files were skipped. Only JPG/PNG/WebP up to 5 MB are allowed.');
+        } else if (validFiles.length > remainingSlots) {
+            setUploadError(`You can upload up to ${MAX_PHOTOS} photos. Remove some to add more.`);
+        }
 
         updateField('photos', [...photos, ...newPhotos]);
     }, [photos, activeTab, updateField]);
@@ -62,43 +68,7 @@ export default function Step4MediaUpload({ formData, updateField }) {
 
     const filteredPhotos = activeTab === 'All'
         ? photos
-        : photos.filter(p => p.category === activeTab);
-
-    /* ── Audio Recording ── */
-    const startRecording = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder.current = new MediaRecorder(stream);
-            audioChunks.current = [];
-
-            mediaRecorder.current.ondataavailable = (e) => {
-                audioChunks.current.push(e.data);
-            };
-
-            mediaRecorder.current.onstop = () => {
-                const blob = new Blob(audioChunks.current, { type: 'audio/webm' });
-                const url = URL.createObjectURL(blob);
-                setAudioURL(url);
-                updateField('audioFile', blob);
-                updateField('audioURL', url);
-                stream.getTracks().forEach(t => t.stop());
-            };
-
-            mediaRecorder.current.start();
-            setIsRecording(true);
-        } catch (err) {
-            console.error('Mic access denied', err);
-        }
-    };
-
-    const stopRecording = () => {
-        if (mediaRecorder.current && mediaRecorder.current.state === 'recording') {
-            mediaRecorder.current.stop();
-            setIsRecording(false);
-        }
-    };
-
-    return (
+        : photos.filter(p => p.category === activeTab);\n\nreturn (
         <div className="ppf-step-content" key="step4">
             <h2 className="ppf-heading"><span className="ppf-heading-icon"><ImagePlus size={18} /></span>Add photos & media to attract more buyers</h2>
 
@@ -141,6 +111,9 @@ export default function Step4MediaUpload({ formData, updateField }) {
                     </span>
                 )}
             </div>
+            {uploadError ? (
+                <p className="ppf-input-error" style={{ marginBottom: 12 }}>{uploadError}</p>
+            ) : null}
 
             {/* ── Category Tabs ── */}
             <div className="ppf-photo-tabs">
@@ -182,7 +155,7 @@ export default function Step4MediaUpload({ formData, updateField }) {
 
             <hr className="ppf-divider" />
 
-            {/* ── Video Upload ── */}
+            {/* ── Video URL ── */}
             <div className="ppf-media-section">
                 <p className="ppf-media-section-title">
                     🎬 Video <span className="ppf-media-badge">Optional</span>
@@ -193,7 +166,7 @@ export default function Step4MediaUpload({ formData, updateField }) {
                         <input
                             className="ppf-input"
                             type="file"
-                            accept="video/*"
+                            accept="video/mp4,video/webm"
                             onChange={(e) => {
                                 if (e.target.files[0]) {
                                     updateField('videoFile', e.target.files[0]);
@@ -202,7 +175,7 @@ export default function Step4MediaUpload({ formData, updateField }) {
                         />
                     </div>
                     <div className="ppf-field">
-                        <label className="ppf-field-label">Or paste YouTube link</label>
+                        <label className="ppf-field-label">Paste YouTube link</label>
                         <input
                             className="ppf-input"
                             type="url"
@@ -213,63 +186,6 @@ export default function Step4MediaUpload({ formData, updateField }) {
                     </div>
                 </div>
             </div>
-
-            {/* ── Voice-over ── */}
-            <div className="ppf-media-section">
-                <p className="ppf-media-section-title">
-                    🎙️ Voice-over <span className="ppf-media-badge">Optional</span>
-                </p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--gray-500)', marginBottom: 12 }}>
-                    Record a short audio description of your property
-                </p>
-
-                <div className="ppf-record-controls">
-                    <button
-                        type="button"
-                        className={`ppf-record-btn ${isRecording ? 'recording' : ''}`}
-                        onClick={isRecording ? stopRecording : startRecording}
-                    >
-                        {isRecording ? (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                <rect x="6" y="6" width="12" height="12" rx="2" />
-                            </svg>
-                        ) : (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                <line x1="12" y1="19" x2="12" y2="23" />
-                                <line x1="8" y1="23" x2="16" y2="23" />
-                            </svg>
-                        )}
-                    </button>
-                    <span style={{ fontSize: '0.85rem', color: isRecording ? 'var(--red-500)' : 'var(--gray-500)' }}>
-                        {isRecording ? 'Recording… click to stop' : 'Click to record'}
-                    </span>
-                </div>
-
-                {audioURL && (
-                    <audio controls src={audioURL} style={{ marginTop: 12, width: '100%', maxWidth: 400 }} />
-                )}
-
-                <div style={{ marginTop: 12 }}>
-                    <label className="ppf-field-label">Or upload audio file</label>
-                    <input
-                        className="ppf-input"
-                        type="file"
-                        accept="audio/*"
-                        onChange={(e) => {
-                            if (e.target.files[0]) {
-                                const url = URL.createObjectURL(e.target.files[0]);
-                                updateField('audioFile', e.target.files[0]);
-                                updateField('audioURL', url);
-                                setAudioURL(url);
-                            }
-                        }}
-                    />
-                </div>
-            </div>
-
             {/* ── Tips Card ── */}
             <div className="ppf-tips-card">
                 <span className="ppf-tips-icon">💡</span>
@@ -281,4 +197,12 @@ export default function Step4MediaUpload({ formData, updateField }) {
         </div>
     );
 }
+
+
+
+
+
+
+
+
 

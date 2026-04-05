@@ -8,6 +8,7 @@ import {
   listProperties,
   listPropertyEnquiries,
   uploadPropertyImages,
+  uploadPropertyVideos,
   unlockSellerDetails,
   updateProperty,
 } from '../controllers/property.controller.js';
@@ -37,6 +38,19 @@ router.post(
     maxFiles: 8,
   }).array('images', 8),
   uploadPropertyImages,
+);
+router.post(
+  '/:id/upload-videos',
+  protect,
+  authorize('admin'),
+  uploadRateLimit,
+  requireStandardHeaders,
+  requireMultipart,
+  createUpload({
+    maxFileSizeBytes: env.MEDIA_VIDEO_MAX_MB * MEGABYTE,
+    maxFiles: 2,
+  }).array('videos', 2),
+  uploadPropertyVideos,
 );
 router.delete('/:id', protect, authorize('admin'), deleteProperty);
 router.post('/:id/seller-details', protect, authorize('user', 'agent', 'admin'), unlockSellerDetails);

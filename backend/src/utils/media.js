@@ -41,6 +41,19 @@ export const getPropertyImagePath = (propertyId, fileName) => {
   return `properties/${propertyId}/images/${safeName}`;
 };
 
+export const getPropertyVideoPath = (propertyId, fileName) => {
+  if (!propertyId || !fileName) {
+    throw new Error('Property id and file name are required to build video path.');
+  }
+
+  const safeName = sanitizeFileName(fileName);
+  if (!safeName) {
+    throw new Error('Invalid file name for video path.');
+  }
+
+  return `properties/${propertyId}/videos/${safeName}`;
+};
+
 export const getImageUrl = (storedPath = '') => {
   if (!storedPath) return '';
 

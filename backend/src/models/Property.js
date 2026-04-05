@@ -115,6 +115,16 @@ const propertySchema = new mongoose.Schema(
       ],
       default: [],
     },
+    videos: {
+      type: [
+        {
+          url: { type: String, trim: true, required: true },
+          key: { type: String, trim: true, required: true },
+          type: { type: String, enum: ['video'], default: 'video' },
+        },
+      ],
+      default: [],
+    },
     videoUrl: { type: String, trim: true, default: '' },
     audioURL: { type: String, trim: true, default: '' },
     societyAmenities: { type: [String], default: [] },

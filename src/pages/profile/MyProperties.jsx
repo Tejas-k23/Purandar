@@ -64,7 +64,7 @@ export default function MyProperties() {
                 </div>
                 <div className="property-location"><MapPin className="w-4 h-4" /><span>{[property.locality, property.city].filter(Boolean).join(', ')}</span></div>
                 <div className="property-actions">
-                  <button className="action-btn edit-btn" onClick={() => navigate(`/post-property?edit=${property._id}`)}><Pencil className="w-4 h-4" /> Edit</button>
+                  <button className="action-btn edit-btn" onClick={() => navigate(`/post-property/form?edit=${property._id}`)}><Pencil className="w-4 h-4" /> Edit</button>
                   <button className="action-btn delete-btn" onClick={() => archiveProperty(property._id)}><Trash2 className="w-4 h-4" /> Archive</button>
                 </div>
               </div>

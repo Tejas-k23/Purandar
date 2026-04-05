@@ -12,10 +12,13 @@ export const errorHandler = (error, req, res, _next) => {
 
   if (error.name === 'MulterError') {
     if (error.code === 'LIMIT_FILE_SIZE') {
-      const isPropertyUpload = req.originalUrl?.includes('/properties/') && req.originalUrl?.includes('upload-images');
-      const message = isPropertyUpload
+      const isPropertyImageUpload = req.originalUrl?.includes('/properties/') && req.originalUrl?.includes('upload-images');
+      const isPropertyVideoUpload = req.originalUrl?.includes('/properties/') && req.originalUrl?.includes('upload-videos');
+      const message = isPropertyImageUpload
         ? `File size exceeds ${env.MEDIA_IMAGE_MAX_MB}MB`
-        : `File size exceeds ${env.MEDIA_VIDEO_MAX_MB}MB`;
+        : isPropertyVideoUpload
+          ? `File size exceeds ${env.MEDIA_VIDEO_MAX_MB}MB`
+          : `File size exceeds ${env.MEDIA_VIDEO_MAX_MB}MB`;
       return res.status(413).json({
         success: false,
         message,
@@ -24,11 +27,14 @@ export const errorHandler = (error, req, res, _next) => {
 
     if (error.code === 'LIMIT_FILE_COUNT' || error.code === 'LIMIT_UNEXPECTED_FILE') {
       const isPropertyUpload = req.originalUrl?.includes('/properties/') && req.originalUrl?.includes('upload-images');
+      const isPropertyVideoUpload = req.originalUrl?.includes('/properties/') && req.originalUrl?.includes('upload-videos');
       const isProjectUpload = req.originalUrl?.includes('/projects/') && req.originalUrl?.includes('upload-media');
       let message = 'Too many files';
 
       if (isPropertyUpload) {
         message = 'Max 8 images allowed';
+      } else if (isPropertyVideoUpload) {
+        message = 'Max 2 videos allowed';
       } else if (isProjectUpload) {
         message = error.field === 'videos' ? 'Max 2 videos allowed' : 'Max 12 images allowed';
       }

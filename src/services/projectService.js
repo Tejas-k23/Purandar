@@ -37,6 +37,10 @@ const projectService = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+
+  createEnquiry(projectId, payload) {
+    return api.post(`/projects/${projectId}/enquiries`, payload);
+  },
 };
 
 export default projectService;

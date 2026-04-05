@@ -29,6 +29,14 @@ export const propertyService = {
     });
   },
 
+  uploadVideos(propertyId, files) {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('videos', file));
+    return api.post(`/properties/${propertyId}/upload-videos`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
   remove(propertyId) {
     return api.delete(`/properties/${propertyId}`);
   },

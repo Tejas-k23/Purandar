@@ -1,4 +1,5 @@
 import Project from '../models/Project.js';
+import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import slugify from '../utils/slugify.js';
@@ -263,5 +264,33 @@ export const deleteProject = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'Project deleted permanently',
+  });
+});
+
+export const createProjectEnquiry = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project || project.visible === false) {
+    throw new ApiError(404, 'Project not found');
+  }
+
+  const { name, email, phone, message } = req.body;
+  if (!name || !email) {
+    throw new ApiError(400, 'Name and email are required');
+  }
+
+  const enquiry = await Enquiry.create({
+    project: project._id,
+    user: req.user?._id || null,
+    name,
+    email,
+    phone,
+    message,
+    leadType: 'enquiry',
+  });
+
+  res.status(201).json({
+    success: true,
+    message: 'Enquiry submitted successfully',
+    data: enquiry,
   });
 });

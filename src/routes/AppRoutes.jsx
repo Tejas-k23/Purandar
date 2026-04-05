@@ -30,6 +30,8 @@ import AdminProperties from '../pages/admin/AdminProperties';
 import AdminProjects from '../pages/admin/AdminProjects';
 import AdminBlogs from '../pages/admin/AdminBlogs';
 import AdminBlogForm from '../pages/admin/AdminBlogForm';
+import ScrollToTop from '../components/common/ScrollToTop';
+import AdminEnquiries from '../pages/admin/AdminEnquiries';
 
 export default function AppRoutes() {
   const location = useLocation();
@@ -37,6 +39,7 @@ export default function AppRoutes() {
 
   return (
     <>
+      <ScrollToTop />
       <Routes location={backgroundLocation || location}>
         <Route path="/" element={<Home />} />
         <Route path="/buy" element={<BuyPage />} />
@@ -68,6 +71,7 @@ export default function AppRoutes() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="enquiries" element={<AdminEnquiries />} />
             <Route path="properties" element={<AdminProperties />} />
             <Route path="properties/form" element={<PostPropertyForm />} />
             <Route path="projects" element={<AdminProjects />} />

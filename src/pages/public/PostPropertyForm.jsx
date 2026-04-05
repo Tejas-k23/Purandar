@@ -25,7 +25,8 @@ const initialState = {
   tenantPreference: '',
   latitude: '',
   longitude: '',
-  photos: [], videoUrl: '', audioURL: '', societyAmenities: [], flatAmenities: [], facing: '', overlooking: [], waterSupply: '', gatedCommunity: '', description: '',
+  photos: [], videoUrl: '', societyAmenities: [], flatAmenities: [], facing: '', overlooking: [], waterSupply: '', gatedCommunity: '', description: '',
+  videoFile: null,
 };
 
 const STEPS = [
@@ -116,6 +117,8 @@ export default function PostPropertyForm() {
             photos: mapPhotosForForm(property.photos),
           },
         });
+      } catch (error) {
+        setStatusMessage(error.message || 'Unable to load property details.');
       } finally {
         setLoading(false);
       }
@@ -157,7 +160,7 @@ export default function PostPropertyForm() {
         return;
       }
 
-      const payload = buildPayload(formData);
+      const { videoFile, ...payload } = buildPayload(formData);
       let propertyId = editId;
       if (editId) {
         const response = await propertyService.update(editId, payload);
@@ -172,6 +175,10 @@ export default function PostPropertyForm() {
       const newImages = (formData.photos || []).filter((photo) => photo?.isLocal && photo?.file);
       if (isAdmin && propertyId && newImages.length) {
         await propertyService.uploadImages(propertyId, newImages.map((photo) => photo.file));
+      }
+
+      if (isAdmin && propertyId && formData.videoFile) {
+        await propertyService.uploadVideos(propertyId, [formData.videoFile]);
       }
 
       setTimeout(() => navigate(isAdminPath ? '/admin/properties' : '/profile/properties'), 800);
