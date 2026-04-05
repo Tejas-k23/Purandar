@@ -1,5 +1,5 @@
 ﻿import React, { useMemo, useState } from 'react';
-import { ChevronDown, Mail, Phone } from 'lucide-react';
+import { ChevronDown, Phone } from 'lucide-react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../../components/common/Modal';
 import useAuth from '../../hooks/useAuth';
@@ -14,15 +14,10 @@ export default function Login() {
   const location = useLocation();
   const navigate = useNavigate();
   const [phone, setPhone] = useState(searchParams.get('phone') || '');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [phoneError, setPhoneError] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [formMessage, setFormMessage] = useState('');
   const [demoOtpMessage, setDemoOtpMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showEmailLogin, setShowEmailLogin] = useState(searchParams.get('mode') === 'email');
 
   const backgroundLocation = location.state?.backgroundLocation;
   const closeTarget = useMemo(() => location.state?.from || '/', [location.state]);
@@ -82,37 +77,6 @@ export default function Login() {
     }
   };
 
-  const submitEmailLogin = async (event) => {
-    event.preventDefault();
-    setEmailError('');
-    setPasswordError('');
-    setFormMessage('');
-    setDemoOtpMessage('');
-
-    if (!email.trim()) {
-      setEmailError('Please enter your email');
-      return;
-    }
-
-    if (!password.trim()) {
-      setPasswordError('Please enter your password');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const otpResponse = await requestDemoOtp({ email: email.trim() });
-      const otp = otpResponse.data?.data?.otp || '123456';
-      setDemoOtpMessage(`Demo OTP: ${otp}`);
-      await login({ email: email.trim(), password, demoOtp: otp });
-      closeModal();
-    } catch (error) {
-      setFormMessage(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <Modal onClose={closeModal} className="auth-modal-shell">
       <h1 className="auth-modal-title">Login / Register</h1>
@@ -141,47 +105,6 @@ export default function Login() {
         <button type="button" className="auth-primary-btn" onClick={continueWithPhone} disabled={loading}>
           {loading ? 'Please wait...' : 'Continue'}
         </button>
-
-        <div className="auth-divider">Or</div>
-
-        <button type="button" className="auth-secondary-btn" onClick={() => setShowEmailLogin((open) => !open)}>
-          <Mail size={18} />
-          <span>Continue with Email</span>
-        </button>
-
-        {showEmailLogin ? (
-          <form className="auth-email-form" onSubmit={submitEmailLogin}>
-            <div className="auth-input-group">
-              <div className="auth-input-row">
-                <input
-                  type="email"
-                  className="auth-input"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                />
-              </div>
-              {emailError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{emailError}</span></div> : null}
-            </div>
-
-            <div className="auth-input-group">
-              <div className="auth-input-row">
-                <input
-                  type="password"
-                  className="auth-input"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-              </div>
-              {passwordError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{passwordError}</span></div> : null}
-            </div>
-
-            <button type="submit" className="auth-primary-btn" disabled={loading}>
-              {loading ? 'Signing in...' : 'Login'}
-            </button>
-          </form>
-        ) : null}
 
         {demoOtpMessage ? <div className="auth-demo-otp"><span>{demoOtpMessage}</span></div> : null}
         {formMessage ? <div className="auth-info"><Phone size={16} /><span>{formMessage}</span></div> : null}

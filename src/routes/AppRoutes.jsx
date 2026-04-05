@@ -32,6 +32,7 @@ import AdminBlogs from '../pages/admin/AdminBlogs';
 import AdminBlogForm from '../pages/admin/AdminBlogForm';
 import ScrollToTop from '../components/common/ScrollToTop';
 import AdminEnquiries from '../pages/admin/AdminEnquiries';
+import AdminLogin from '../pages/admin/AdminLogin';
 import AdminFeedback from '../pages/admin/AdminFeedback';
 
 export default function AppRoutes() {
@@ -55,6 +56,7 @@ export default function AppRoutes() {
         <Route path="/post-property" element={<PostProperty />} />
         {!backgroundLocation ? <Route path="/login" element={<Login />} /> : null}
         {!backgroundLocation ? <Route path="/signup" element={<Signup />} /> : null}
+        <Route path="/tk23" element={<AdminLogin />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/post-property/form" element={<PostPropertyForm />} />

@@ -12,7 +12,7 @@ export default function AdminRoute() {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/tk23" replace state={{ from: location.pathname }} />;
   }
 
   if (user.role !== 'admin') {
