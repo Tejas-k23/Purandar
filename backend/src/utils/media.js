@@ -46,7 +46,9 @@ export const getImageUrl = (storedPath = '') => {
 
   if (/^https?:\/\//i.test(storedPath)) {
     if (storedPath.includes('propertys/')) {
-      const fixed = storedPath.replace(/propertys\//g, 'properties/');
+      const fixed = storedPath
+        .replace(/propertys\/properties\//g, 'properties/')
+        .replace(/propertys\//g, 'properties/');
       // eslint-disable-next-line no-console
       console.warn('Normalized legacy image URL to "properties/":', storedPath);
       return fixed;
@@ -57,7 +59,9 @@ export const getImageUrl = (storedPath = '') => {
   let normalized = String(storedPath).replace(/^\/+/, '');
 
   if (normalized.includes('propertys/')) {
-    normalized = normalized.replace(/propertys\//g, 'properties/');
+    normalized = normalized
+      .replace(/propertys\/properties\//g, 'properties/')
+      .replace(/propertys\//g, 'properties/');
     // eslint-disable-next-line no-console
     console.warn('Normalized legacy image path to "properties/":', storedPath);
   }
