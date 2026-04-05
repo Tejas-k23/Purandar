@@ -20,7 +20,12 @@ export const protect = asyncHandler(async (req, _res, next) => {
     throw new ApiError(401, 'Authentication required');
   }
 
-  const decoded = verifyAccessToken(token);
+  let decoded;
+  try {
+    decoded = verifyAccessToken(token);
+  } catch (_error) {
+    throw new ApiError(401, 'Authentication required');
+  }
   const user = await User.findById(decoded.sub).select('-password -refreshTokenHash');
 
   if (!user || !user.isActive) {

@@ -4,7 +4,7 @@ import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { env } from '../config/env.js';
-import { buildFileName, toPublicUrl, validateImageFile } from '../utils/media.js';
+import { buildFileName, getImageUrl, getPropertyImagePath, validateImageFile } from '../utils/media.js';
 import { deleteManyFromR2, uploadToR2 } from '../utils/r2.js';
 
 const numericFields = [
@@ -302,7 +302,7 @@ export const uploadPropertyImages = asyncHandler(async (req, res) => {
 
   const uploads = files.map(async (file) => {
     const filename = buildFileName(file.originalname);
-    const key = `properties/${property._id}/images/${filename}`;
+    const key = getPropertyImagePath(property._id, filename);
     try {
       await uploadToR2({
         key,
@@ -319,7 +319,7 @@ export const uploadPropertyImages = asyncHandler(async (req, res) => {
     }
 
     return {
-      url: toPublicUrl(key),
+      url: getImageUrl(key),
       key,
       type: 'image',
     };
