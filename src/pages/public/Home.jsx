@@ -53,7 +53,13 @@ const SearchWidget = () => {
 
     const targetPath = activeTab === 'Rent' ? '/rent' : '/buy';
     const category = activeTab === 'Commercial' ? 'commercial' : '';
-    const queryString = buildSearchQueryString({ city, propertyType, category, intent: targetPath === '/rent' ? 'rent' : 'sell' });
+    const resolvedPropertyType = activeTab === 'Plots/Land' && !propertyType ? 'Plot / Land' : propertyType;
+    const queryString = buildSearchQueryString({
+      city,
+      propertyType: resolvedPropertyType,
+      category,
+      intent: targetPath === '/rent' ? 'rent' : 'sell',
+    });
     navigate(`${targetPath}?${queryString}`);
   };
 

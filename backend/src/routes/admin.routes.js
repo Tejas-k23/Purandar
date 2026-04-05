@@ -15,6 +15,7 @@ import {
   updateEnquiryStatus,
   updatePropertyStatus,
 } from '../controllers/admin.controller.js';
+import { deleteFeedback, listAllFeedback } from '../controllers/feedback.controller.js';
 import { authorize, protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -35,5 +36,7 @@ router.delete('/properties/:id', deleteAdminProperty);
 router.get('/users', getUsers);
 router.get('/enquiries', getEnquiries);
 router.patch('/enquiries/:id/status', updateEnquiryStatus);
+router.get('/feedback', listAllFeedback);
+router.delete('/feedback/:id', deleteFeedback);
 
 export default router;

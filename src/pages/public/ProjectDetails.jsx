@@ -231,16 +231,24 @@ export default function ProjectDetails() {
   const [loading, setLoading] = useState(true);
   const [enquiry, setEnquiry] = useState({ name: '', email: '', phone: '', message: '' });
   const [message, setMessage] = useState('');
+  const [feedbackItems, setFeedbackItems] = useState([]);
+  const [feedbackForm, setFeedbackForm] = useState({ name: '', rating: 0, feedback: '' });
+  const [feedbackStatus, setFeedbackStatus] = useState('');
 
   useEffect(() => {
     let active = true;
     const load = async () => {
       setLoading(true);
       try {
-        const [projectResponse, listResponse] = await Promise.all([projectService.getById(id), projectService.getAll()]);
+        const [projectResponse, listResponse, feedbackResponse] = await Promise.all([
+          projectService.getById(id),
+          projectService.getAll(),
+          projectService.getFeedback(id),
+        ]);
         if (!active) return;
         setProject(projectResponse.data.data);
         setProjects(listResponse.data.data.items || []);
+        setFeedbackItems(feedbackResponse.data.data || []);
       } finally {
         if (active) setLoading(false);
       }
@@ -259,6 +267,37 @@ export default function ProjectDetails() {
       setEnquiry({ name: '', email: '', phone: '', message: '' });
     } catch (error) {
       setMessage(error.message || 'Unable to submit enquiry.');
+    }
+  };
+
+  const submitFeedback = async (event) => {
+    event.preventDefault();
+    setFeedbackStatus('');
+
+    if (!feedbackForm.name.trim()) {
+      setFeedbackStatus('Please enter your name.');
+      return;
+    }
+    if (!feedbackForm.rating) {
+      setFeedbackStatus('Please select a rating.');
+      return;
+    }
+    if (!feedbackForm.feedback.trim()) {
+      setFeedbackStatus('Please add a short feedback.');
+      return;
+    }
+
+    try {
+      const response = await projectService.addFeedback(id, {
+        name: feedbackForm.name.trim(),
+        rating: feedbackForm.rating,
+        feedback: feedbackForm.feedback.trim(),
+      });
+      setFeedbackItems((current) => [response.data.data, ...current]);
+      setFeedbackForm({ name: '', rating: 0, feedback: '' });
+      setFeedbackStatus('Thanks! Your feedback is submitted.');
+    } catch (error) {
+      setFeedbackStatus(error.message || 'Unable to submit feedback.');
     }
   };
 
@@ -373,15 +412,6 @@ export default function ProjectDetails() {
             {message ? <p style={{ marginTop: 12 }}>{message}</p> : null}
           </div>
 
-          <div className="pd-contact-card">
-            <h3>Quick Contact</h3>
-            <p>Reach out directly for brochure, site visit, and latest availability.</p>
-            <div className="pd-chip-list">
-              <span className="pd-info-chip"><Phone size={14} /> {visibleContact.phone || '-'}</span>
-              <span className="pd-info-chip"><Mail size={14} /> {visibleContact.email || '-'}</span>
-            </div>
-          </div>
-
           {project.showWhatsappButton && whatsappNumber ? (
             <div className="pd-contact-card">
               <h3>WhatsApp</h3>
@@ -396,6 +426,15 @@ export default function ProjectDetails() {
               </button>
             </div>
           ) : null}
+
+          <div className="pd-contact-card">
+            <h3>Quick Contact</h3>
+            <p>Reach out directly for brochure, site visit, and latest availability.</p>
+            <div className="pd-chip-list">
+              <span className="pd-info-chip"><Phone size={14} /> {visibleContact.phone || '-'}</span>
+              <span className="pd-info-chip"><Mail size={14} /> {visibleContact.email || '-'}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -409,6 +448,72 @@ export default function ProjectDetails() {
           </div>
         </section>
       ) : null}
+
+      <section className="pd-feedback-section">
+        <div className="pd-feedback-header">
+          <h2 className="pd-similar-title">Project Feedback</h2>
+          <p className="pd-feedback-subtitle">Share a rating and a short note (max 200 characters).</p>
+        </div>
+
+        <div className="pd-feedback-grid">
+          <form className="pd-feedback-form" onSubmit={submitFeedback}>
+            <label className="pd-feedback-label">Your Name</label>
+            <input
+              className="styled-input"
+              value={feedbackForm.name}
+              onChange={(event) => setFeedbackForm((current) => ({ ...current, name: event.target.value }))}
+              placeholder="Enter your name"
+            />
+
+            <label className="pd-feedback-label">Rating</label>
+            <div className="pd-feedback-rating">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={`pd-rating-star-btn ${feedbackForm.rating >= value ? 'active' : ''}`}
+                  onClick={() => setFeedbackForm((current) => ({ ...current, rating: value }))}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            <label className="pd-feedback-label">Short Feedback</label>
+            <textarea
+              className="styled-textarea"
+              rows={4}
+              maxLength={200}
+              value={feedbackForm.feedback}
+              onChange={(event) => setFeedbackForm((current) => ({ ...current, feedback: event.target.value }))}
+              placeholder="Write a short feedback..."
+            />
+            <div className="pd-feedback-count">{feedbackForm.feedback.length} / 200</div>
+
+            <button type="submit" className="pd-contact-btn">Submit Feedback</button>
+            {feedbackStatus ? <p style={{ marginTop: 10 }}>{feedbackStatus}</p> : null}
+          </form>
+
+          <div className="pd-feedback-list">
+            {feedbackItems.length === 0 ? (
+              <div className="pd-feedback-empty">No feedback yet. Be the first to share.</div>
+            ) : (
+              feedbackItems.map((item) => (
+                <div key={item._id} className="pd-feedback-card">
+                  <div className="pd-feedback-top">
+                    <div>
+                      <div className="pd-feedback-name">{item.name}</div>
+                      <div className="pd-feedback-date">{new Date(item.createdAt).toLocaleDateString('en-IN')}</div>
+                    </div>
+                    <div className="pd-feedback-stars">{'★'.repeat(item.rating || 0)}</div>
+                  </div>
+                  <p className="pd-feedback-text">{item.feedback}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -32,6 +32,7 @@ import AdminBlogs from '../pages/admin/AdminBlogs';
 import AdminBlogForm from '../pages/admin/AdminBlogForm';
 import ScrollToTop from '../components/common/ScrollToTop';
 import AdminEnquiries from '../pages/admin/AdminEnquiries';
+import AdminFeedback from '../pages/admin/AdminFeedback';
 
 export default function AppRoutes() {
   const location = useLocation();
@@ -72,6 +73,7 @@ export default function AppRoutes() {
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="enquiries" element={<AdminEnquiries />} />
+            <Route path="feedback" element={<AdminFeedback />} />
             <Route path="properties" element={<AdminProperties />} />
             <Route path="properties/form" element={<PostPropertyForm />} />
             <Route path="projects" element={<AdminProjects />} />

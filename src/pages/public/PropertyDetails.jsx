@@ -266,18 +266,6 @@ export default function PropertyDetails() {
             ) : null}
           </div>
 
-          <div className="pd-contact-card" id="property-enquiry-form">
-            <h3>Send an enquiry</h3>
-            <form onSubmit={submitEnquiry} style={{ display: 'grid', gap: 10 }}>
-              <input value={enquiry.name} onChange={(e) => setEnquiry({ ...enquiry, name: e.target.value })} placeholder="Your name" className="styled-input" />
-              <input value={enquiry.email} onChange={(e) => setEnquiry({ ...enquiry, email: e.target.value })} placeholder="Email" className="styled-input" />
-              <input value={enquiry.phone} onChange={(e) => setEnquiry({ ...enquiry, phone: e.target.value })} placeholder="Phone" className="styled-input" />
-              <textarea value={enquiry.message} onChange={(e) => setEnquiry({ ...enquiry, message: e.target.value })} placeholder="Message" className="styled-textarea" rows={4} />
-              <button type="submit" className="pd-contact-btn"><Phone size={16} /> Contact Seller</button>
-            </form>
-            {message ? <p style={{ marginTop: 12 }}>{message}</p> : null}
-          </div>
-
           {property.showWhatsappButton && whatsappNumber ? (
             <div className="pd-contact-card">
               <h3>WhatsApp</h3>
@@ -292,6 +280,18 @@ export default function PropertyDetails() {
               </button>
             </div>
           ) : null}
+
+          <div className="pd-contact-card" id="property-enquiry-form">
+            <h3>Send an enquiry</h3>
+            <form onSubmit={submitEnquiry} style={{ display: 'grid', gap: 10 }}>
+              <input value={enquiry.name} onChange={(e) => setEnquiry({ ...enquiry, name: e.target.value })} placeholder="Your name" className="styled-input" />
+              <input value={enquiry.email} onChange={(e) => setEnquiry({ ...enquiry, email: e.target.value })} placeholder="Email" className="styled-input" />
+              <input value={enquiry.phone} onChange={(e) => setEnquiry({ ...enquiry, phone: e.target.value })} placeholder="Phone" className="styled-input" />
+              <textarea value={enquiry.message} onChange={(e) => setEnquiry({ ...enquiry, message: e.target.value })} placeholder="Message" className="styled-textarea" rows={4} />
+              <button type="submit" className="pd-contact-btn"><Phone size={16} /> Contact Seller</button>
+            </form>
+            {message ? <p style={{ marginTop: 12 }}>{message}</p> : null}
+          </div>
         </div>
       </div>
       <SimilarProperties properties={similar} />

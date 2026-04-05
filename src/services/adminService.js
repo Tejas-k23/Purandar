@@ -40,6 +40,14 @@ export const adminService = {
   updateEnquiryStatus(enquiryId, status) {
     return api.patch(`/admin/enquiries/${enquiryId}/status`, { status });
   },
+
+  getFeedback() {
+    return api.get('/admin/feedback');
+  },
+
+  deleteFeedback(feedbackId) {
+    return api.delete(`/admin/feedback/${feedbackId}`);
+  },
 };
 
 export default adminService;

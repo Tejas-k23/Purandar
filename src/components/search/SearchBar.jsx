@@ -69,6 +69,7 @@ export default function SearchBar({ intent = 'sell' }) {
   const routeFilters = useMemo(() => parseSearchParams(new URLSearchParams(location.search)), [location.search]);
   const [city, setCity] = useState(routeFilters.city || '');
   const [propertyType, setPropertyType] = useState(routeFilters.propertyType || '');
+  const [category, setCategory] = useState(routeFilters.category || '');
   const [bhk, setBhk] = useState(routeFilters.bedrooms || '');
   const [budget, setBudget] = useState(routeFilters.budget || '');
   const [area, setArea] = useState(routeFilters.area || '');
@@ -79,11 +80,12 @@ export default function SearchBar({ intent = 'sell' }) {
   useEffect(() => {
     setCity(routeFilters.city || '');
     setPropertyType(routeFilters.propertyType || '');
+    setCategory(routeFilters.category || '');
     setBhk(routeFilters.bedrooms || '');
     setBudget(routeFilters.budget || '');
     setArea(routeFilters.area || '');
     setTenantPreference(routeFilters.tenantPreference || '');
-  }, [routeFilters.city, routeFilters.propertyType, routeFilters.bedrooms, routeFilters.budget, routeFilters.area, routeFilters.tenantPreference]);
+  }, [routeFilters.city, routeFilters.propertyType, routeFilters.category, routeFilters.bedrooms, routeFilters.budget, routeFilters.area, routeFilters.tenantPreference]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -111,6 +113,7 @@ export default function SearchBar({ intent = 'sell' }) {
   const navigateWithFilters = ({
     nextCity = city,
     nextPropertyType = propertyType,
+    nextCategory = category,
     nextBhk = bhk,
     nextBudget = budget,
     nextArea = area,
@@ -120,6 +123,7 @@ export default function SearchBar({ intent = 'sell' }) {
     const queryString = buildSearchQueryString({
       city: nextCity,
       propertyType: nextPropertyType,
+      category: nextCategory,
       bedrooms: nextBhk,
       budget: nextBudget,
       area: nextArea,
@@ -176,6 +180,7 @@ export default function SearchBar({ intent = 'sell' }) {
   const clearAllFilters = () => {
     setCity('');
     setPropertyType('');
+    setCategory('');
     setBhk('');
     setBudget('');
     setArea('');
@@ -200,14 +205,14 @@ export default function SearchBar({ intent = 'sell' }) {
           <div className="dropdown-menu dropdown-grid">
             <p className="dropdown-label full-width">Residential</p>
             {propertyTypes.filter((item) => item.category === 'residential').map((type) => (
-              <div key={type.label} className={`dropdown-item ${propertyType === type.label ? 'active' : ''}`} onClick={() => { setPropertyType(type.label); setActiveDropdown(null); }}>
+              <div key={type.label} className={`dropdown-item ${propertyType === type.label ? 'active' : ''}`} onClick={() => { setPropertyType(type.label); setCategory(type.category); setActiveDropdown(null); }}>
                 {type.label}
               </div>
             ))}
             <div className="dropdown-divider full-width" />
             <p className="dropdown-label full-width">Commercial</p>
             {propertyTypes.filter((item) => item.category === 'commercial').map((type) => (
-              <div key={type.label} className={`dropdown-item ${propertyType === type.label ? 'active' : ''}`} onClick={() => { setPropertyType(type.label); setActiveDropdown(null); }}>
+              <div key={type.label} className={`dropdown-item ${propertyType === type.label ? 'active' : ''}`} onClick={() => { setPropertyType(type.label); setCategory(type.category); setActiveDropdown(null); }}>
                 {type.label}
               </div>
             ))}

@@ -41,6 +41,14 @@ const projectService = {
   createEnquiry(projectId, payload) {
     return api.post(`/projects/${projectId}/enquiries`, payload);
   },
+
+  getFeedback(projectId) {
+    return api.get(`/projects/${projectId}/feedback`);
+  },
+
+  addFeedback(projectId, payload) {
+    return api.post(`/projects/${projectId}/feedback`, payload);
+  },
 };
 
 export default projectService;

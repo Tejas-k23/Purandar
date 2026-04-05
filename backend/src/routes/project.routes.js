@@ -10,6 +10,7 @@ import {
   updateProject,
   uploadProjectMedia,
 } from '../controllers/project.controller.js';
+import { createProjectFeedback, listProjectFeedback } from '../controllers/feedback.controller.js';
 import { authorize, optionalProtect, protect } from '../middlewares/auth.middleware.js';
 import { uploadRateLimit } from '../middlewares/rateLimit.middleware.js';
 import { requireMultipart, requireStandardHeaders } from '../middlewares/security.middleware.js';
@@ -31,6 +32,8 @@ router.patch('/:id', protect, authorize('admin'), updateProject);
 router.patch('/:id/visibility', protect, authorize('admin'), toggleProjectVisibility);
 router.patch('/:id/featured', protect, authorize('admin'), toggleProjectFeatured);
 router.post('/:id/enquiries', createProjectEnquiry);
+router.get('/:id/feedback', listProjectFeedback);
+router.post('/:id/feedback', createProjectFeedback);
 router.post(
   '/:id/upload-media',
   protect,
