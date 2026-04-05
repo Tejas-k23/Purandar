@@ -127,6 +127,15 @@ export default function PostPropertyForm() {
     loadProperty();
   }, [editId]);
 
+  useEffect(() => {
+    const target = document.getElementById('post-property-form');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentStep]);
+
   const score = useMemo(() => {
     const fields = ['title', 'propertyType', 'city', 'locality', 'price', 'description'];
     const filled = fields.filter((field) => formData[field]).length;

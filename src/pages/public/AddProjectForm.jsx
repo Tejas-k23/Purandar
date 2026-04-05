@@ -36,6 +36,8 @@ const PROJECT_TYPES = Object.keys(PROJECT_TYPE_PROFILES);
 const PROJECT_STATUS = ['Upcoming', 'Under Construction', 'Ready to Move'];
 const PRICE_UNITS = ['Lakh', 'Crore'];
 const TAGS = ['Luxury', 'Affordable', 'Premium'];
+const MAX_PROJECT_IMAGES = 5;
+const MAX_PROJECT_MEDIA_SIZE = 50 * 1024 * 1024; // 50 MB total
 
 const initialState = {
   projectName: '',
@@ -278,6 +280,7 @@ export default function AddProjectForm() {
   const [mapOpen, setMapOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [mediaError, setMediaError] = useState('');
   const [loading, setLoading] = useState(false);
   const editId = searchParams.get('edit');
   const isAdminPath = location.pathname.startsWith('/admin');
@@ -324,6 +327,15 @@ export default function AddProjectForm() {
 
     loadProject();
   }, [editId]);
+
+  useEffect(() => {
+    const target = document.querySelector('.apf-form-card');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentStep]);
 
   const completionScore = useMemo(() => {
     const trackedFields = [
@@ -393,16 +405,42 @@ export default function AddProjectForm() {
   };
 
   const handleImageUpload = (event) => {
+    setMediaError('');
     const files = Array.from(event.target.files || []);
-    const mappedFiles = files
-      .filter((file) => file.type.startsWith('image/'))
-      .map((file) => ({
-        id: `${file.name}-${file.size}-${Date.now()}`,
-        file,
-        name: file.name,
-        preview: URL.createObjectURL(file),
-        isLocal: true,
-      }));
+    const validFiles = files.filter((file) => file.type.startsWith('image/'));
+    const rejectedCount = files.length - validFiles.length;
+    const remainingSlots = MAX_PROJECT_IMAGES - formData.projectImages.length;
+    const allowedByCount = validFiles.slice(0, remainingSlots);
+    const currentSize = formData.projectImages.reduce((sum, image) => sum + (image?.file?.size || 0), 0);
+
+    let runningSize = currentSize;
+    const toAdd = [];
+    let skippedForSize = 0;
+    for (const file of allowedByCount) {
+      if (runningSize + file.size > MAX_PROJECT_MEDIA_SIZE) {
+        skippedForSize += 1;
+        continue;
+      }
+      toAdd.push(file);
+      runningSize += file.size;
+    }
+
+    const mappedFiles = toAdd.map((file) => ({
+      id: `${file.name}-${file.size}-${Date.now()}`,
+      file,
+      name: file.name,
+      preview: URL.createObjectURL(file),
+      isLocal: true,
+    }));
+
+    if (rejectedCount > 0) {
+      setMediaError('Some files were skipped. Only image files are allowed.');
+    } else if (validFiles.length > remainingSlots) {
+      setMediaError(`You can upload up to ${MAX_PROJECT_IMAGES} images. Remove some to add more.`);
+    } else if (skippedForSize > 0) {
+      setMediaError('Total upload size can be up to 50 MB. Remove a few images to continue.');
+    }
+
     updateField('projectImages', [...formData.projectImages, ...mappedFiles]);
   };
 
@@ -660,8 +698,9 @@ export default function AddProjectForm() {
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
                 <p className="ppf-upload-text">Drop project images here or <strong>browse</strong></p>
-                <p className="ppf-upload-hint">Multiple uploads supported with instant preview.</p>
+                <p className="ppf-upload-hint">Up to {MAX_PROJECT_IMAGES} images • Total 50 MB.</p>
               </label>
+              {mediaError ? <p className="ppf-input-error" style={{ marginTop: 10 }}>{mediaError}</p> : null}
             </Field>
 
             {formData.projectImages.length > 0 ? (

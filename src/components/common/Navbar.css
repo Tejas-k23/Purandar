@@ -383,8 +383,9 @@
 }
 
 .mobile-tab-link.active {
-    color: var(--white);
-    background: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    box-shadow: inset 0 0 0 1px rgba(255, 107, 0, 0.35);
 }
 
 .mobile-tab-link:active {

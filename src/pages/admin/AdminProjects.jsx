@@ -62,6 +62,29 @@ export default function AdminProjects() {
     }
   };
 
+  const setContactMode = async (projectId, nextMode) => {
+    const project = projects.find((item) => item._id === projectId);
+    if (!project) return;
+
+    const currentMode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
+    if (currentMode === nextMode) return;
+
+    setBusyId(`${projectId}:contact`);
+    setProjects((current) => current.map((item) => (
+      item._id === projectId ? { ...item, contactDisplayMode: nextMode, useCustomContactDetails: nextMode === 'custom' } : item
+    )));
+
+    try {
+      await projectService.update(projectId, { contactDisplayMode: nextMode, useCustomContactDetails: nextMode === 'custom' });
+    } catch (_error) {
+      setProjects((current) => current.map((item) => (
+        item._id === projectId ? { ...item, contactDisplayMode: currentMode, useCustomContactDetails: currentMode === 'custom' } : item
+      )));
+    } finally {
+      setBusyId('');
+    }
+  };
+
   const deleteProject = async (projectId) => {
     if (!window.confirm('Delete this project permanently?')) return;
     setBusyId(`${projectId}:delete`);
@@ -125,12 +148,24 @@ export default function AdminProjects() {
                 const mode = row.contactDisplayMode || (row.useCustomContactDetails ? 'custom' : 'original');
                 const checked = mode === 'original';
                 return (
-                  <ToggleSwitch
-                    checked={checked}
-                    onChange={(value) => toggleContactMode(row._id, value)}
-                    label="Toggle real project contact"
-                    disabled={busyId === `${row._id}:contact`}
-                  />
+                  <div className="admin-cell-stack">
+                    <ToggleSwitch
+                      checked={checked}
+                      onChange={(value) => toggleContactMode(row._id, value)}
+                      label="Toggle real project contact"
+                      disabled={busyId === `${row._id}:contact`}
+                    />
+                    {mode === 'company' ? (
+                      <button
+                        type="button"
+                        className="admin-secondary-btn admin-secondary-btn-inline"
+                        disabled={busyId === `${row._id}:contact`}
+                        onClick={() => setContactMode(row._id, 'custom')}
+                      >
+                        Use custom contact
+                      </button>
+                    ) : null}
+                  </div>
                 );
               },
             },

@@ -9,6 +9,7 @@ import {
   getImageUrl,
   getPropertyImagePath,
   getPropertyVideoPath,
+  R2_BASE_URL,
   validateImageFile,
   validateVideoFile,
 } from '../utils/media.js';
@@ -392,8 +393,9 @@ export const uploadPropertyVideos = asyncHandler(async (req, res) => {
       });
     }
 
+    const videoUrl = R2_BASE_URL ? `${R2_BASE_URL}/${key}` : key;
     return {
-      url: getImageUrl(key),
+      url: videoUrl,
       key,
       type: 'video',
     };

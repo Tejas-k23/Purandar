@@ -2,8 +2,8 @@ import React, { useState, useRef, useCallback } from 'react';
 import { ImagePlus } from 'lucide-react';
 
 const PHOTO_CATEGORIES = ['All', 'Living Room', 'Bedroom', 'Kitchen', 'Bathroom', 'Exterior', 'Other'];
-const MAX_PHOTOS = 8;
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_PHOTOS = 5;
+const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50 MB total
 
 export default function Step4MediaUpload({ formData, updateField }) {
     const [activeTab, setActiveTab] = useState('All');
@@ -15,16 +15,25 @@ export default function Step4MediaUpload({ formData, updateField }) {
 
     const handleFiles = useCallback((files) => {
         setUploadError('');
-        const validFiles = Array.from(files).filter(f => {
-            if (!['image/jpeg', 'image/png', 'image/webp'].includes(f.type)) return false;
-            if (f.size > MAX_FILE_SIZE) return false;
-            return true;
-        });
-
-        const rejectedCount = Array.from(files).length - validFiles.length;
+        const selectedFiles = Array.from(files);
+        const validFiles = selectedFiles.filter((file) => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type));
+        const rejectedCount = selectedFiles.length - validFiles.length;
 
         const remainingSlots = MAX_PHOTOS - photos.length;
-        const toAdd = validFiles.slice(0, remainingSlots);
+        const currentSize = photos.reduce((sum, photo) => sum + (photo?.file?.size || 0), 0);
+        const allowedByCount = validFiles.slice(0, remainingSlots);
+
+        let runningSize = currentSize;
+        const toAdd = [];
+        let skippedForSize = 0;
+        for (const file of allowedByCount) {
+            if (runningSize + file.size > MAX_TOTAL_SIZE) {
+                skippedForSize += 1;
+                continue;
+            }
+            toAdd.push(file);
+            runningSize += file.size;
+        }
 
         const newPhotos = toAdd.map((file, i) => ({
             id: Date.now() + i,
@@ -36,9 +45,11 @@ export default function Step4MediaUpload({ formData, updateField }) {
         }));
 
         if (rejectedCount > 0) {
-            setUploadError('Some files were skipped. Only JPG/PNG/WebP up to 5 MB are allowed.');
+            setUploadError('Some files were skipped. Only JPG/PNG/WebP images are allowed.');
         } else if (validFiles.length > remainingSlots) {
             setUploadError(`You can upload up to ${MAX_PHOTOS} photos. Remove some to add more.`);
+        } else if (skippedForSize > 0) {
+            setUploadError('Total upload size can be up to 50 MB. Remove a few photos to continue.');
         }
 
         updateField('photos', [...photos, ...newPhotos]);
@@ -92,7 +103,7 @@ export default function Step4MediaUpload({ formData, updateField }) {
                     Drag & drop photos here or <strong>browse</strong>
                 </p>
                 <p className="ppf-upload-hint">
-                    JPG, PNG or WebP • Max 5 MB per photo • Up to {MAX_PHOTOS} photos
+                    JPG, PNG or WebP • Total 50 MB • Up to {MAX_PHOTOS} photos
                 </p>
                 <input
                     ref={fileInputRef}

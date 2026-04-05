@@ -86,6 +86,29 @@ export default function AdminProperties() {
     }
   };
 
+  const setContactMode = async (propertyId, nextMode) => {
+    const property = properties.find((item) => item._id === propertyId);
+    if (!property) return;
+
+    const currentMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
+    if (currentMode === nextMode) return;
+
+    setBusyId(`${propertyId}:contact`);
+    setProperties((current) => current.map((item) => (
+      item._id === propertyId ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: nextMode === 'original' } : item
+    )));
+
+    try {
+      await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
+    } catch (_error) {
+      setProperties((current) => current.map((item) => (
+        item._id === propertyId ? { ...item, contactDisplayMode: currentMode, useOriginalSellerContact: currentMode === 'original' } : item
+      )));
+    } finally {
+      setBusyId('');
+    }
+  };
+
   const deleteProperty = async (propertyId) => {
     const confirmed = window.confirm('Delete this property permanently?');
     if (!confirmed) return;
@@ -158,12 +181,24 @@ export default function AdminProperties() {
                 const mode = row.contactDisplayMode || (row.useOriginalSellerContact === false ? 'custom' : 'original');
                 const checked = mode === 'original';
                 return (
-                  <ToggleSwitch
-                    checked={checked}
-                    onChange={(value) => toggleContactMode(row._id, value)}
-                    label="Toggle real seller details"
-                    disabled={busyId === `${row._id}:contact`}
-                  />
+                  <div className="admin-cell-stack">
+                    <ToggleSwitch
+                      checked={checked}
+                      onChange={(value) => toggleContactMode(row._id, value)}
+                      label="Toggle real seller details"
+                      disabled={busyId === `${row._id}:contact`}
+                    />
+                    {mode === 'company' ? (
+                      <button
+                        type="button"
+                        className="admin-secondary-btn admin-secondary-btn-inline"
+                        disabled={busyId === `${row._id}:contact`}
+                        onClick={() => setContactMode(row._id, 'custom')}
+                      >
+                        Use custom contact
+                      </button>
+                    ) : null}
+                  </div>
                 );
               },
             },
