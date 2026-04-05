@@ -48,7 +48,7 @@ export default function PropertyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, savedPropertyIds, toggleSavedProperty } = useAuth();
+  const { isAuthenticated, savedPropertyIds, toggleSavedProperty, user } = useAuth();
   const [property, setProperty] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [enquiry, setEnquiry] = useState({ name: '', email: '', phone: '', message: '' });
@@ -144,6 +144,23 @@ export default function PropertyDetails() {
   const videoEmbedUrl = getYoutubeEmbedUrl(property.videoUrl || '');
   const uploadedDate = formatDate(property.createdAt);
   const pageUrl = `${window.location.origin}/property/${property._id}`;
+  const whatsappMessage = `WhatsApp chat started for ${titleBase}`;
+  const handleWhatsappClick = async () => {
+    if (isAuthenticated && user?.email) {
+      try {
+        await propertyService.createEnquiry(id, {
+          name: user?.name || 'User',
+          email: user?.email,
+          phone: user?.phone || '',
+          message: whatsappMessage,
+          leadType: 'whatsapp',
+        });
+      } catch (_error) {
+        // ignore logging errors
+      }
+    }
+    window.open(`https://wa.me/${whatsappNumber}`, '_blank');
+  };
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Residence',
@@ -260,23 +277,23 @@ export default function PropertyDetails() {
             </form>
             {message ? <p style={{ marginTop: 12 }}>{message}</p> : null}
           </div>
+
+          {property.showWhatsappButton && whatsappNumber ? (
+            <div className="pd-contact-card">
+              <h3>WhatsApp</h3>
+              <p>{property.responseTime || 'Chat directly for quick updates.'}</p>
+              <button
+                type="button"
+                className="pd-contact-btn pd-contact-btn--whatsapp"
+                onClick={handleWhatsappClick}
+              >
+                <i className="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                Chat on WhatsApp
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
-      {property.showWhatsappButton && whatsappNumber ? (
-        <button
-          type="button"
-          className="pd-whatsapp-fab"
-          onClick={() => window.open(`https://wa.me/${whatsappNumber}`, '_blank')}
-          aria-label="Chat on WhatsApp"
-        >
-          <span className="pd-whatsapp-icon">
-            <i className="fa-brands fa-whatsapp" aria-hidden="true"></i>
-          </span>
-          <span className="pd-whatsapp-tooltip">
-            {property.responseTime || 'Chat on WhatsApp'}
-          </span>
-        </button>
-      ) : null}
       <SimilarProperties properties={similar} />
     </div>
   );

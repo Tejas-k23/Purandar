@@ -7,6 +7,7 @@ import ProjectCard from '../../components/project/ProjectCard';
 import projectService from '../../services/projectService';
 import { getProjectTypeProfile } from '../../utils/projectTypeConfig';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import useAuth from '../../hooks/useAuth';
 import './PropertyDetails.css';
 
 const getYoutubeEmbedUrl = (rawUrl = '') => {
@@ -224,6 +225,7 @@ function ProjectMap({ project }) {
 export default function ProjectDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
   const [project, setProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -273,6 +275,23 @@ export default function ProjectDetails() {
   const whatsappNumber = normalizeWhatsapp(whatsappContact.number);
   const videoEmbedUrl = getYoutubeEmbedUrl(project.videoUrl || '');
   const uploadedDate = formatDate(project.createdAt);
+  const whatsappMessage = `WhatsApp chat started for ${project.projectName || 'Project'}`;
+  const handleWhatsappClick = async () => {
+    if (isAuthenticated && user?.email) {
+      try {
+        await projectService.createEnquiry(id, {
+          name: user?.name || 'User',
+          email: user?.email,
+          phone: user?.phone || '',
+          message: whatsappMessage,
+          leadType: 'whatsapp',
+        });
+      } catch (_error) {
+        // ignore logging errors
+      }
+    }
+    window.open(`https://wa.me/${whatsappNumber}`, '_blank');
+  };
 
   return (
     <div className="pd-page" style={{ paddingBottom: '3rem' }}>
@@ -362,24 +381,23 @@ export default function ProjectDetails() {
               <span className="pd-info-chip"><Mail size={14} /> {visibleContact.email || '-'}</span>
             </div>
           </div>
+
+          {project.showWhatsappButton && whatsappNumber ? (
+            <div className="pd-contact-card">
+              <h3>WhatsApp</h3>
+              <p>{project.responseTime || 'Chat directly for brochure or site visits.'}</p>
+              <button
+                type="button"
+                className="pd-contact-btn pd-contact-btn--whatsapp"
+                onClick={handleWhatsappClick}
+              >
+                <i className="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                Chat on WhatsApp
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
-
-      {project.showWhatsappButton && whatsappNumber ? (
-        <button
-          type="button"
-          className="pd-whatsapp-fab"
-          onClick={() => window.open(`https://wa.me/${whatsappNumber}`, '_blank')}
-          aria-label="Chat on WhatsApp"
-        >
-          <span className="pd-whatsapp-icon">
-            <i className="fa-brands fa-whatsapp" aria-hidden="true"></i>
-          </span>
-          <span className="pd-whatsapp-tooltip">
-            {project.responseTime || 'Chat on WhatsApp'}
-          </span>
-        </button>
-      ) : null}
 
       {similar.length ? (
         <section className="pd-similar-section">

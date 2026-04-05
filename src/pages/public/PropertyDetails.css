@@ -1252,6 +1252,16 @@
     box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
 }
 
+.pd-contact-btn--whatsapp {
+    background: linear-gradient(90deg, #1EBE5D 0%, #25D366 100%);
+    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
+}
+
+.pd-contact-btn--whatsapp:hover {
+    background: linear-gradient(90deg, #17A84B 0%, #1EBE5D 100%);
+    box-shadow: 0 8px 18px rgba(37, 211, 102, 0.4);
+}
+
 /* WhatsApp Floating Button */
 .pd-whatsapp-fab {
     position: fixed;

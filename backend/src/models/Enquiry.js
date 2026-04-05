@@ -45,7 +45,7 @@ const enquirySchema = new mongoose.Schema(
     },
     leadType: {
       type: String,
-      enum: ['enquiry', 'seller_detail'],
+      enum: ['enquiry', 'seller_detail', 'whatsapp'],
       default: 'enquiry',
     },
     status: {

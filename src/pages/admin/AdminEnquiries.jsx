@@ -24,7 +24,11 @@ const downloadBlob = (content, filename, type) => {
   URL.revokeObjectURL(url);
 };
 
-const formatLeadType = (leadType) => (leadType === 'seller_detail' ? 'Seller Details' : 'Enquiry');
+const formatLeadType = (leadType) => {
+  if (leadType === 'seller_detail') return 'Seller Details';
+  if (leadType === 'whatsapp') return 'WhatsApp';
+  return 'Enquiry';
+};
 
 export default function AdminEnquiries() {
   const [enquiries, setEnquiries] = useState([]);
@@ -88,7 +92,7 @@ export default function AdminEnquiries() {
           <div className="admin-filter-group">
             <span className="admin-filter-label">Type</span>
             <div className="admin-filter-chips">
-              {['all', 'seller_detail', 'enquiry'].map((value) => (
+              {['all', 'seller_detail', 'whatsapp', 'enquiry'].map((value) => (
                 <button
                   key={value}
                   type="button"
