@@ -343,20 +343,6 @@ export default function ProjectDetails() {
           </div>
 
           {project.showWhatsappButton && whatsappNumber ? (
-            <div className="pd-contact-card">
-              <h3>WhatsApp</h3>
-              <p>{project.responseTime || 'Chat directly for brochure or site visits.'}</p>
-              <button
-                type="button"
-                className="pd-contact-btn"
-                onClick={() => window.open(`https://wa.me/${whatsappNumber}`, '_blank')}
-              >
-                <Phone size={16} /> Chat on WhatsApp
-              </button>
-            </div>
-          ) : null}
-
-          {project.showWhatsappButton && whatsappNumber ? (
             <button
               type="button"
               className="pd-whatsapp-fab"
@@ -364,7 +350,9 @@ export default function ProjectDetails() {
               aria-label="Chat on WhatsApp"
             >
               <span className="pd-whatsapp-icon">
-                <Phone size={18} />
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path fill="currentColor" d="M19.11 17.2c-.27-.14-1.6-.79-1.85-.88-.25-.1-.44-.14-.62.14-.18.27-.71.88-.87 1.06-.16.18-.32.2-.59.07-.27-.14-1.13-.42-2.15-1.34-.79-.7-1.33-1.56-1.49-1.83-.16-.27-.02-.41.12-.55.13-.12.27-.32.41-.48.14-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.62-1.5-.85-2.06-.22-.53-.45-.46-.62-.47l-.53-.01c-.18 0-.48.07-.73.34-.25.27-.96.94-.96 2.3 0 1.35.98 2.65 1.12 2.83.14.18 1.94 2.96 4.69 4.15.65.28 1.16.45 1.56.58.65.21 1.23.18 1.69.11.52-.08 1.6-.65 1.82-1.28.23-.63.23-1.17.16-1.28-.07-.11-.25-.18-.52-.32M16.02 6.6c-5.25 0-9.53 4.27-9.53 9.52 0 1.68.44 3.25 1.2 4.62l-1.28 4.67 4.78-1.25c1.31.71 2.82 1.12 4.83 1.12 5.25 0 9.52-4.27 9.52-9.53 0-5.25-4.27-9.52-9.52-9.52m0 20.63c-1.86 0-3.58-.5-5.07-1.36l-.36-.21-2.84.74.76-2.76-.24-.39c-.82-1.42-1.25-3.04-1.25-4.67 0-5.12 4.17-9.29 9.3-9.29 2.48 0 4.81.97 6.56 2.72a9.25 9.25 0 0 1 2.73 6.57c0 5.12-4.17 9.29-9.29 9.29"/>
+                </svg>
               </span>
               <span className="pd-whatsapp-tooltip">
                 {project.responseTime || 'Chat on WhatsApp'}
