@@ -38,6 +38,12 @@ Commercial types:
 - displaySellerName (custom contact)
 - displaySellerPhone (custom contact)
 - displaySellerEmail (custom contact)
+- whatsappNumber
+- showWhatsappButton (true/false)
+- responseTime
+- whatsappDisplayMode (original, company, custom)
+- useCustomWhatsappDetails
+- customWhatsappNumber (custom WhatsApp)
 
 ### Step 2: Location Details
 
@@ -167,6 +173,11 @@ Source: `src/pages/public/AddProjectForm.jsx` and `src/utils/projectTypeConfig.j
 - configurationTypes (from project type profile)
 - extraConfigurations (custom entries)
 - areaRange
+- pricePerSqFt (Plots)
+- plotUnit (Plots)
+- minPlotSize (Plots)
+- maxPlotSize (Plots)
+- totalPlots (Plots, optional)
 
 ### Section 4: Amenities
 
@@ -176,6 +187,7 @@ Source: `src/pages/public/AddProjectForm.jsx` and `src/utils/projectTypeConfig.j
 
 - projectImages (up to 5)
 - brochure (PDF)
+- videoFile (optional upload)
 - videoUrl (YouTube URL)
 
 ### Section 6: Description
@@ -201,6 +213,12 @@ Source: `src/pages/public/AddProjectForm.jsx` and `src/utils/projectTypeConfig.j
 - customContactName (if custom)
 - customContactPhone (if custom)
 - customContactEmail (if custom)
+- whatsappNumber
+- showWhatsappButton (true/false)
+- responseTime
+- whatsappDisplayMode (original, company, custom)
+- useCustomWhatsappDetails
+- customWhatsappNumber (if custom)
 
 ### Other Project Fields in State
 

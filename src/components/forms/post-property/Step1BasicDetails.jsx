@@ -30,6 +30,11 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
         updateField('useOriginalSellerContact', mode === 'original');
     };
 
+    const setWhatsappDisplayMode = (mode) => {
+        updateField('whatsappDisplayMode', mode);
+        updateField('useCustomWhatsappDetails', mode === 'custom');
+    };
+
     return (
         <div className="ppf-step-content" key="step1">
             <h2 className="ppf-heading">
@@ -196,6 +201,101 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
                             {errors.displaySellerEmail ? <p className="ppf-input-error">{errors.displaySellerEmail}</p> : null}
                         </div>
                     </div>
+                ) : null}
+            </div>
+
+            <div className="ppf-admin-contact-card" style={{ marginTop: 18 }}>
+                <div className="ppf-admin-contact-head">
+                    <div>
+                        <h3 className="ppf-admin-contact-title">WhatsApp Contact</h3>
+                        <p className="ppf-admin-contact-subtitle">Show a WhatsApp button on the listing page and control which number is shown.</p>
+                    </div>
+                </div>
+
+                <div className="ppf-toggle-wrapper">
+                    <button
+                        type="button"
+                        className={`ppf-toggle ${formData.showWhatsappButton ? 'on' : ''}`}
+                        onClick={() => updateField('showWhatsappButton', !formData.showWhatsappButton)}
+                        aria-pressed={formData.showWhatsappButton}
+                    />
+                    <span className="ppf-toggle-label">Show WhatsApp button on listing</span>
+                </div>
+
+                {formData.showWhatsappButton ? (
+                    <>
+                        <div className="ppf-form-row" style={{ marginTop: 12 }}>
+                            <div className="ppf-field">
+                                <label className="ppf-field-label"><span className="ppf-field-label-icon"><Phone size={14} /></span>Seller WhatsApp Number</label>
+                                <input
+                                    className="ppf-input"
+                                    type="text"
+                                    placeholder="Enter WhatsApp number"
+                                    value={formData.whatsappNumber || ''}
+                                    onChange={(event) => updateField('whatsappNumber', event.target.value)}
+                                />
+                            </div>
+                            <div className="ppf-field">
+                                <label className="ppf-field-label">Response Time</label>
+                                <input
+                                    className="ppf-input"
+                                    type="text"
+                                    placeholder="Usually responds within 10 mins"
+                                    value={formData.responseTime || ''}
+                                    onChange={(event) => updateField('responseTime', event.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="ppf-radio-group" style={{ marginTop: 12 }}>
+                            {isAdmin ? (
+                                <label className="ppf-radio-label" htmlFor="ppf-whatsapp-company">
+                                    <input
+                                        type="radio"
+                                        id="ppf-whatsapp-company"
+                                        name="ppf-whatsapp-mode"
+                                        checked={formData.whatsappDisplayMode === 'company'}
+                                        onChange={() => setWhatsappDisplayMode('company')}
+                                    />
+                                    Use company WhatsApp number
+                                </label>
+                            ) : null}
+                            <label className="ppf-radio-label" htmlFor="ppf-whatsapp-original">
+                                <input
+                                    type="radio"
+                                    id="ppf-whatsapp-original"
+                                    name="ppf-whatsapp-mode"
+                                    checked={formData.whatsappDisplayMode === 'original' || (!isAdmin && formData.whatsappDisplayMode !== 'custom')}
+                                    onChange={() => setWhatsappDisplayMode('original')}
+                                />
+                                Use seller WhatsApp number
+                            </label>
+                            <label className="ppf-radio-label" htmlFor="ppf-whatsapp-custom">
+                                <input
+                                    type="radio"
+                                    id="ppf-whatsapp-custom"
+                                    name="ppf-whatsapp-mode"
+                                    checked={formData.whatsappDisplayMode === 'custom'}
+                                    onChange={() => setWhatsappDisplayMode('custom')}
+                                />
+                                Use custom WhatsApp number
+                            </label>
+                        </div>
+
+                        {formData.whatsappDisplayMode === 'custom' ? (
+                            <div className="ppf-field" style={{ marginTop: 12 }}>
+                                <label className="ppf-field-label"><span className="ppf-field-label-icon"><Phone size={14} /></span>Custom WhatsApp Number</label>
+                                <input
+                                    className={`ppf-input ${errors.customWhatsappNumber ? 'error' : ''}`}
+                                    type="text"
+                                    placeholder="Enter custom WhatsApp number"
+                                    value={formData.customWhatsappNumber || ''}
+                                    onChange={(event) => updateField('customWhatsappNumber', event.target.value)}
+                                />
+                                {errors.customWhatsappNumber ? <p className="ppf-input-error">{errors.customWhatsappNumber}</p> : null}
+                            </div>
+                        ) : null}
+                    </>
                 ) : null}
             </div>
         </div>

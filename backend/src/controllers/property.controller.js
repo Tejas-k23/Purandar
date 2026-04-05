@@ -45,6 +45,12 @@ const toNumberOrNull = (value) => {
   return Number.isNaN(num) ? null : num;
 };
 
+const toBoolean = (value) => {
+  if (value === true || value === 'true' || value === 1 || value === '1') return true;
+  if (value === false || value === 'false' || value === 0 || value === '0') return false;
+  return Boolean(value);
+};
+
 const normalizePayload = (payload) => {
   const data = { ...payload };
 
@@ -66,6 +72,24 @@ const normalizePayload = (payload) => {
     data.useOriginalSellerContact = false;
   } else if (data.contactDisplayMode === 'original') {
     data.useOriginalSellerContact = true;
+  }
+
+  if (data.whatsappDisplayMode) {
+    data.whatsappDisplayMode = String(data.whatsappDisplayMode).toLowerCase();
+  } else if (data.useCustomWhatsappDetails === true) {
+    data.whatsappDisplayMode = 'custom';
+  } else if (data.useCustomWhatsappDetails === false) {
+    data.whatsappDisplayMode = 'original';
+  }
+
+  if (data.whatsappDisplayMode && data.whatsappDisplayMode !== 'original') {
+    data.useCustomWhatsappDetails = true;
+  } else if (data.whatsappDisplayMode === 'original') {
+    data.useCustomWhatsappDetails = false;
+  }
+
+  if ('showWhatsappButton' in data) {
+    data.showWhatsappButton = toBoolean(data.showWhatsappButton);
   }
 
   data.photos = Array.isArray(data.photos) ? data.photos : [];
@@ -226,6 +250,9 @@ export const createProperty = asyncHandler(async (req, res) => {
   if (!isAdmin && payload.contactDisplayMode === 'company') {
     payload.contactDisplayMode = payload.useOriginalSellerContact ? 'original' : 'custom';
   }
+  if (!isAdmin && payload.whatsappDisplayMode === 'company') {
+    payload.whatsappDisplayMode = payload.useCustomWhatsappDetails ? 'custom' : 'original';
+  }
   const property = await Property.create({
     ...payload,
     owner: req.user._id,
@@ -248,6 +275,9 @@ export const updateProperty = asyncHandler(async (req, res) => {
 
   if (req.user.role !== 'admin' && payload.contactDisplayMode === 'company') {
     payload.contactDisplayMode = payload.useOriginalSellerContact ? 'original' : 'custom';
+  }
+  if (req.user.role !== 'admin' && payload.whatsappDisplayMode === 'company') {
+    payload.whatsappDisplayMode = payload.useCustomWhatsappDetails ? 'custom' : 'original';
   }
 
   Object.assign(property, payload);
@@ -287,7 +317,7 @@ export const deleteProperty = asyncHandler(async (req, res) => {
 });
 
 export const uploadPropertyImages = asyncHandler(async (req, res) => {
-  const property = await Property.findById(req.params.id);
+  const property = await getOwnedProperty(req.params.id, req.user);
 
   if (!property) {
     throw new ApiError(404, 'Property not found');
@@ -351,7 +381,7 @@ export const uploadPropertyImages = asyncHandler(async (req, res) => {
 });
 
 export const uploadPropertyVideos = asyncHandler(async (req, res) => {
-  const property = await Property.findById(req.params.id);
+  const property = await getOwnedProperty(req.params.id, req.user);
 
   if (!property) {
     throw new ApiError(404, 'Property not found');

@@ -34,7 +34,7 @@ router.post('/:id/enquiries', createProjectEnquiry);
 router.post(
   '/:id/upload-media',
   protect,
-  authorize('admin'),
+  authorize('user', 'agent', 'admin'),
   uploadRateLimit,
   requireStandardHeaders,
   requireMultipart,

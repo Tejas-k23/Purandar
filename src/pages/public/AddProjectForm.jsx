@@ -29,7 +29,7 @@ const STEP_FIELDS = {
   media: ['projectImages', 'videoUrl'],
   description: ['shortDescription', 'detailedDescription'],
   additional: ['totalTowers', 'totalUnits', 'totalFloors', 'openSpace', 'approvalAuthority'],
-  contact: ['contactPersonName', 'phoneNumber', 'email', 'customContactName', 'customContactPhone', 'customContactEmail'],
+  contact: ['contactPersonName', 'phoneNumber', 'email', 'customContactName', 'customContactPhone', 'customContactEmail', 'customWhatsappNumber'],
 };
 
 const PROJECT_TYPES = Object.keys(PROJECT_TYPE_PROFILES);
@@ -61,9 +61,15 @@ const initialState = {
   configurationTypes: [],
   extraConfigurations: [''],
   areaRange: '',
+  pricePerSqFt: '',
+  plotUnit: 'sq.ft',
+  minPlotSize: '',
+  maxPlotSize: '',
+  totalPlots: '',
   amenities: [],
   projectImages: [],
   brochure: null,
+  videoFile: null,
   videoUrl: '',
   shortDescription: '',
   detailedDescription: '',
@@ -81,6 +87,12 @@ const initialState = {
   customContactName: '',
   customContactPhone: '',
   customContactEmail: '',
+  whatsappNumber: '',
+  showWhatsappButton: false,
+  responseTime: '',
+  whatsappDisplayMode: 'original',
+  useCustomWhatsappDetails: false,
+  customWhatsappNumber: '',
   visible: true,
   featuredOnHome: false,
 };
@@ -176,6 +188,22 @@ function validateForm(data) {
     if (!data.customContactName.trim()) errors.customContactName = 'Custom contact name is required';
     if (!/^\d{10}$/.test(String(data.customContactPhone).trim())) errors.customContactPhone = 'Enter a valid 10 digit phone number';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.customContactEmail.trim())) errors.customContactEmail = 'Enter a valid email address';
+  }
+
+  if (data.projectType === 'Plots') {
+    if (!String(data.pricePerSqFt).trim()) errors.pricePerSqFt = 'Price per sq.ft is required';
+    if (!data.plotUnit) errors.plotUnit = 'Plot unit is required';
+    if (!String(data.minPlotSize).trim()) errors.minPlotSize = 'Minimum plot size is required';
+    if (!String(data.maxPlotSize).trim()) errors.maxPlotSize = 'Maximum plot size is required';
+    if (Number(data.minPlotSize) > Number(data.maxPlotSize)) {
+      errors.maxPlotSize = 'Maximum plot size should be greater than minimum';
+    }
+  }
+
+  if (data.showWhatsappButton && data.whatsappDisplayMode === 'custom') {
+    if (!/^\d{10,15}$/.test(String(data.customWhatsappNumber || '').trim())) {
+      errors.customWhatsappNumber = 'Enter a valid WhatsApp number';
+    }
   }
 
   return errors;
@@ -305,11 +333,14 @@ export default function AddProjectForm() {
         const response = await projectService.getById(editId);
         const project = response.data.data;
         const contactDisplayMode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
+        const whatsappDisplayMode = project.whatsappDisplayMode || (project.useCustomWhatsappDetails ? 'custom' : 'original');
         setFormData({
           ...initialState,
           ...project,
           contactDisplayMode,
           useCustomContactDetails: contactDisplayMode === 'custom',
+          whatsappDisplayMode,
+          useCustomWhatsappDetails: whatsappDisplayMode === 'custom',
           projectImages: (project.projectImages || []).map((image, index) => ({
             id: `${project._id || 'project'}-${index}`,
             name: `Project image ${index + 1}`,
@@ -381,6 +412,11 @@ export default function AddProjectForm() {
     updateField('useCustomContactDetails', mode === 'custom');
   };
 
+  const setWhatsappDisplayMode = (mode) => {
+    updateField('whatsappDisplayMode', mode);
+    updateField('useCustomWhatsappDetails', mode === 'custom');
+  };
+
   const handleProjectTypeChange = (value) => {
     const nextProfile = getProjectTypeProfile(value);
     setFormData((current) => ({
@@ -388,12 +424,21 @@ export default function AddProjectForm() {
       projectType: value,
       configurationTypes: current.configurationTypes.filter((item) => nextProfile.configurationOptions.includes(item)),
       amenities: current.amenities.filter((item) => nextProfile.amenities.includes(item)),
+      pricePerSqFt: value === 'Plots' ? current.pricePerSqFt : '',
+      plotUnit: value === 'Plots' ? current.plotUnit : 'sq.ft',
+      minPlotSize: value === 'Plots' ? current.minPlotSize : '',
+      maxPlotSize: value === 'Plots' ? current.maxPlotSize : '',
+      totalPlots: value === 'Plots' ? current.totalPlots : '',
     }));
     setErrors((current) => {
       const next = { ...current };
       delete next.projectType;
       delete next.configurationTypes;
       delete next.amenities;
+      delete next.pricePerSqFt;
+      delete next.plotUnit;
+      delete next.minPlotSize;
+      delete next.maxPlotSize;
       return next;
     });
   };
@@ -489,13 +534,9 @@ export default function AddProjectForm() {
     setSubmitting(true);
     setStatusMessage('');
     try {
-      if (!isAdmin && formData.projectImages.some((image) => image?.isLocal)) {
-        setStatusMessage('Only admin can upload images.');
-        return;
-      }
-
+      const { videoFile, ...rest } = formData;
       const payload = {
-        ...formData,
+        ...rest,
         projectImages: formData.projectImages
           .filter((image) => image?.existing)
           .map((image) => image.preview),
@@ -513,8 +554,13 @@ export default function AddProjectForm() {
       }
 
       const newImages = formData.projectImages.filter((image) => image?.isLocal && image?.file);
-      if (isAdmin && projectId && newImages.length) {
-        await projectService.uploadMedia(projectId, { images: newImages.map((image) => image.file) });
+      if (projectId) {
+        const mediaPayload = {};
+        if (newImages.length) mediaPayload.images = newImages.map((image) => image.file);
+        if (formData.videoFile) mediaPayload.videos = [formData.videoFile];
+        if (Object.keys(mediaPayload).length) {
+          await projectService.uploadMedia(projectId, mediaPayload);
+        }
       }
 
       window.setTimeout(() => navigate(isAdminPath ? '/admin/projects' : '/projects'), 700);
@@ -672,6 +718,34 @@ export default function AddProjectForm() {
                 <TextInput name="areaRange" type="text" placeholder={typeProfile.labels.areaRangePlaceholder} value={formData.areaRange} onChange={(event) => updateField('areaRange', event.target.value)} error={errors.areaRange} />
               </Field>
             </div>
+
+            {formData.projectType === 'Plots' ? (
+              <>
+                <div className="ppf-form-row">
+                  <Field label="Price Per Sq.ft" required error={errors.pricePerSqFt}>
+                    <TextInput name="pricePerSqFt" type="number" placeholder="e.g. 2500" value={formData.pricePerSqFt} onChange={(event) => updateField('pricePerSqFt', event.target.value)} error={errors.pricePerSqFt} />
+                  </Field>
+                  <Field label="Plot Unit" required error={errors.plotUnit}>
+                    <SelectInput name="plotUnit" value={formData.plotUnit} onChange={(event) => updateField('plotUnit', event.target.value)} error={errors.plotUnit}>
+                      {['sq.ft', 'sq.m', 'sq.yard'].map((unit) => (
+                        <option key={unit} value={unit}>{unit}</option>
+                      ))}
+                    </SelectInput>
+                  </Field>
+                </div>
+                <div className="ppf-form-row">
+                  <Field label="Minimum Plot Size" required error={errors.minPlotSize}>
+                    <TextInput name="minPlotSize" type="number" placeholder="e.g. 1200" value={formData.minPlotSize} onChange={(event) => updateField('minPlotSize', event.target.value)} error={errors.minPlotSize} />
+                  </Field>
+                  <Field label="Maximum Plot Size" required error={errors.maxPlotSize}>
+                    <TextInput name="maxPlotSize" type="number" placeholder="e.g. 3000" value={formData.maxPlotSize} onChange={(event) => updateField('maxPlotSize', event.target.value)} error={errors.maxPlotSize} />
+                  </Field>
+                  <Field label="Total Plots (optional)">
+                    <TextInput name="totalPlots" type="number" placeholder="e.g. 120" value={formData.totalPlots} onChange={(event) => updateField('totalPlots', event.target.value)} />
+                  </Field>
+                </div>
+              </>
+            ) : null}
           </SectionCard>
         );
       case 'amenities':
@@ -722,6 +796,14 @@ export default function AddProjectForm() {
               <Field label="Upload Brochure (PDF)" icon={FileBadge2}>
                 <TextInput name="brochure" type="file" accept="application/pdf" onChange={handleBrochureUpload} />
                 {formData.brochure ? <p className="apf-file-badge">{formData.brochure.name}</p> : null}
+              </Field>
+              <Field label="Upload Project Video (MP4/WebM)">
+                <TextInput
+                  name="videoFile"
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  onChange={(event) => updateField('videoFile', event.target.files?.[0] || null)}
+                />
               </Field>
               <Field label="Project Video URL" error={errors.videoUrl}>
                 <TextInput name="videoUrl" type="url" placeholder="https://youtube.com/watch?v=..." value={formData.videoUrl} onChange={(event) => updateField('videoUrl', event.target.value)} error={errors.videoUrl} />
@@ -834,6 +916,81 @@ export default function AddProjectForm() {
                     <TextInput name="customContactEmail" type="email" placeholder="Enter custom email address" value={formData.customContactEmail} onChange={(event) => updateField('customContactEmail', event.target.value)} error={errors.customContactEmail} />
                   </Field>
                 </div>
+              ) : null}
+            </div>
+
+            <div className="ppf-admin-contact-card" style={{ marginTop: 18 }}>
+              <div className="ppf-admin-contact-head">
+                <div>
+                  <h3 className="ppf-admin-contact-title">WhatsApp Contact</h3>
+                  <p className="ppf-admin-contact-subtitle">Show a WhatsApp button and control which number appears on the project detail page.</p>
+                </div>
+              </div>
+
+              <div className="ppf-toggle-wrapper">
+                <button
+                  type="button"
+                  className={`ppf-toggle ${formData.showWhatsappButton ? 'on' : ''}`}
+                  onClick={() => updateField('showWhatsappButton', !formData.showWhatsappButton)}
+                  aria-pressed={formData.showWhatsappButton}
+                />
+                <span className="ppf-toggle-label">Show WhatsApp button on project page</span>
+              </div>
+
+              {formData.showWhatsappButton ? (
+                <>
+                  <div className="ppf-form-row" style={{ marginTop: 12 }}>
+                    <Field label="WhatsApp Number">
+                      <TextInput name="whatsappNumber" type="text" placeholder="Enter WhatsApp number" value={formData.whatsappNumber} onChange={(event) => updateField('whatsappNumber', event.target.value)} />
+                    </Field>
+                    <Field label="Response Time">
+                      <TextInput name="responseTime" type="text" placeholder="Usually responds within 10 mins" value={formData.responseTime} onChange={(event) => updateField('responseTime', event.target.value)} />
+                    </Field>
+                  </div>
+
+                  <div className="ppf-radio-group" style={{ marginTop: 12 }}>
+                    {isAdminPath ? (
+                      <label className="ppf-radio-label" htmlFor="apf-whatsapp-company">
+                        <input
+                          type="radio"
+                          id="apf-whatsapp-company"
+                          name="apf-whatsapp-mode"
+                          checked={formData.whatsappDisplayMode === 'company'}
+                          onChange={() => setWhatsappDisplayMode('company')}
+                        />
+                        Use company WhatsApp number
+                      </label>
+                    ) : null}
+                    <label className="ppf-radio-label" htmlFor="apf-whatsapp-original">
+                      <input
+                        type="radio"
+                        id="apf-whatsapp-original"
+                        name="apf-whatsapp-mode"
+                        checked={formData.whatsappDisplayMode === 'original' || (!isAdminPath && formData.whatsappDisplayMode !== 'custom')}
+                        onChange={() => setWhatsappDisplayMode('original')}
+                      />
+                      Use project contact WhatsApp number
+                    </label>
+                    <label className="ppf-radio-label" htmlFor="apf-whatsapp-custom">
+                      <input
+                        type="radio"
+                        id="apf-whatsapp-custom"
+                        name="apf-whatsapp-mode"
+                        checked={formData.whatsappDisplayMode === 'custom'}
+                        onChange={() => setWhatsappDisplayMode('custom')}
+                      />
+                      Use custom WhatsApp number
+                    </label>
+                  </div>
+
+                  {formData.whatsappDisplayMode === 'custom' ? (
+                    <div className="ppf-form-row" style={{ marginTop: 12 }}>
+                      <Field label="Custom WhatsApp Number" required error={errors.customWhatsappNumber}>
+                        <TextInput name="customWhatsappNumber" type="text" placeholder="Enter custom WhatsApp number" value={formData.customWhatsappNumber} onChange={(event) => updateField('customWhatsappNumber', event.target.value)} error={errors.customWhatsappNumber} />
+                      </Field>
+                    </div>
+                  ) : null}
+                </>
               ) : null}
             </div>
           </SectionCard>

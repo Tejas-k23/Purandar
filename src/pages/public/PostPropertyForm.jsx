@@ -16,6 +16,12 @@ const initialState = {
   displaySellerName: '',
   displaySellerPhone: '',
   displaySellerEmail: '',
+  whatsappNumber: '',
+  showWhatsappButton: false,
+  responseTime: '',
+  whatsappDisplayMode: 'original',
+  useCustomWhatsappDetails: false,
+  customWhatsappNumber: '',
   useOriginalSellerContact: true,
   contactDisplayMode: 'original',
   title: '',
@@ -57,6 +63,9 @@ const validateStep = (step, data) => {
       if (!data.displaySellerPhone?.trim()) errors.displaySellerPhone = 'Seller phone is required';
       if (!data.displaySellerEmail?.trim()) errors.displaySellerEmail = 'Seller email is required';
     }
+    if (data.showWhatsappButton && data.whatsappDisplayMode === 'custom') {
+      if (!data.customWhatsappNumber?.trim()) errors.customWhatsappNumber = 'Custom WhatsApp number is required';
+    }
   }
   if (step === 2) {
     if (!data.city) errors.city = 'City is required';
@@ -78,6 +87,8 @@ const buildPayload = (formData) => ({
   ...formData,
   contactDisplayMode: formData.contactDisplayMode || (formData.useOriginalSellerContact ? 'original' : 'custom'),
   useOriginalSellerContact: (formData.contactDisplayMode || (formData.useOriginalSellerContact ? 'original' : 'custom')) === 'original',
+  whatsappDisplayMode: formData.whatsappDisplayMode || (formData.useCustomWhatsappDetails ? 'custom' : 'original'),
+  useCustomWhatsappDetails: (formData.whatsappDisplayMode || (formData.useCustomWhatsappDetails ? 'custom' : 'original')) === 'custom',
   intent: formData.intent === 'pg' ? 'rent' : formData.intent,
   photos: (formData.photos || [])
     .filter((photo) => !photo?.isLocal)
@@ -108,12 +119,15 @@ export default function PostPropertyForm() {
         const response = isAdminPath ? await adminService.getProperty(editId) : await propertyService.getById(editId);
         const property = response.data.data;
         const contactDisplayMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
+        const whatsappDisplayMode = property.whatsappDisplayMode || (property.useCustomWhatsappDetails ? 'custom' : 'original');
         dispatch({
           type: 'bulk',
           value: {
             ...property,
             contactDisplayMode,
             useOriginalSellerContact: contactDisplayMode === 'original',
+            whatsappDisplayMode,
+            useCustomWhatsappDetails: whatsappDisplayMode === 'custom',
             photos: mapPhotosForForm(property.photos),
           },
         });
@@ -164,11 +178,6 @@ export default function PostPropertyForm() {
     setSubmitting(true);
     setStatusMessage('');
     try {
-      if (!isAdmin && (formData.photos || []).some((photo) => photo?.isLocal)) {
-        setStatusMessage('Only admin can upload images.');
-        return;
-      }
-
       const { videoFile, ...payload } = buildPayload(formData);
       let propertyId = editId;
       if (editId) {
@@ -182,11 +191,11 @@ export default function PostPropertyForm() {
       }
 
       const newImages = (formData.photos || []).filter((photo) => photo?.isLocal && photo?.file);
-      if (isAdmin && propertyId && newImages.length) {
+      if (propertyId && newImages.length) {
         await propertyService.uploadImages(propertyId, newImages.map((photo) => photo.file));
       }
 
-      if (isAdmin && propertyId && formData.videoFile) {
+      if (propertyId && formData.videoFile) {
         await propertyService.uploadVideos(propertyId, [formData.videoFile]);
       }
 

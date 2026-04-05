@@ -29,7 +29,7 @@ router.patch('/:id', protect, authorize('user', 'agent', 'admin'), updatePropert
 router.post(
   '/:id/upload-images',
   protect,
-  authorize('admin'),
+  authorize('user', 'agent', 'admin'),
   uploadRateLimit,
   requireStandardHeaders,
   requireMultipart,
@@ -42,7 +42,7 @@ router.post(
 router.post(
   '/:id/upload-videos',
   protect,
-  authorize('admin'),
+  authorize('user', 'agent', 'admin'),
   uploadRateLimit,
   requireStandardHeaders,
   requireMultipart,

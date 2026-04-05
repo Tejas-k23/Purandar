@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Bath, Building2, CalendarDays, CarFront, Dumbbell, FileText, Mail, MapPin, MapPinned, Phone, ShieldCheck, Trees, Waves, Users, Building, Lock, Blocks, Sparkles } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import ContactCard, { resolveContact } from '../../components/common/ContactCard';
+import ContactCard, { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
 import Loader from '../../components/common/Loader';
 import ProjectCard from '../../components/project/ProjectCard';
 import projectService from '../../services/projectService';
@@ -27,6 +27,8 @@ const getYoutubeEmbedUrl = (rawUrl = '') => {
   }
   return '';
 };
+
+const normalizeWhatsapp = (value = '') => String(value).replace(/\D/g, '');
 
 const AMENITY_ICONS = {
   Parking: CarFront,
@@ -130,6 +132,28 @@ function InfoGrid({ project }) {
     { icon: Building, label: profile.labels.developer, value: project.developerName || 'NA' },
     { icon: ShieldCheck, label: profile.labels.rera, value: project.reraNumber || 'NA' },
   ];
+
+  if (project.projectType === 'Plots') {
+    cards.splice(2, 0, {
+      icon: Building2,
+      label: 'Price Per Sq.ft',
+      value: project.pricePerSqFt ? `₹${project.pricePerSqFt} / ${project.plotUnit || 'sq.ft'}` : 'NA',
+    });
+    cards.splice(3, 0, {
+      icon: Bath,
+      label: 'Plot Size Range',
+      value: project.minPlotSize && project.maxPlotSize
+        ? `${project.minPlotSize} - ${project.maxPlotSize} ${project.plotUnit || 'sq.ft'}`
+        : 'NA',
+    });
+    if (project.totalPlots) {
+      cards.splice(4, 0, {
+        icon: Blocks,
+        label: 'Total Plots',
+        value: project.totalPlots,
+      });
+    }
+  }
 
   return (
     <div className="pd-stats-grid">
@@ -239,6 +263,8 @@ export default function ProjectDetails() {
   const ending = (project.endingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000);
   const profile = getProjectTypeProfile(project.projectType);
   const visibleContact = resolveContact(project);
+  const whatsappContact = resolveWhatsappContact(project);
+  const whatsappNumber = normalizeWhatsapp(whatsappContact.number);
   const videoEmbedUrl = getYoutubeEmbedUrl(project.videoUrl || '');
 
   return (
@@ -310,6 +336,20 @@ export default function ProjectDetails() {
               if (visibleContact.phone) window.location.href = `tel:${visibleContact.phone}`;
             }}
           />
+
+          {project.showWhatsappButton && whatsappNumber ? (
+            <div className="pd-contact-card">
+              <h3>WhatsApp</h3>
+              <p>{project.responseTime || 'Chat directly for brochure or site visits.'}</p>
+              <button
+                type="button"
+                className="pd-contact-btn"
+                onClick={() => window.open(`https://wa.me/${whatsappNumber}`, '_blank')}
+              >
+                <Phone size={16} /> Chat on WhatsApp
+              </button>
+            </div>
+          ) : null}
 
           <div className="pd-contact-card">
             <h3>Send an enquiry</h3>

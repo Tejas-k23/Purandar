@@ -13,7 +13,7 @@ import PropertyMap from '../../components/property/PropertyMap';
 import SimilarProperties from '../../components/property/SimilarProperties';
 import { formatCurrency } from '../../utils/formatPrice';
 import { getPropertyImageUrls } from '../../utils/propertyImages';
-import ContactCard, { resolveContact } from '../../components/common/ContactCard';
+import ContactCard, { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
 import SeoManager from '../../components/common/SeoManager';
 import './PropertyDetails.css';
 
@@ -35,6 +35,8 @@ const getYoutubeEmbedUrl = (rawUrl = '') => {
   }
   return '';
 };
+
+const normalizeWhatsapp = (value = '') => String(value).replace(/\D/g, '');
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -117,6 +119,8 @@ export default function PropertyDetails() {
   if (!property) return <div style={{ padding: '2rem' }}>{message || 'Property not found'}</div>;
 
   const visibleContact = resolveContact(property);
+  const whatsappContact = resolveWhatsappContact(property);
+  const whatsappNumber = normalizeWhatsapp(whatsappContact.number);
   const titleBase = property.title || `${property.propertyType || 'Property'} in ${property.locality || property.city || 'Purandar'}`;
   const locationLabel = [property.locality, property.city].filter(Boolean).join(', ');
   const areaValue = property.totalArea || property.plotArea || property.carpetArea;
@@ -243,6 +247,20 @@ export default function PropertyDetails() {
             onAction={() => document.getElementById('property-enquiry-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
             helperText="Visible contact reflects your original, company, or custom seller settings."
           />
+
+          {property.showWhatsappButton && whatsappNumber ? (
+            <div className="pd-contact-card">
+              <h3>WhatsApp</h3>
+              <p>{property.responseTime || 'Chat directly for quick updates.'}</p>
+              <button
+                type="button"
+                className="pd-contact-btn"
+                onClick={() => window.open(`https://wa.me/${whatsappNumber}`, '_blank')}
+              >
+                <Phone size={16} /> Chat on WhatsApp
+              </button>
+            </div>
+          ) : null}
 
           <div className="pd-contact-card" id="property-enquiry-form">
             <h3>Send an enquiry</h3>

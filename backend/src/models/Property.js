@@ -27,6 +27,34 @@ const propertySchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    whatsappNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    showWhatsappButton: {
+      type: Boolean,
+      default: false,
+    },
+    responseTime: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    whatsappDisplayMode: {
+      type: String,
+      enum: ['original', 'company', 'custom'],
+      default: 'original',
+    },
+    useCustomWhatsappDetails: {
+      type: Boolean,
+      default: false,
+    },
+    customWhatsappNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     useOriginalSellerContact: {
       type: Boolean,
       default: true,

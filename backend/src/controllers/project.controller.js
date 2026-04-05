@@ -11,11 +11,45 @@ import {
 } from '../utils/media.js';
 import { deleteManyFromR2, uploadToR2 } from '../utils/r2.js';
 
+const toNumberOrNull = (value) => {
+  if (value === '' || value === undefined || value === null) {
+    return null;
+  }
+  const num = Number(value);
+  return Number.isNaN(num) ? null : num;
+};
+
+const toBoolean = (value) => {
+  if (value === true || value === 'true' || value === 1 || value === '1') return true;
+  if (value === false || value === 'false' || value === 0 || value === '0') return false;
+  return Boolean(value);
+};
+
 const normalizePayload = (payload = {}) => {
   const next = { ...payload };
   if (!next.slug && next.projectName) {
     next.slug = slugify(next.projectName);
   }
+  if ('pricePerSqFt' in next) next.pricePerSqFt = toNumberOrNull(next.pricePerSqFt);
+  if ('minPlotSize' in next) next.minPlotSize = toNumberOrNull(next.minPlotSize);
+  if ('maxPlotSize' in next) next.maxPlotSize = toNumberOrNull(next.maxPlotSize);
+  if ('totalPlots' in next) next.totalPlots = toNumberOrNull(next.totalPlots);
+  if ('showWhatsappButton' in next) next.showWhatsappButton = toBoolean(next.showWhatsappButton);
+
+  if (next.whatsappDisplayMode) {
+    next.whatsappDisplayMode = String(next.whatsappDisplayMode).toLowerCase();
+  } else if (next.useCustomWhatsappDetails === true) {
+    next.whatsappDisplayMode = 'custom';
+  } else if (next.useCustomWhatsappDetails === false) {
+    next.whatsappDisplayMode = 'original';
+  }
+
+  if (next.whatsappDisplayMode && next.whatsappDisplayMode !== 'original') {
+    next.useCustomWhatsappDetails = true;
+  } else if (next.whatsappDisplayMode === 'original') {
+    next.useCustomWhatsappDetails = false;
+  }
+
   next.configurationTypes = Array.isArray(next.configurationTypes) ? next.configurationTypes : [];
   next.extraConfigurations = Array.isArray(next.extraConfigurations) ? next.extraConfigurations : [];
   next.amenities = Array.isArray(next.amenities) ? next.amenities : [];

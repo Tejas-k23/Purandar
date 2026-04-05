@@ -1,6 +1,6 @@
 import React from 'react';
 import { Mail, Phone, UserRound } from 'lucide-react';
-import { companyContact, hasCompanyContact } from '../../config/companyContact';
+import { companyContact, hasCompanyContact, hasCompanyWhatsapp } from '../../config/companyContact';
 
 function resolveContact(item = {}) {
   const contactDisplayMode = item.contactDisplayMode
@@ -30,6 +30,22 @@ function resolveContact(item = {}) {
   return original;
 }
 
+function resolveWhatsappContact(item = {}) {
+  const whatsappDisplayMode = item.whatsappDisplayMode
+    || (item.useCustomWhatsappDetails ? 'custom' : null)
+    || 'original';
+
+  const originalNumber = item.whatsappNumber || item.phoneNumber || item.owner?.phone || '';
+
+  const customNumber = item.customWhatsappNumber || originalNumber;
+
+  const companyNumber = companyContact.whatsapp || companyContact.phone || originalNumber;
+
+  if (whatsappDisplayMode === 'company' && hasCompanyWhatsapp) return { number: companyNumber };
+  if (whatsappDisplayMode === 'custom') return { number: customNumber };
+  return { number: originalNumber };
+}
+
 export default function ContactCard({ item = {}, buttonLabel = 'Enquire Now', onAction, helperText = 'Get in touch for floor plans, pricing, and site visits.' }) {
   const contact = resolveContact(item);
 
@@ -49,4 +65,4 @@ export default function ContactCard({ item = {}, buttonLabel = 'Enquire Now', on
   );
 }
 
-export { resolveContact };
+export { resolveContact, resolveWhatsappContact };
