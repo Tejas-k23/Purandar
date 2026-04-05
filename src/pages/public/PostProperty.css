@@ -570,13 +570,23 @@
     }
 }
 
-@media (max-width: 840px) {
+@media (max-width: 900px) {
     .pp-choice-grid {
         gap: var(--space-4);
     }
 
     .pp-choice-card {
         padding: var(--space-6);
+    }
+}
+
+@media (max-width: 900px) {
+    .pp-mobile-toggle {
+        display: flex;
+    }
+
+    .pp-choice-card-inactive {
+        display: none;
     }
 }
 
@@ -609,10 +619,6 @@
         gap: var(--space-3);
     }
 
-    .pp-mobile-toggle {
-        display: flex;
-    }
-
     .pp-choice-card {
         padding: var(--space-5);
     }
@@ -625,10 +631,6 @@
 
     .pp-choice-point {
         font-size: 0.88rem;
-    }
-
-    .pp-choice-card-inactive {
-        display: none;
     }
 
     .pp-pill-group {
