@@ -13,7 +13,7 @@ import PropertyMap from '../../components/property/PropertyMap';
 import SimilarProperties from '../../components/property/SimilarProperties';
 import { formatCurrency } from '../../utils/formatPrice';
 import { getPropertyImageUrls } from '../../utils/propertyImages';
-import ContactCard, { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
+import { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
 import SeoManager from '../../components/common/SeoManager';
 import './PropertyDetails.css';
 
@@ -37,6 +37,12 @@ const getYoutubeEmbedUrl = (rawUrl = '') => {
 };
 
 const normalizeWhatsapp = (value = '') => String(value).replace(/\D/g, '');
+const formatDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+};
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -136,6 +142,7 @@ export default function PropertyDetails() {
   const seoDescription = property.description || summaryBits.join(' ');
   const primaryImage = getPropertyImageUrls(property)[0] || '';
   const videoEmbedUrl = getYoutubeEmbedUrl(property.videoUrl || '');
+  const uploadedDate = formatDate(property.createdAt);
   const pageUrl = `${window.location.origin}/property/${property._id}`;
   const schema = {
     '@context': 'https://schema.org',
@@ -198,6 +205,12 @@ export default function PropertyDetails() {
             </div>
           ) : null}
           <div className="pd-card"><PropertyTitleSection property={property} /></div>
+          {uploadedDate ? (
+            <div className="pd-card">
+              <h2 className="pd-section-title">Listing Info</h2>
+              <p className="pd-description-text">Uploaded on {uploadedDate}</p>
+            </div>
+          ) : null}
           <div className="pd-card"><PropertyStatsBar property={property} /></div>
           <div className="pd-card"><PropertyDescription property={property} /></div>
           <div className="pd-card"><PropertyInfoPanel property={property} /></div>
@@ -236,18 +249,6 @@ export default function PropertyDetails() {
             ) : null}
           </div>
 
-          <ContactCard
-            item={{
-              ...property,
-              contactPersonName: visibleContact.name,
-              phoneNumber: visibleContact.phone,
-              email: visibleContact.email,
-            }}
-            buttonLabel="Enquire Now"
-            onAction={() => document.getElementById('property-enquiry-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-            helperText="Visible contact reflects your original, company, or custom seller settings."
-          />
-
           {property.showWhatsappButton && whatsappNumber ? (
             <div className="pd-contact-card">
               <h3>WhatsApp</h3>
@@ -260,6 +261,22 @@ export default function PropertyDetails() {
                 <Phone size={16} /> Chat on WhatsApp
               </button>
             </div>
+          ) : null}
+
+          {property.showWhatsappButton && whatsappNumber ? (
+            <button
+              type="button"
+              className="pd-whatsapp-fab"
+              onClick={() => window.open(`https://wa.me/${whatsappNumber}`, '_blank')}
+              aria-label="Chat on WhatsApp"
+            >
+              <span className="pd-whatsapp-icon">
+                <Phone size={18} />
+              </span>
+              <span className="pd-whatsapp-tooltip">
+                {property.responseTime || 'Chat on WhatsApp'}
+              </span>
+            </button>
           ) : null}
 
           <div className="pd-contact-card" id="property-enquiry-form">

@@ -398,20 +398,64 @@ export default function AdminProperties() {
               label: 'Actions',
               render: (row) => (
                 <div className="admin-action-row">
-                  <a href={`/property/${row._id}`} target="_blank" rel="noreferrer" className="admin-secondary-btn admin-secondary-btn-inline"><Eye className="w-4 h-4" /> View</a>
-                  <Link to={`/admin/properties/form?edit=${row._id}`} className="admin-secondary-btn admin-secondary-btn-inline"><Pencil className="w-4 h-4" /> Edit</Link>
+                  <a
+                    href={`/property/${row._id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="admin-secondary-btn admin-secondary-btn-inline admin-icon-btn"
+                    title="View property"
+                    aria-label="View property"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </a>
+                  <Link
+                    to={`/admin/properties/form?edit=${row._id}`}
+                    className="admin-secondary-btn admin-secondary-btn-inline admin-icon-btn"
+                    title="Edit property"
+                    aria-label="Edit property"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Link>
                   <button
                     type="button"
-                    className={`admin-secondary-btn admin-secondary-btn-inline admin-feature-btn ${row.featuredOnHome ? 'is-featured' : ''}`}
+                    className={`admin-secondary-btn admin-secondary-btn-inline admin-feature-btn admin-icon-btn ${row.featuredOnHome ? 'is-featured' : ''}`}
                     disabled={busyId === `${row._id}:featured` || row.status !== 'approved'}
                     onClick={() => toggleFeatured(row._id, row.featuredOnHome)}
+                    title={row.featuredOnHome ? 'Remove from featured' : 'Feature on home'}
+                    aria-label={row.featuredOnHome ? 'Remove from featured' : 'Feature on home'}
                   >
                     {busyId === `${row._id}:featured` ? <span className="admin-inline-spinner" aria-hidden="true"></span> : <Star className="w-4 h-4" />}
-                    {row.featuredOnHome ? 'Unfeature' : 'Feature'}
                   </button>
-                  <button type="button" className="admin-primary-btn admin-primary-btn-inline" disabled={busyId === `${row._id}:approved`} onClick={() => updateStatus(row._id, 'approved')}><Power className="w-4 h-4" /> Show</button>
-                  <button type="button" className="admin-danger-btn" disabled={busyId === `${row._id}:archived`} onClick={() => updateStatus(row._id, 'archived')}>Hide</button>
-                  <button type="button" className="admin-danger-btn" disabled={busyId === `${row._id}:delete`} onClick={() => deleteProperty(row._id)}><Trash2 className="w-4 h-4" /> Delete</button>
+                  <button
+                    type="button"
+                    className="admin-primary-btn admin-primary-btn-inline admin-icon-btn"
+                    disabled={busyId === `${row._id}:approved`}
+                    onClick={() => updateStatus(row._id, 'approved')}
+                    title="Show listing"
+                    aria-label="Show listing"
+                  >
+                    <Power className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-danger-btn admin-icon-btn"
+                    disabled={busyId === `${row._id}:archived`}
+                    onClick={() => updateStatus(row._id, 'archived')}
+                    title="Hide listing"
+                    aria-label="Hide listing"
+                  >
+                    <Power className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-danger-btn admin-icon-btn"
+                    disabled={busyId === `${row._id}:delete`}
+                    onClick={() => deleteProperty(row._id)}
+                    title="Delete property"
+                    aria-label="Delete property"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ),
             },

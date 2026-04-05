@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Bath, Building2, CalendarDays, CarFront, Dumbbell, FileText, Mail, MapPin, MapPinned, Phone, ShieldCheck, Trees, Waves, Users, Building, Lock, Blocks, Sparkles } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import ContactCard, { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
+import { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
 import Loader from '../../components/common/Loader';
 import ProjectCard from '../../components/project/ProjectCard';
 import projectService from '../../services/projectService';
@@ -29,6 +29,12 @@ const getYoutubeEmbedUrl = (rawUrl = '') => {
 };
 
 const normalizeWhatsapp = (value = '') => String(value).replace(/\D/g, '');
+const formatDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+};
 
 const AMENITY_ICONS = {
   Parking: CarFront,
@@ -266,6 +272,7 @@ export default function ProjectDetails() {
   const whatsappContact = resolveWhatsappContact(project);
   const whatsappNumber = normalizeWhatsapp(whatsappContact.number);
   const videoEmbedUrl = getYoutubeEmbedUrl(project.videoUrl || '');
+  const uploadedDate = formatDate(project.createdAt);
 
   return (
     <div className="pd-page" style={{ paddingBottom: '3rem' }}>
@@ -304,6 +311,12 @@ export default function ProjectDetails() {
               {(project.tags || []).map((tag) => <span key={tag} className="pd-tag">{tag}</span>)}
             </div>
           </div>
+          {uploadedDate ? (
+            <div className="pd-card">
+              <h2 className="pd-section-title">Project Info</h2>
+              <p className="pd-description-text">Uploaded on {uploadedDate}</p>
+            </div>
+          ) : null}
           <div className="pd-card"><InfoGrid project={project} /></div>
           <div className="pd-card"><Amenities amenities={project.amenities || []} /></div>
           <div className="pd-card"><Description project={project} /></div>
@@ -329,14 +342,6 @@ export default function ProjectDetails() {
             </div>
           </div>
 
-          <ContactCard
-            item={project}
-            helperText="Contact info reflects the original, company, or custom contact settings."
-            onAction={() => {
-              if (visibleContact.phone) window.location.href = `tel:${visibleContact.phone}`;
-            }}
-          />
-
           {project.showWhatsappButton && whatsappNumber ? (
             <div className="pd-contact-card">
               <h3>WhatsApp</h3>
@@ -349,6 +354,22 @@ export default function ProjectDetails() {
                 <Phone size={16} /> Chat on WhatsApp
               </button>
             </div>
+          ) : null}
+
+          {project.showWhatsappButton && whatsappNumber ? (
+            <button
+              type="button"
+              className="pd-whatsapp-fab"
+              onClick={() => window.open(`https://wa.me/${whatsappNumber}`, '_blank')}
+              aria-label="Chat on WhatsApp"
+            >
+              <span className="pd-whatsapp-icon">
+                <Phone size={18} />
+              </span>
+              <span className="pd-whatsapp-tooltip">
+                {project.responseTime || 'Chat on WhatsApp'}
+              </span>
+            </button>
           ) : null}
 
           <div className="pd-contact-card">

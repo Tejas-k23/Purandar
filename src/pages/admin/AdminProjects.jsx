@@ -357,12 +357,44 @@ export default function AdminProjects() {
               label: 'Actions',
               render: (row) => (
                 <div className="admin-action-row">
-                  <a href={`/projects/${row.slug || row._id}`} target="_blank" rel="noreferrer" className="admin-secondary-btn admin-secondary-btn-inline"><Eye className="w-4 h-4" /> View</a>
-                  <Link to={`/admin/add-project?edit=${row._id}`} className="admin-secondary-btn admin-secondary-btn-inline"><Pencil className="w-4 h-4" /> Edit</Link>
-                  <button type="button" className={`admin-secondary-btn admin-secondary-btn-inline admin-feature-btn ${row.featuredOnHome ? 'is-featured' : ''}`} onClick={() => toggleFeatured(row._id, !row.featuredOnHome)} disabled={busyId === `${row._id}:featured`}>
-                    <Star className="w-4 h-4" /> {row.featuredOnHome ? 'Unfeature' : 'Feature'}
+                  <a
+                    href={`/projects/${row.slug || row._id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="admin-secondary-btn admin-secondary-btn-inline admin-icon-btn"
+                    title="View project"
+                    aria-label="View project"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </a>
+                  <Link
+                    to={`/admin/add-project?edit=${row._id}`}
+                    className="admin-secondary-btn admin-secondary-btn-inline admin-icon-btn"
+                    title="Edit project"
+                    aria-label="Edit project"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Link>
+                  <button
+                    type="button"
+                    className={`admin-secondary-btn admin-secondary-btn-inline admin-feature-btn admin-icon-btn ${row.featuredOnHome ? 'is-featured' : ''}`}
+                    onClick={() => toggleFeatured(row._id, !row.featuredOnHome)}
+                    disabled={busyId === `${row._id}:featured`}
+                    title={row.featuredOnHome ? 'Remove from featured' : 'Feature on home'}
+                    aria-label={row.featuredOnHome ? 'Remove from featured' : 'Feature on home'}
+                  >
+                    <Star className="w-4 h-4" />
                   </button>
-                  <button type="button" className="admin-danger-btn" onClick={() => deleteProject(row._id)} disabled={busyId === `${row._id}:delete`}><Trash2 className="w-4 h-4" /> Delete</button>
+                  <button
+                    type="button"
+                    className="admin-danger-btn admin-icon-btn"
+                    onClick={() => deleteProject(row._id)}
+                    disabled={busyId === `${row._id}:delete`}
+                    title="Delete project"
+                    aria-label="Delete project"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ),
             },
