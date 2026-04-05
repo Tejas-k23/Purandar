@@ -18,6 +18,7 @@ const initialState = {
   displaySellerEmail: '',
   useOriginalSellerContact: true,
   contactDisplayMode: 'original',
+  title: '',
   intent: 'sell', category: 'residential', propertyType: '', city: '', locality: '', subLocality: '', landmark: '', flatNo: '', totalFloors: '', floorNo: '',
   bedrooms: '', bathrooms: '', balconies: '', totalArea: '', areaUnit: 'sq.ft', carpetArea: '', furnishing: '', availability: '', possessionMonth: '', possessionYear: '', propertyAge: '', ownership: '', price: '', priceNegotiable: false,
   securityDeposit: '', maintenance: '', mealsIncluded: false, plotArea: '', plotLength: '', plotWidth: '', boundaryWall: '', openSides: '', constructionDone: '', superBuiltUpArea: '', washroom: '', personalWashroom: '', pantry: '', coveredParking: '', openParking: '', warehouseHeight: '', loadingUnloading: '', floorsInProperty: '', floorArea: '',
@@ -124,7 +125,7 @@ export default function PostPropertyForm() {
   }, [editId]);
 
   const score = useMemo(() => {
-    const fields = ['propertyType', 'city', 'locality', 'price', 'description'];
+    const fields = ['title', 'propertyType', 'city', 'locality', 'price', 'description'];
     const filled = fields.filter((field) => formData[field]).length;
     return Math.round((filled / fields.length) * 100);
   }, [formData]);

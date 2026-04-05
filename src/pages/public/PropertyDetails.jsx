@@ -12,6 +12,7 @@ import PropertyInfoPanel from '../../components/property/PropertyInfoPanel';
 import PropertyMap from '../../components/property/PropertyMap';
 import SimilarProperties from '../../components/property/SimilarProperties';
 import { formatCurrency } from '../../utils/formatPrice';
+import { getPropertyImageUrls } from '../../utils/propertyImages';
 import ContactCard, { resolveContact } from '../../components/common/ContactCard';
 import SeoManager from '../../components/common/SeoManager';
 import './PropertyDetails.css';
@@ -110,7 +111,7 @@ export default function PropertyDetails() {
     property.price ? `• Price ${formatCurrency(property.price)}` : '',
   ].filter(Boolean);
   const seoDescription = property.description || summaryBits.join(' ');
-  const primaryImage = property.photos?.[0] || '';
+  const primaryImage = getPropertyImageUrls(property)[0] || '';
   const pageUrl = `${window.location.origin}/property/${property._id}`;
   const schema = {
     '@context': 'https://schema.org',
@@ -154,7 +155,7 @@ export default function PropertyDetails() {
       <div className="pd-layout">
         <div className="pd-main">
           <button onClick={() => navigate(-1)} className="pd-back-btn">Back to listings</button>
-          <PropertyGallery photos={property.photos} intent={property.intent} />
+          <PropertyGallery photos={property.photos} images={property.images} intent={property.intent} />
           <div className="pd-card"><PropertyTitleSection property={property} /></div>
           <div className="pd-card"><PropertyStatsBar property={property} /></div>
           <div className="pd-card"><PropertyDescription property={property} /></div>

@@ -562,6 +562,12 @@
     min-height: 0;
 }
 
+.ppf-input-hint {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+    margin-top: 4px;
+}
+
 /* --- Select / Dropdown --- */
 .ppf-select {
     width: 100%;

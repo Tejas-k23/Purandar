@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, HandCoins, Home, Mail, Phone, UserRound } from 'lucide-react';
+import { Building2, HandCoins, Home, Mail, PenSquare, Phone, UserRound } from 'lucide-react';
 
 const residentialTypes = [
     'Flat / Apartment',
@@ -99,6 +99,21 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
                 ))}
             </div>
             {errors.propertyType ? <p className="ppf-input-error">{errors.propertyType}</p> : null}
+
+            <div className="ppf-field" style={{ marginTop: 18 }}>
+                <label className="ppf-field-label">
+                    <span className="ppf-field-label-icon"><PenSquare size={14} /></span>
+                    Property Title
+                </label>
+                <input
+                    className="ppf-input"
+                    type="text"
+                    placeholder="e.g. 2 BHK with balcony in Saswad"
+                    value={formData.title || ''}
+                    onChange={(event) => updateField('title', event.target.value)}
+                />
+                <p className="ppf-input-hint">If left blank, we will auto-generate a title from type and location.</p>
+            </div>
 
             <div className="ppf-admin-contact-card">
                 <div className="ppf-admin-contact-head">

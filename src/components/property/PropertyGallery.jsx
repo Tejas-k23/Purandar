@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getPropertyImageUrls } from '../../utils/propertyImages';
 
-export default function PropertyGallery({ photos = [], intent = 'sell' }) {
-  const items = photos.length ? photos : ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80'];
+export default function PropertyGallery({ photos = [], images = [], intent = 'sell' }) {
+  const items = useMemo(() => {
+    const urls = getPropertyImageUrls({ photos, images });
+    return urls.length ? urls : ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80'];
+  }, [photos, images]);
   const [activeIdx, setActiveIdx] = useState(0);
   const showGalleryControls = items.length > 1;
 

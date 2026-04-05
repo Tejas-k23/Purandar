@@ -4,6 +4,7 @@ import Map, { FullscreenControl, Marker, NavigationControl, Popup } from 'react-
 import { useNavigate } from 'react-router-dom';
 import env from '../../config/env';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import { getPropertyImageUrls } from '../../utils/propertyImages';
 import SearchBar from './SearchBar';
 import './MapPanel.css';
 
@@ -129,7 +130,11 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
                 setSelectedPropertyId(property._id);
               }}
             >
-              <img src={property.photos?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=300&q=80'} alt={property.title} className="marker-image" />
+              <img
+                src={getPropertyImageUrls(property)[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=300&q=80'}
+                alt={property.title}
+                className="marker-image"
+              />
               <span className="marker-price">INR {Math.round((property.price || 0) / 100000)}L</span>
             </button>
           </Marker>
@@ -149,7 +154,7 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
                 <X size={14} />
               </button>
               <img
-                src={selectedProperty.photos?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80'}
+                src={getPropertyImageUrls(selectedProperty)[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80'}
                 alt={selectedProperty.title}
                 className="map-popup-image"
               />

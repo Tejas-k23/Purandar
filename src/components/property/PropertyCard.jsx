@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { MapPin, Heart, ShieldCheck, BedDouble, Bath, Ruler, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import { getPropertyImageUrls } from '../../utils/propertyImages';
 import { resolveContact } from '../common/ContactCard';
 import './PropertyCard.css';
 
@@ -10,7 +11,10 @@ const getFallbackImage = () => 'https://images.unsplash.com/photo-1600596542815-
 
 export default function PropertyCard({ property, isSaved = false, onToggleSave, onHover, isActive = false, variant = 'default' }) {
   const navigate = useNavigate();
-  const images = useMemo(() => (property.photos?.length ? property.photos : [getFallbackImage()]), [property]);
+  const images = useMemo(() => {
+    const urls = getPropertyImageUrls(property);
+    return urls.length ? urls : [getFallbackImage()];
+  }, [property]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const contact = useMemo(() => resolveContact(property), [property]);
   const showBachelorsBadge = property.propertyType === 'PG / Hostel' || property.tenantPreference === 'bachelors';

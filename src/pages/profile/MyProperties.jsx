@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import userService from '../../services/userService';
 import propertyService from '../../services/propertyService';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import { getPropertyImageUrls } from '../../utils/propertyImages';
 import Loader from '../../components/common/Loader';
 import EmptyState from '../../components/common/EmptyState';
 import './MyProperties.css';
@@ -13,6 +14,7 @@ export default function MyProperties() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const fallbackImage = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80';
 
   const load = async () => {
     setLoading(true);
@@ -52,7 +54,7 @@ export default function MyProperties() {
           {properties.map((property) => (
             <div key={property._id} className="my-property-card">
               <div className="property-image-col">
-                <img src={property.photos?.[0]} alt={property.title} />
+                <img src={getPropertyImageUrls(property)[0] || fallbackImage} alt={property.title} />
                 <span className={`status-badge ${property.status === 'approved' ? 'active' : 'pending'}`}>{property.status}</span>
               </div>
               <div className="property-info-col">
