@@ -68,7 +68,9 @@ export default function Step4MediaUpload({ formData, updateField }) {
 
     const filteredPhotos = activeTab === 'All'
         ? photos
-        : photos.filter(p => p.category === activeTab);\n\nreturn (
+        : photos.filter(p => p.category === activeTab);
+
+    return (
         <div className="ppf-step-content" key="step4">
             <h2 className="ppf-heading"><span className="ppf-heading-icon"><ImagePlus size={18} /></span>Add photos & media to attract more buyers</h2>
 
