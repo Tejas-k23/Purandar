@@ -11,6 +11,11 @@ import { hasCompanyContact } from '../../config/companyContact';
 export default function AdminProjects() {
   const [projects, setProjects] = useState([]);
   const [busyId, setBusyId] = useState('');
+  const [contactEditorId, setContactEditorId] = useState('');
+  const [contactDrafts, setContactDrafts] = useState({});
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
 
   const load = async () => {
     const response = await projectService.getAll({ includeHidden: true });
@@ -62,6 +67,61 @@ export default function AdminProjects() {
     }
   };
 
+  const openContactEditor = (project) => {
+    setContactEditorId(project._id);
+    setContactDrafts((current) => ({
+      ...current,
+      [project._id]: {
+        customContactName: project.customContactName || '',
+        customContactPhone: project.customContactPhone || '',
+        customContactEmail: project.customContactEmail || '',
+      },
+    }));
+  };
+
+  const updateContactDraft = (projectId, field, value) => {
+    setContactDrafts((current) => ({
+      ...current,
+      [projectId]: {
+        ...(current[projectId] || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveCustomContact = async (projectId) => {
+    const draft = contactDrafts[projectId];
+    if (!draft) return;
+    setBusyId(`${projectId}:contact-edit`);
+    setProjects((current) => current.map((item) => (
+      item._id === projectId
+        ? {
+          ...item,
+          contactDisplayMode: 'custom',
+          useCustomContactDetails: true,
+          customContactName: draft.customContactName,
+          customContactPhone: draft.customContactPhone,
+          customContactEmail: draft.customContactEmail,
+        }
+        : item
+    )));
+
+    try {
+      await projectService.update(projectId, {
+        contactDisplayMode: 'custom',
+        useCustomContactDetails: true,
+        customContactName: draft.customContactName,
+        customContactPhone: draft.customContactPhone,
+        customContactEmail: draft.customContactEmail,
+      });
+      setContactEditorId('');
+    } catch (_error) {
+      await load();
+    } finally {
+      setBusyId('');
+    }
+  };
+
   const setContactMode = async (projectId, nextMode) => {
     const project = projects.find((item) => item._id === projectId);
     if (!project) return;
@@ -94,6 +154,35 @@ export default function AdminProjects() {
   };
 
   const featuredCount = useMemo(() => projects.filter((item) => item.featuredOnHome).length, [projects]);
+  const filteredProjects = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    const filtered = projects.filter((project) => {
+      if (statusFilter !== 'all' && project.projectStatus !== statusFilter) return false;
+      if (!needle) return true;
+      const haystack = [
+        project.projectName,
+        project.projectType,
+        project.developerName,
+        project.area,
+        project.city,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(needle);
+    });
+
+    const sorted = [...filtered];
+    if (sortBy === 'name-asc') {
+      sorted.sort((a, b) => String(a.projectName || '').localeCompare(String(b.projectName || '')));
+    } else if (sortBy === 'name-desc') {
+      sorted.sort((a, b) => String(b.projectName || '').localeCompare(String(a.projectName || '')));
+    } else if (sortBy === 'price-asc') {
+      sorted.sort((a, b) => Number(a.startingPrice || 0) - Number(b.startingPrice || 0));
+    } else if (sortBy === 'price-desc') {
+      sorted.sort((a, b) => Number(b.startingPrice || 0) - Number(a.startingPrice || 0));
+    } else {
+      sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+    return sorted;
+  }, [projects, search, statusFilter, sortBy]);
 
   return (
     <div className="admin-page">
@@ -109,6 +198,37 @@ export default function AdminProjects() {
       />
 
       <div className="admin-panel-card">
+        <div className="admin-filter-row" style={{ marginBottom: '0.85rem' }}>
+          <div className="admin-filter-group">
+            <span className="admin-filter-label">Search</span>
+            <input
+              className="admin-filter-input"
+              type="text"
+              placeholder="Search by project, developer, city..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+          <div className="admin-filter-group">
+            <span className="admin-filter-label">Status</span>
+            <select className="admin-filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+              <option value="all">All</option>
+              <option value="Upcoming">Upcoming</option>
+              <option value="Under Construction">Under Construction</option>
+              <option value="Ready to Move">Ready to Move</option>
+            </select>
+          </div>
+          <div className="admin-filter-group">
+            <span className="admin-filter-label">Sort</span>
+            <select className="admin-filter-select" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+              <option value="newest">Newest</option>
+              <option value="name-asc">Name A-Z</option>
+              <option value="name-desc">Name Z-A</option>
+              <option value="price-asc">Price Low-High</option>
+              <option value="price-desc">Price High-Low</option>
+            </select>
+          </div>
+        </div>
         <DataTable
           emptyMessage="No projects found."
           columns={[
@@ -147,6 +267,8 @@ export default function AdminProjects() {
               render: (row) => {
                 const mode = row.contactDisplayMode || (row.useCustomContactDetails ? 'custom' : 'original');
                 const checked = mode === 'original';
+                const isEditing = contactEditorId === row._id;
+                const draft = contactDrafts[row._id] || {};
                 return (
                   <div className="admin-cell-stack">
                     <ToggleSwitch
@@ -158,12 +280,68 @@ export default function AdminProjects() {
                     {mode === 'company' ? (
                       <button
                         type="button"
-                        className="admin-secondary-btn admin-secondary-btn-inline"
+                        className="admin-secondary-btn admin-secondary-btn-inline admin-contact-cta"
                         disabled={busyId === `${row._id}:contact`}
-                        onClick={() => setContactMode(row._id, 'custom')}
+                        onClick={() => {
+                          setContactMode(row._id, 'custom');
+                          openContactEditor(row);
+                        }}
                       >
                         Use custom contact
                       </button>
+                    ) : null}
+                    {mode === 'custom' ? (
+                      <button
+                        type="button"
+                        className="admin-secondary-btn admin-secondary-btn-inline admin-contact-cta"
+                        onClick={() => openContactEditor(row)}
+                        disabled={busyId === `${row._id}:contact`}
+                      >
+                        {row.customContactName || row.customContactPhone || row.customContactEmail ? 'Edit custom contact' : 'Add custom contact'}
+                      </button>
+                    ) : null}
+                    {isEditing ? (
+                      <div className="admin-contact-editor">
+                        <input
+                          className="admin-contact-input"
+                          type="text"
+                          placeholder="Name"
+                          value={draft.customContactName || ''}
+                          onChange={(event) => updateContactDraft(row._id, 'customContactName', event.target.value)}
+                        />
+                        <input
+                          className="admin-contact-input"
+                          type="tel"
+                          placeholder="Phone"
+                          value={draft.customContactPhone || ''}
+                          onChange={(event) => updateContactDraft(row._id, 'customContactPhone', event.target.value)}
+                        />
+                        <input
+                          className="admin-contact-input"
+                          type="email"
+                          placeholder="Email"
+                          value={draft.customContactEmail || ''}
+                          onChange={(event) => updateContactDraft(row._id, 'customContactEmail', event.target.value)}
+                        />
+                        <div className="admin-contact-actions">
+                          <button
+                            type="button"
+                            className="admin-primary-btn admin-primary-btn-inline"
+                            onClick={() => saveCustomContact(row._id)}
+                            disabled={busyId === `${row._id}:contact-edit`}
+                          >
+                            {busyId === `${row._id}:contact-edit` ? 'Saving...' : 'Save'}
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-secondary-btn admin-secondary-btn-inline"
+                            onClick={() => setContactEditorId('')}
+                            disabled={busyId === `${row._id}:contact-edit`}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 );
@@ -189,7 +367,7 @@ export default function AdminProjects() {
               ),
             },
           ]}
-          rows={projects.map((item) => ({ ...item, id: item._id }))}
+          rows={filteredProjects.map((item) => ({ ...item, id: item._id }))}
         />
       </div>
     </div>

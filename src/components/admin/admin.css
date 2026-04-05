@@ -399,6 +399,39 @@
     gap: 0.38rem;
 }
 
+.admin-contact-cta {
+    align-self: flex-start;
+    border-color: rgba(255, 107, 0, 0.25);
+    background: linear-gradient(180deg, #fff6ef 0%, #ffffff 100%);
+    color: var(--navy-blue);
+}
+
+.admin-contact-editor {
+    margin-top: 0.5rem;
+    padding: 0.65rem;
+    border-radius: 16px;
+    background: var(--warm-white);
+    border: 1px solid var(--gray-200);
+    display: grid;
+    gap: 0.45rem;
+}
+
+.admin-contact-input {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    font-size: 0.82rem;
+    color: var(--navy-blue);
+    background: var(--white);
+}
+
+.admin-contact-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
 .admin-inline-spinner {
     width: 14px;
     height: 14px;
@@ -592,6 +625,25 @@
     border-color: var(--indigo-600);
     color: var(--indigo-600);
     background: var(--indigo-50);
+}
+
+.admin-filter-input,
+.admin-filter-select {
+    min-height: 40px;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    color: var(--navy-blue);
+    font-size: 0.85rem;
+}
+
+.admin-filter-input {
+    min-width: 220px;
+}
+
+.admin-filter-select {
+    min-width: 160px;
 }
 
 

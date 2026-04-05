@@ -51,7 +51,7 @@ export const getPropertyVideoPath = (propertyId, fileName) => {
     throw new Error('Invalid file name for video path.');
   }
 
-  return `propertys/properties/${propertyId}/videos/${safeName}`;
+  return `properties/${propertyId}/videos/${safeName}`;
 };
 
 export const getImageUrl = (storedPath = '') => {

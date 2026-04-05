@@ -13,6 +13,11 @@ export default function AdminProperties() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState('');
+  const [contactEditorId, setContactEditorId] = useState('');
+  const [contactDrafts, setContactDrafts] = useState({});
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
 
   const load = async () => {
     setLoading(true);
@@ -109,6 +114,60 @@ export default function AdminProperties() {
     }
   };
 
+  const openContactEditor = (property) => {
+    setContactEditorId(property._id);
+    setContactDrafts((current) => ({
+      ...current,
+      [property._id]: {
+        displaySellerName: property.displaySellerName || '',
+        displaySellerPhone: property.displaySellerPhone || '',
+        displaySellerEmail: property.displaySellerEmail || '',
+      },
+    }));
+  };
+
+  const updateContactDraft = (propertyId, field, value) => {
+    setContactDrafts((current) => ({
+      ...current,
+      [propertyId]: {
+        ...(current[propertyId] || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveCustomContact = async (propertyId) => {
+    const draft = contactDrafts[propertyId];
+    if (!draft) return;
+    setBusyId(`${propertyId}:contact-edit`);
+    setProperties((current) => current.map((item) => (
+      item._id === propertyId
+        ? {
+          ...item,
+          contactDisplayMode: 'custom',
+          useOriginalSellerContact: false,
+          displaySellerName: draft.displaySellerName,
+          displaySellerPhone: draft.displaySellerPhone,
+          displaySellerEmail: draft.displaySellerEmail,
+        }
+        : item
+    )));
+
+    try {
+      await adminService.updateProperty(propertyId, {
+        contactDisplayMode: 'custom',
+        displaySellerName: draft.displaySellerName,
+        displaySellerPhone: draft.displaySellerPhone,
+        displaySellerEmail: draft.displaySellerEmail,
+      });
+      setContactEditorId('');
+    } catch (_error) {
+      await load();
+    } finally {
+      setBusyId('');
+    }
+  };
+
   const deleteProperty = async (propertyId) => {
     const confirmed = window.confirm('Delete this property permanently?');
     if (!confirmed) return;
@@ -123,6 +182,36 @@ export default function AdminProperties() {
   };
 
   const featuredCount = useMemo(() => properties.filter((property) => property.featuredOnHome).length, [properties]);
+  const filteredProperties = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    const filtered = properties.filter((property) => {
+      if (statusFilter !== 'all' && property.status !== statusFilter) return false;
+      if (!needle) return true;
+      const haystack = [
+        property.title,
+        property.propertyType,
+        property.locality,
+        property.city,
+        property.owner?.name,
+        property.userName,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(needle);
+    });
+
+    const sorted = [...filtered];
+    if (sortBy === 'name-asc') {
+      sorted.sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')));
+    } else if (sortBy === 'name-desc') {
+      sorted.sort((a, b) => String(b.title || '').localeCompare(String(a.title || '')));
+    } else if (sortBy === 'price-asc') {
+      sorted.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+    } else if (sortBy === 'price-desc') {
+      sorted.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+    } else {
+      sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+    return sorted;
+  }, [properties, search, statusFilter, sortBy]);
 
   if (loading) return <Loader label="Loading properties..." />;
 
@@ -140,6 +229,38 @@ export default function AdminProperties() {
       />
 
       <div className="admin-panel-card">
+        <div className="admin-filter-row" style={{ marginBottom: '0.85rem' }}>
+          <div className="admin-filter-group">
+            <span className="admin-filter-label">Search</span>
+            <input
+              className="admin-filter-input"
+              type="text"
+              placeholder="Search by title, type, city..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+          <div className="admin-filter-group">
+            <span className="admin-filter-label">Status</span>
+            <select className="admin-filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+              <option value="all">All</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+              <option value="archived">Archived</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+          <div className="admin-filter-group">
+            <span className="admin-filter-label">Sort</span>
+            <select className="admin-filter-select" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+              <option value="newest">Newest</option>
+              <option value="name-asc">Name A-Z</option>
+              <option value="name-desc">Name Z-A</option>
+              <option value="price-asc">Price Low-High</option>
+              <option value="price-desc">Price High-Low</option>
+            </select>
+          </div>
+        </div>
         <DataTable
           emptyMessage="No properties found."
           columns={[
@@ -180,6 +301,8 @@ export default function AdminProperties() {
               render: (row) => {
                 const mode = row.contactDisplayMode || (row.useOriginalSellerContact === false ? 'custom' : 'original');
                 const checked = mode === 'original';
+                const isEditing = contactEditorId === row._id;
+                const draft = contactDrafts[row._id] || {};
                 return (
                   <div className="admin-cell-stack">
                     <ToggleSwitch
@@ -191,12 +314,68 @@ export default function AdminProperties() {
                     {mode === 'company' ? (
                       <button
                         type="button"
-                        className="admin-secondary-btn admin-secondary-btn-inline"
+                        className="admin-secondary-btn admin-secondary-btn-inline admin-contact-cta"
                         disabled={busyId === `${row._id}:contact`}
-                        onClick={() => setContactMode(row._id, 'custom')}
+                        onClick={() => {
+                          setContactMode(row._id, 'custom');
+                          openContactEditor(row);
+                        }}
                       >
                         Use custom contact
                       </button>
+                    ) : null}
+                    {mode === 'custom' ? (
+                      <button
+                        type="button"
+                        className="admin-secondary-btn admin-secondary-btn-inline admin-contact-cta"
+                        onClick={() => openContactEditor(row)}
+                        disabled={busyId === `${row._id}:contact`}
+                      >
+                        {row.displaySellerName || row.displaySellerPhone || row.displaySellerEmail ? 'Edit custom contact' : 'Add custom contact'}
+                      </button>
+                    ) : null}
+                    {isEditing ? (
+                      <div className="admin-contact-editor">
+                        <input
+                          className="admin-contact-input"
+                          type="text"
+                          placeholder="Name"
+                          value={draft.displaySellerName || ''}
+                          onChange={(event) => updateContactDraft(row._id, 'displaySellerName', event.target.value)}
+                        />
+                        <input
+                          className="admin-contact-input"
+                          type="tel"
+                          placeholder="Phone"
+                          value={draft.displaySellerPhone || ''}
+                          onChange={(event) => updateContactDraft(row._id, 'displaySellerPhone', event.target.value)}
+                        />
+                        <input
+                          className="admin-contact-input"
+                          type="email"
+                          placeholder="Email"
+                          value={draft.displaySellerEmail || ''}
+                          onChange={(event) => updateContactDraft(row._id, 'displaySellerEmail', event.target.value)}
+                        />
+                        <div className="admin-contact-actions">
+                          <button
+                            type="button"
+                            className="admin-primary-btn admin-primary-btn-inline"
+                            onClick={() => saveCustomContact(row._id)}
+                            disabled={busyId === `${row._id}:contact-edit`}
+                          >
+                            {busyId === `${row._id}:contact-edit` ? 'Saving...' : 'Save'}
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-secondary-btn admin-secondary-btn-inline"
+                            onClick={() => setContactEditorId('')}
+                            disabled={busyId === `${row._id}:contact-edit`}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 );
@@ -237,7 +416,7 @@ export default function AdminProperties() {
               ),
             },
           ]}
-          rows={properties.map((property) => ({ ...property, id: property._id }))}
+          rows={filteredProperties.map((property) => ({ ...property, id: property._id }))}
         />
       </div>
     </div>
