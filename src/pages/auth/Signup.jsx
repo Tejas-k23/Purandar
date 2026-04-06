@@ -4,12 +4,13 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../../components/common/Modal';
 import useAuth from '../../hooks/useAuth';
 import userService from '../../services/userService';
+import { startMsg91Otp } from '../../utils/msg91Otp';
 import './AuthModal.css';
 
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
 
 export default function Signup() {
-  const { requestDemoOtp, refreshProfile } = useAuth();
+  const { refreshProfile } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function Signup() {
   const [phoneError, setPhoneError] = useState('');
   const [termsError, setTermsError] = useState('');
   const [formError, setFormError] = useState('');
-  const [demoOtpMessage, setDemoOtpMessage] = useState(location.state?.demoOtp ? `Demo OTP: ${location.state.demoOtp}` : '');
+  const [otpToken, setOtpToken] = useState(location.state?.otpToken || '');
   const [loading, setLoading] = useState(false);
   const phone = searchParams.get('phone') || '';
   const hasLockedPhone = isValidPhone(phone);
@@ -53,7 +54,6 @@ export default function Signup() {
   const continueWithPhone = async () => {
     setPhoneError('');
     setFormError('');
-    setDemoOtpMessage('');
 
     if (!isValidPhone(phoneInput)) {
       setPhoneError('Please enter a valid 10-digit phone number');
@@ -65,21 +65,20 @@ export default function Signup() {
       const normalizedPhone = phoneInput.trim();
       const response = await userService.checkPhone({ phone: normalizedPhone });
       const exists = response.data?.data?.exists;
-      const otpResponse = await requestDemoOtp({ phone: normalizedPhone });
-      const otp = otpResponse.data?.data?.otp || '123456';
-      setDemoOtpMessage(`Demo OTP: ${otp}`);
+      const nextToken = await startMsg91Otp({ identifier: normalizedPhone });
+      setOtpToken(nextToken);
 
       if (exists) {
         navigate(`/login?phone=${normalizedPhone}`, {
           replace: true,
-          state: { backgroundLocation: backgroundLocation || closeTarget, demoOtp: otp },
+          state: { backgroundLocation: backgroundLocation || closeTarget, otpToken: nextToken },
         });
         return;
       }
 
       navigate(`/signup?phone=${normalizedPhone}`, {
         replace: true,
-        state: { backgroundLocation: backgroundLocation || closeTarget, demoOtp: otp },
+        state: { backgroundLocation: backgroundLocation || closeTarget, otpToken: nextToken },
       });
     } catch (error) {
       setFormError(error.message);
@@ -93,7 +92,6 @@ export default function Signup() {
     setNameError('');
     setTermsError('');
     setFormError('');
-    setDemoOtpMessage('');
 
     if (!fullName.trim()) {
       setNameError('Please enter your full name');
@@ -112,15 +110,13 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      const otpResponse = await requestDemoOtp({ phone });
-      const otp = otpResponse.data?.data?.otp || '123456';
-      setDemoOtpMessage(`Demo OTP: ${otp}`);
+      const nextToken = otpToken || await startMsg91Otp({ identifier: phone });
 
       await userService.registerWithPhone({
         name: fullName.trim(),
         phone,
         role: role === 'broker' ? 'agent' : 'user',
-        demoOtp: otp,
+        otpToken: nextToken,
       });
 
       await refreshProfile();
@@ -163,7 +159,6 @@ export default function Signup() {
             {loading ? 'Please wait...' : 'Continue'}
           </button>
 
-          {demoOtpMessage ? <div className="auth-demo-otp"><span>{demoOtpMessage}</span></div> : null}
           {formError ? <div className="auth-info"><Phone size={16} /><span>{formError}</span></div> : null}
         </div>
       ) : (
@@ -223,7 +218,6 @@ export default function Signup() {
           ) : null}
 
           {formError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{formError}</span></div> : null}
-          {demoOtpMessage ? <div className="auth-demo-otp"><span>{demoOtpMessage}</span></div> : null}
 
           <button type="submit" className="auth-primary-btn" disabled={loading}>
             {loading ? 'Creating Account...' : 'Create Account'}

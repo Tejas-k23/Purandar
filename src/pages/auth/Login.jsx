@@ -4,19 +4,19 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import Modal from '../../components/common/Modal';
 import useAuth from '../../hooks/useAuth';
 import userService from '../../services/userService';
+import { startMsg91Otp } from '../../utils/msg91Otp';
 import './AuthModal.css';
 
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
 
 export default function Login() {
-  const { login, requestDemoOtp, refreshProfile } = useAuth();
+  const { login, refreshProfile } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
   const [phone, setPhone] = useState(searchParams.get('phone') || '');
   const [phoneError, setPhoneError] = useState('');
   const [formMessage, setFormMessage] = useState('');
-  const [demoOtpMessage, setDemoOtpMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const backgroundLocation = location.state?.backgroundLocation;
@@ -40,7 +40,6 @@ export default function Login() {
   const continueWithPhone = async () => {
     setPhoneError('');
     setFormMessage('');
-    setDemoOtpMessage('');
 
     if (!isValidPhone(phone)) {
       setPhoneError('Please enter a valid 10-digit phone number');
@@ -52,12 +51,10 @@ export default function Login() {
       const normalizedPhone = phone.trim();
       const response = await userService.checkPhone({ phone: normalizedPhone });
       const exists = response.data?.data?.exists;
-      const otpResponse = await requestDemoOtp({ phone: normalizedPhone });
-      const otp = otpResponse.data?.data?.otp || '123456';
-      setDemoOtpMessage(`Demo OTP: ${otp}`);
+      const otpToken = await startMsg91Otp({ identifier: normalizedPhone });
 
       if (exists) {
-        await userService.loginWithPhone({ phone: normalizedPhone, demoOtp: otp });
+        await userService.loginWithPhone({ phone: normalizedPhone, otpToken });
         await refreshProfile();
         navigate(closeTarget, { replace: true });
         return;
@@ -67,7 +64,7 @@ export default function Login() {
         replace: true,
         state: {
           backgroundLocation: backgroundLocation || closeTarget,
-          demoOtp: otp,
+          otpToken,
         },
       });
     } catch (error) {
@@ -106,7 +103,6 @@ export default function Login() {
           {loading ? 'Please wait...' : 'Continue'}
         </button>
 
-        {demoOtpMessage ? <div className="auth-demo-otp"><span>{demoOtpMessage}</span></div> : null}
         {formMessage ? <div className="auth-info"><Phone size={16} /><span>{formMessage}</span></div> : null}
       </div>
 

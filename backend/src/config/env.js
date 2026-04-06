@@ -35,6 +35,7 @@ export const env = {
   COMPANY_CONTACT_NAME: process.env.COMPANY_CONTACT_NAME || 'Purandar Properties',
   COMPANY_CONTACT_PHONE: process.env.COMPANY_CONTACT_PHONE || '',
   COMPANY_CONTACT_EMAIL: process.env.COMPANY_CONTACT_EMAIL || '',
+  MSG91_AUTHKEY: process.env.MSG91_AUTHKEY || '',
   R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
   R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
   R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
