@@ -15,12 +15,12 @@ export const userService = {
     return api.post('/auth/check-phone', payload);
   },
 
-  sendOtp(payload) {
-    return api.post('/auth/send-otp', payload);
+  validateForOtp(payload) {
+    return api.post('/auth/validate-for-otp', payload);
   },
 
-  verifyOtp(payload) {
-    const response = api.post('/auth/verify-otp', payload);
+  verifyMsg91Token(payload) {
+    const response = api.post('/auth/verify-msg91-token', payload);
     return response.then(syncTokenFromResponse);
   },
 

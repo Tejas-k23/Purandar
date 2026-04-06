@@ -4,6 +4,15 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../../components/common/Modal';
 import useAuth from '../../hooks/useAuth';
 import userService from '../../services/userService';
+import env from '../../config/env';
+import {
+  buildIdentifier,
+  extractAccessToken,
+  initWidget,
+  loadMsg91Script,
+  sendOtpWithWidget,
+  verifyOtpWithWidget,
+} from '../../utils/msg91Widget';
 import './AuthModal.css';
 
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
@@ -18,8 +27,9 @@ export default function Signup() {
   const [fullName, setFullName] = useState('');
   const [phoneInput, setPhoneInput] = useState(searchParams.get('phone') || '');
   const [otp, setOtp] = useState('');
-  const [isVerified, setIsVerified] = useState(Boolean(location.state?.verified));
-  const [otpSent, setOtpSent] = useState(Boolean(location.state?.otpSent));
+  const [isVerified, setIsVerified] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [reqId, setReqId] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [nameError, setNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
@@ -67,8 +77,64 @@ export default function Signup() {
       const normalizedPhone = normalizePhone(phoneInput);
       const response = await userService.checkPhone({ phone: normalizedPhone });
       const exists = response.data?.data?.exists;
-      await userService.sendOtp({ phone: normalizedPhone });
-      setOtpSent(true);
+
+      if (!env.msg91WidgetId || !env.msg91WidgetToken) {
+        throw new Error('OTP widget is not configured.');
+      }
+
+      await userService.validateForOtp({ phone: normalizedPhone, intent: 'signup' });
+      await loadMsg91Script();
+
+      initWidget({
+        widgetId: env.msg91WidgetId,
+        tokenAuth: env.msg91WidgetToken,
+        authToken: env.msg91WidgetToken,
+        identifier: buildIdentifier(normalizedPhone),
+        exposeMethods: true,
+        success: async (data) => {
+          const accessToken = extractAccessToken(data);
+          window.__msg91LastOtpResponse = data;
+          console.log('MSG91 OTP response:', data);
+          if (!accessToken) {
+            setFormError('OTP verified but token was missing.');
+            return;
+          }
+          if (!fullName.trim()) {
+            setFormError('Please enter your full name before verifying OTP.');
+            return;
+          }
+          try {
+            const res = await userService.verifyMsg91Token({
+              phone: normalizedPhone,
+              accessToken,
+              intent: 'signup',
+              name: fullName.trim(),
+              role: role === 'broker' ? 'agent' : 'user',
+            });
+            console.log('Signup response:', res?.data || res);
+            await refreshProfile();
+            closeModal();
+          } catch (error) {
+            setFormError(error.message);
+          }
+        },
+        failure: (error) => {
+          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'OTP verification failed.');
+          setFormError(msg);
+        },
+      });
+
+      sendOtpWithWidget(
+        buildIdentifier(normalizedPhone),
+        (data) => {
+          setReqId(data?.reqId || data?.request_id || '');
+          setOtpSent(true);
+        },
+        (error) => {
+          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
+          setFormError(msg);
+        },
+      );
 
       if (exists) {
         navigate(`/login?phone=${normalizedPhone}`, {
@@ -99,21 +165,51 @@ export default function Signup() {
     setLoading(true);
     try {
       const normalizedPhone = normalizePhone(phone);
-      const verifyResponse = await userService.verifyOtp({ phone: normalizedPhone, otp: otp.trim() });
-      console.log('OTP verify response:', verifyResponse?.data || verifyResponse);
-
-      const data = verifyResponse?.data?.data;
-      if (data?.verified && data?.exists === false) {
-        setIsVerified(true);
-        return;
-      }
-
-      await refreshProfile();
-      closeModal();
+      verifyOtpWithWidget(
+        otp.trim(),
+        async (data) => {
+          const accessToken = extractAccessToken(data);
+          window.__msg91LastOtpResponse = data;
+          console.log('MSG91 OTP response:', data);
+          if (!accessToken) {
+            setFormError('OTP verified but token was missing.');
+            setLoading(false);
+            return;
+          }
+          if (!fullName.trim()) {
+            setFormError('Please enter your full name before verifying OTP.');
+            setLoading(false);
+            return;
+          }
+          try {
+            const res = await userService.verifyMsg91Token({
+              phone: normalizedPhone,
+              accessToken,
+              intent: 'signup',
+              name: fullName.trim(),
+              role: role === 'broker' ? 'agent' : 'user',
+            });
+            console.log('Signup response:', res?.data || res);
+            setIsVerified(true);
+            await refreshProfile();
+            closeModal();
+          } catch (error) {
+            setFormError(error.message);
+          } finally {
+            setLoading(false);
+          }
+        },
+        (error) => {
+          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Invalid or expired OTP.');
+          setFormError(msg);
+          setLoading(false);
+        },
+        reqId,
+      );
     } catch (error) {
       setFormError(error.message);
     } finally {
-      setLoading(false);
+      // handled in callbacks
     }
   };
 
@@ -122,9 +218,64 @@ export default function Signup() {
     setLoading(true);
     try {
       const normalizedPhone = normalizePhone(phone);
-      await userService.sendOtp({ phone: normalizedPhone });
-      setOtpSent(true);
-      setFormError('OTP sent to your phone.');
+      if (!env.msg91WidgetId || !env.msg91WidgetToken) {
+        throw new Error('OTP widget is not configured.');
+      }
+
+      await userService.validateForOtp({ phone: normalizedPhone, intent: 'signup' });
+      await loadMsg91Script();
+      initWidget({
+        widgetId: env.msg91WidgetId,
+        tokenAuth: env.msg91WidgetToken,
+        authToken: env.msg91WidgetToken,
+        identifier: buildIdentifier(normalizedPhone),
+        exposeMethods: true,
+        success: async (data) => {
+          const accessToken = extractAccessToken(data);
+          window.__msg91LastOtpResponse = data;
+          console.log('MSG91 OTP response:', data);
+          if (!accessToken) {
+            setFormError('OTP verified but token was missing.');
+            return;
+          }
+          if (!fullName.trim()) {
+            setFormError('Please enter your full name before verifying OTP.');
+            return;
+          }
+          try {
+            const res = await userService.verifyMsg91Token({
+              phone: normalizedPhone,
+              accessToken,
+              intent: 'signup',
+              name: fullName.trim(),
+              role: role === 'broker' ? 'agent' : 'user',
+            });
+            console.log('Signup response:', res?.data || res);
+            setIsVerified(true);
+            await refreshProfile();
+            closeModal();
+          } catch (error) {
+            setFormError(error.message);
+          }
+        },
+        failure: (error) => {
+          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'OTP verification failed.');
+          setFormError(msg);
+        },
+      });
+
+      sendOtpWithWidget(
+        buildIdentifier(normalizedPhone),
+        (data) => {
+          setReqId(data?.reqId || data?.request_id || '');
+          setOtpSent(true);
+          setFormError('OTP sent to your phone.');
+        },
+        (error) => {
+          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
+          setFormError(msg);
+        },
+      );
     } catch (error) {
       setFormError(error.message);
     } finally {
@@ -160,12 +311,6 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      await userService.registerWithPhone({
-        name: fullName.trim(),
-        phone: normalizePhone(phone),
-        role: role === 'broker' ? 'agent' : 'user',
-      });
-
       await refreshProfile();
       closeModal();
     } catch (error) {

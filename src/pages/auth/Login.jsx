@@ -4,6 +4,15 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import Modal from '../../components/common/Modal';
 import useAuth from '../../hooks/useAuth';
 import userService from '../../services/userService';
+import env from '../../config/env';
+import {
+  buildIdentifier,
+  extractAccessToken,
+  initWidget,
+  loadMsg91Script,
+  sendOtpWithWidget,
+  verifyOtpWithWidget,
+} from '../../utils/msg91Widget';
 import './AuthModal.css';
 
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
@@ -18,7 +27,7 @@ export default function Login() {
   const [otp, setOtp] = useState('');
   const [normalizedPhone, setNormalizedPhone] = useState('');
   const [step, setStep] = useState('phone');
-  const [isExistingUser, setIsExistingUser] = useState(false);
+  const [reqId, setReqId] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [formMessage, setFormMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,10 +62,57 @@ export default function Login() {
     setLoading(true);
     try {
       const formattedPhone = normalizePhone(phone);
-      const response = await userService.checkPhone({ phone: formattedPhone });
-      const exists = response.data?.data?.exists;
-      await userService.sendOtp({ phone: formattedPhone });
-      setIsExistingUser(Boolean(exists));
+      if (!env.msg91WidgetId || !env.msg91WidgetToken) {
+        throw new Error('OTP widget is not configured.');
+      }
+
+      await userService.validateForOtp({ phone: formattedPhone, intent: 'login' });
+
+      await loadMsg91Script();
+      initWidget({
+        widgetId: env.msg91WidgetId,
+        tokenAuth: env.msg91WidgetToken,
+        authToken: env.msg91WidgetToken,
+        identifier: buildIdentifier(formattedPhone),
+        exposeMethods: true,
+        success: async (data) => {
+          const accessToken = extractAccessToken(data);
+          window.__msg91LastOtpResponse = data;
+          console.log('MSG91 OTP response:', data);
+          if (!accessToken) {
+            setFormMessage('OTP verified but token was missing.');
+            return;
+          }
+          try {
+            const loginResponse = await userService.verifyMsg91Token({
+              phone: formattedPhone,
+              accessToken,
+              intent: 'login',
+            });
+            console.log('Login response:', loginResponse?.data || loginResponse);
+            await refreshProfile();
+            navigate(closeTarget, { replace: true });
+          } catch (error) {
+            setFormMessage(error.message);
+          }
+        },
+        failure: (error) => {
+          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'OTP verification failed.');
+          setFormMessage(msg);
+        },
+      });
+
+      sendOtpWithWidget(
+        buildIdentifier(formattedPhone),
+        (data) => {
+          setReqId(data?.reqId || data?.request_id || '');
+        },
+        (error) => {
+          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
+          setFormMessage(msg);
+        },
+      );
+
       setNormalizedPhone(formattedPhone);
       setStep('otp');
       setFormMessage('OTP sent to your phone.');
@@ -76,27 +132,43 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const verifyResponse = await userService.verifyOtp({ phone: normalizedPhone, otp: otp.trim() });
-      console.log('OTP verify response:', verifyResponse?.data || verifyResponse);
-
-      const data = verifyResponse?.data?.data;
-      if (data?.verified && data?.exists === false) {
-        navigate(`/signup?phone=${normalizedPhone}`, {
-          replace: true,
-          state: {
-            backgroundLocation: backgroundLocation || closeTarget,
-            verified: true,
-          },
-        });
-        return;
-      }
-
-      await refreshProfile();
-      navigate(closeTarget, { replace: true });
+      verifyOtpWithWidget(
+        otp.trim(),
+        async (data) => {
+          const accessToken = extractAccessToken(data);
+          window.__msg91LastOtpResponse = data;
+          console.log('MSG91 OTP response:', data);
+          if (!accessToken) {
+            setFormMessage('OTP verified but token was missing.');
+            setLoading(false);
+            return;
+          }
+          try {
+            const loginResponse = await userService.verifyMsg91Token({
+              phone: normalizedPhone,
+              accessToken,
+              intent: 'login',
+            });
+            console.log('Login response:', loginResponse?.data || loginResponse);
+            await refreshProfile();
+            navigate(closeTarget, { replace: true });
+          } catch (error) {
+            setFormMessage(error.message);
+          } finally {
+            setLoading(false);
+          }
+        },
+        (error) => {
+          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Invalid or expired OTP.');
+          setFormMessage(msg);
+          setLoading(false);
+        },
+        reqId,
+      );
     } catch (error) {
       setFormMessage(error.message);
     } finally {
-      setLoading(false);
+      // handled in callbacks
     }
   };
 

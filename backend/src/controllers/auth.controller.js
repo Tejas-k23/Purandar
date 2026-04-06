@@ -9,7 +9,7 @@ import {
   hashToken,
   verifyRefreshToken,
 } from '../utils/token.js';
-import { sendOtpViaMsg91, verifyOtpViaMsg91 } from '../utils/msg91Otp.js';
+import verifyMsg91AccessToken from '../utils/msg91.js';
 
 const cookieOptions = {
   httpOnly: true,
@@ -74,35 +74,64 @@ export const checkPhone = asyncHandler(async (req, res) => {
   });
 });
 
-export const sendOtp = asyncHandler(async (req, res) => {
+export const validateForOtp = asyncHandler(async (req, res) => {
   const phone = normalizePhone(req.body.phone);
-  const result = await sendOtpViaMsg91(phone);
-  res.json({
-    success: true,
-    message: 'OTP sent successfully',
-    data: {
-      phone: result.mobile,
-    },
-  });
+  const intent = req.body.intent === 'login' ? 'login' : 'signup';
+
+  if (!phone) {
+    throw new ApiError(400, 'Phone number is required');
+  }
+
+  const existingUser = await User.findOne({ phone });
+
+  if (intent === 'login' && !existingUser) {
+    throw new ApiError(400, 'No account found with this phone number. Please sign up.');
+  }
+
+  if (intent === 'signup' && existingUser) {
+    throw new ApiError(400, 'An account with this phone number already exists. Please login.');
+  }
+
+  res.json({ success: true, message: 'Validation passed' });
 });
 
-export const verifyOtp = asyncHandler(async (req, res) => {
+export const verifyMsg91Token = asyncHandler(async (req, res) => {
   const phone = normalizePhone(req.body.phone);
-  const otp = String(req.body.otp || '').trim();
-  const result = await verifyOtpViaMsg91({ phone, otp });
+  const accessToken = req.body.accessToken;
+  const intent = req.body.intent === 'login' ? 'login' : 'signup';
+  const name = String(req.body.name || '').trim();
+  const role = req.body.role === 'agent' ? 'agent' : 'user';
 
-  const user = await User.findOne({ phone: result.mobile }).select('+refreshTokenHash');
-  if (!user) {
-    res.json({
-      success: true,
-      message: 'OTP verified',
-      data: {
-        verified: true,
-        exists: false,
-        phone: result.mobile,
-      },
+  if (!phone) {
+    throw new ApiError(400, 'Phone number is required');
+  }
+
+  if (!accessToken) {
+    throw new ApiError(400, 'accessToken is required for verification');
+  }
+
+  await verifyMsg91AccessToken(accessToken);
+
+  let user = await User.findOne({ phone }).select('+refreshTokenHash');
+
+  if (intent === 'login') {
+    if (!user) {
+      throw new ApiError(400, 'No account found. Please sign up.');
+    }
+  } else {
+    if (user) {
+      throw new ApiError(400, 'An account with this phone number already exists. Please login.');
+    }
+    if (!name) {
+      throw new ApiError(400, 'Name is required to create an account');
+    }
+    user = await User.create({
+      name,
+      email: buildPhonePlaceholderEmail(phone),
+      password: buildPhonePlaceholderPassword(phone),
+      phone,
+      role,
     });
-    return;
   }
 
   await sendAuthResponse(user, res);
