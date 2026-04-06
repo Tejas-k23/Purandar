@@ -9,7 +9,7 @@ import {
   hashToken,
   verifyRefreshToken,
 } from '../utils/token.js';
-import { verifyMsg91AccessToken } from '../utils/msg91.js';
+import { sendOtpViaMsg91, verifyOtpViaMsg91 } from '../utils/msg91Otp.js';
 
 const cookieOptions = {
   httpOnly: true,
@@ -17,15 +17,13 @@ const cookieOptions = {
   secure: false,
 };
 
-const assertPhoneOtp = async ({ otpToken }) => {
-  if (!otpToken) {
-    throw new ApiError(400, 'OTP verification is required');
-  }
-
-  await verifyMsg91AccessToken(otpToken);
+const normalizePhone = (phone = '') => {
+  const digits = String(phone).replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.length === 10) return digits;
+  if (digits.startsWith('91') && digits.length === 12) return digits.slice(2);
+  return digits.slice(-10);
 };
-
-const normalizePhone = (phone = '') => phone.trim();
 
 const buildPhonePlaceholderEmail = (phone) => `phone.${phone}@purandar.local`;
 
@@ -76,6 +74,40 @@ export const checkPhone = asyncHandler(async (req, res) => {
   });
 });
 
+export const sendOtp = asyncHandler(async (req, res) => {
+  const phone = normalizePhone(req.body.phone);
+  const result = await sendOtpViaMsg91(phone);
+  res.json({
+    success: true,
+    message: 'OTP sent successfully',
+    data: {
+      phone: result.mobile,
+    },
+  });
+});
+
+export const verifyOtp = asyncHandler(async (req, res) => {
+  const phone = normalizePhone(req.body.phone);
+  const otp = String(req.body.otp || '').trim();
+  const result = await verifyOtpViaMsg91({ phone, otp });
+
+  const user = await User.findOne({ phone: result.mobile }).select('+refreshTokenHash');
+  if (!user) {
+    res.json({
+      success: true,
+      message: 'OTP verified',
+      data: {
+        verified: true,
+        exists: false,
+        phone: result.mobile,
+      },
+    });
+    return;
+  }
+
+  await sendAuthResponse(user, res);
+});
+
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password, phone, role } = req.body;
 
@@ -100,14 +132,12 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 export const registerWithPhone = asyncHandler(async (req, res) => {
-  const { name, phone: rawPhone, role, otpToken } = req.body;
+  const { name, phone: rawPhone, role } = req.body;
   const phone = normalizePhone(rawPhone);
 
   if (!name || !phone) {
     throw new ApiError(400, 'Name and phone are required');
   }
-
-  await assertPhoneOtp({ otpToken });
 
   const existingPhoneUser = await User.findOne({ phone });
   if (existingPhoneUser) {
@@ -146,13 +176,10 @@ export const login = asyncHandler(async (req, res) => {
 
 export const loginWithPhone = asyncHandler(async (req, res) => {
   const phone = normalizePhone(req.body.phone);
-  const { otpToken } = req.body;
 
   if (!phone) {
     throw new ApiError(400, 'Phone number is required');
   }
-
-  await assertPhoneOtp({ otpToken });
 
   const user = await User.findOne({ phone }).select('+refreshTokenHash');
 

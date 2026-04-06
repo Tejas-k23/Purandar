@@ -15,6 +15,15 @@ export const userService = {
     return api.post('/auth/check-phone', payload);
   },
 
+  sendOtp(payload) {
+    return api.post('/auth/send-otp', payload);
+  },
+
+  verifyOtp(payload) {
+    const response = api.post('/auth/verify-otp', payload);
+    return response.then(syncTokenFromResponse);
+  },
+
   async register(payload) {
     const response = await api.post('/auth/register', payload);
     return syncTokenFromResponse(response);

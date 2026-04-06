@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import Modal from '../../components/common/Modal';
 import useAuth from '../../hooks/useAuth';
 import userService from '../../services/userService';
-import { startMsg91Otp } from '../../utils/msg91Otp';
 import './AuthModal.css';
 
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
@@ -16,6 +15,10 @@ export default function Login() {
   const location = useLocation();
   const navigate = useNavigate();
   const [phone, setPhone] = useState(searchParams.get('phone') || '');
+  const [otp, setOtp] = useState('');
+  const [normalizedPhone, setNormalizedPhone] = useState('');
+  const [step, setStep] = useState('phone');
+  const [isExistingUser, setIsExistingUser] = useState(false);
   const [phoneError, setPhoneError] = useState('');
   const [formMessage, setFormMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,31 +52,47 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const normalizedPhone = normalizePhone(phone);
-      const response = await userService.checkPhone({ phone: normalizedPhone });
+      const formattedPhone = normalizePhone(phone);
+      const response = await userService.checkPhone({ phone: formattedPhone });
       const exists = response.data?.data?.exists;
-      const otpResult = await startMsg91Otp({ identifier: normalizedPhone });
-      const otpToken = otpResult?.otpToken;
-      if (!otpToken) {
-        console.error('MSG91 OTP token missing.', otpResult);
-        throw new Error('OTP verified but token was missing.');
-      }
+      await userService.sendOtp({ phone: formattedPhone });
+      setIsExistingUser(Boolean(exists));
+      setNormalizedPhone(formattedPhone);
+      setStep('otp');
+      setFormMessage('OTP sent to your phone.');
+    } catch (error) {
+      setFormMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (exists) {
-        const loginResponse = await userService.loginWithPhone({ phone: normalizedPhone, otpToken });
-        console.log('Login response:', loginResponse?.data || loginResponse);
-        await refreshProfile();
-        navigate(closeTarget, { replace: true });
+  const verifyOtp = async () => {
+    setFormMessage('');
+    if (!otp.trim()) {
+      setFormMessage('Please enter the OTP.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const verifyResponse = await userService.verifyOtp({ phone: normalizedPhone, otp: otp.trim() });
+      console.log('OTP verify response:', verifyResponse?.data || verifyResponse);
+
+      const data = verifyResponse?.data?.data;
+      if (data?.verified && data?.exists === false) {
+        navigate(`/signup?phone=${normalizedPhone}`, {
+          replace: true,
+          state: {
+            backgroundLocation: backgroundLocation || closeTarget,
+            verified: true,
+          },
+        });
         return;
       }
 
-      navigate(`/signup?phone=${normalizedPhone}`, {
-        replace: true,
-        state: {
-          backgroundLocation: backgroundLocation || closeTarget,
-          otpToken,
-        },
-      });
+      await refreshProfile();
+      navigate(closeTarget, { replace: true });
     } catch (error) {
       setFormMessage(error.message);
     } finally {
@@ -87,28 +106,58 @@ export default function Login() {
       <p className="auth-modal-subtitle">Please enter your Phone Number</p>
 
       <div className="auth-modal-stack">
-        <div className="auth-input-group">
-          <div className="auth-phone-row">
-            <div className="auth-country-code">
-              <span>+91</span>
-              <ChevronDown size={14} />
+        {step === 'phone' ? (
+          <>
+            <div className="auth-input-group">
+              <div className="auth-phone-row">
+                <div className="auth-country-code">
+                  <span>+91</span>
+                  <ChevronDown size={14} />
+                </div>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  className="auth-phone-input"
+                  placeholder="Enter phone number"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value.replace(/\D/g, ''))}
+                />
+              </div>
+              {phoneError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{phoneError}</span></div> : null}
             </div>
-            <input
-              type="tel"
-              inputMode="numeric"
-              maxLength={10}
-              className="auth-phone-input"
-              placeholder="Enter phone number"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value.replace(/\D/g, ''))}
-            />
-          </div>
-          {phoneError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{phoneError}</span></div> : null}
-        </div>
 
-        <button type="button" className="auth-primary-btn" onClick={continueWithPhone} disabled={loading}>
-          {loading ? 'Please wait...' : 'Continue'}
-        </button>
+            <button type="button" className="auth-primary-btn" onClick={continueWithPhone} disabled={loading}>
+              {loading ? 'Please wait...' : 'Send OTP'}
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="auth-input-group">
+              <label className="auth-label" htmlFor="login-otp">Enter OTP</label>
+              <div className="auth-input-row">
+                <input
+                  id="login-otp"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className="auth-input"
+                  placeholder="Enter OTP"
+                  value={otp}
+                  onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))}
+                />
+              </div>
+            </div>
+
+            <button type="button" className="auth-primary-btn" onClick={verifyOtp} disabled={loading}>
+              {loading ? 'Verifying...' : isExistingUser ? 'Verify & Login' : 'Verify'}
+            </button>
+
+            <button type="button" className="auth-secondary-btn" onClick={() => { setStep('phone'); setOtp(''); }} disabled={loading}>
+              Change number
+            </button>
+          </>
+        )}
 
         {formMessage ? <div className="auth-info"><Phone size={16} /><span>{formMessage}</span></div> : null}
       </div>

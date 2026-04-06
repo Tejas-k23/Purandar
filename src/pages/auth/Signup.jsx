@@ -4,7 +4,6 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../../components/common/Modal';
 import useAuth from '../../hooks/useAuth';
 import userService from '../../services/userService';
-import { startMsg91Otp } from '../../utils/msg91Otp';
 import './AuthModal.css';
 
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
@@ -18,12 +17,14 @@ export default function Signup() {
   const [role, setRole] = useState('owner');
   const [fullName, setFullName] = useState('');
   const [phoneInput, setPhoneInput] = useState(searchParams.get('phone') || '');
+  const [otp, setOtp] = useState('');
+  const [isVerified, setIsVerified] = useState(Boolean(location.state?.verified));
+  const [otpSent, setOtpSent] = useState(Boolean(location.state?.otpSent));
   const [agreed, setAgreed] = useState(false);
   const [nameError, setNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [termsError, setTermsError] = useState('');
   const [formError, setFormError] = useState('');
-  const [otpToken, setOtpToken] = useState(location.state?.otpToken || '');
   const [loading, setLoading] = useState(false);
   const phone = searchParams.get('phone') || '';
   const hasLockedPhone = isValidPhone(phone);
@@ -66,26 +67,64 @@ export default function Signup() {
       const normalizedPhone = normalizePhone(phoneInput);
       const response = await userService.checkPhone({ phone: normalizedPhone });
       const exists = response.data?.data?.exists;
-      const otpResult = await startMsg91Otp({ identifier: normalizedPhone });
-      const nextToken = otpResult?.otpToken;
-      if (!nextToken) {
-        console.error('MSG91 OTP token missing.', otpResult);
-        throw new Error('OTP verified but token was missing.');
-      }
-      setOtpToken(nextToken);
+      await userService.sendOtp({ phone: normalizedPhone });
+      setOtpSent(true);
 
       if (exists) {
         navigate(`/login?phone=${normalizedPhone}`, {
           replace: true,
-          state: { backgroundLocation: backgroundLocation || closeTarget, otpToken: nextToken },
+          state: { backgroundLocation: backgroundLocation || closeTarget },
         });
         return;
       }
 
       navigate(`/signup?phone=${normalizedPhone}`, {
         replace: true,
-        state: { backgroundLocation: backgroundLocation || closeTarget, otpToken: nextToken },
+        state: { backgroundLocation: backgroundLocation || closeTarget, otpSent: true },
       });
+    } catch (error) {
+      setFormError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    setFormError('');
+    if (!otp.trim()) {
+      setFormError('Please enter the OTP.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const normalizedPhone = normalizePhone(phone);
+      const verifyResponse = await userService.verifyOtp({ phone: normalizedPhone, otp: otp.trim() });
+      console.log('OTP verify response:', verifyResponse?.data || verifyResponse);
+
+      const data = verifyResponse?.data?.data;
+      if (data?.verified && data?.exists === false) {
+        setIsVerified(true);
+        return;
+      }
+
+      await refreshProfile();
+      closeModal();
+    } catch (error) {
+      setFormError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendOtpForLockedPhone = async () => {
+    setFormError('');
+    setLoading(true);
+    try {
+      const normalizedPhone = normalizePhone(phone);
+      await userService.sendOtp({ phone: normalizedPhone });
+      setOtpSent(true);
+      setFormError('OTP sent to your phone.');
     } catch (error) {
       setFormError(error.message);
     } finally {
@@ -109,6 +148,11 @@ export default function Signup() {
       return;
     }
 
+    if (!isVerified) {
+      setFormError('Please verify the OTP before creating your account.');
+      return;
+    }
+
     if (!agreed) {
       setTermsError('This is required for creating an account');
       return;
@@ -116,19 +160,10 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      const normalizedPhone = normalizePhone(phone);
-      const otpResult = otpToken ? { otpToken } : await startMsg91Otp({ identifier: normalizedPhone });
-      const nextToken = otpResult?.otpToken;
-      if (!nextToken) {
-        console.error('MSG91 OTP token missing.', otpResult);
-        throw new Error('OTP verified but token was missing.');
-      }
-
       await userService.registerWithPhone({
         name: fullName.trim(),
-        phone: normalizedPhone,
+        phone: normalizePhone(phone),
         role: role === 'broker' ? 'agent' : 'user',
-        otpToken: nextToken,
       });
 
       await refreshProfile();
@@ -168,7 +203,7 @@ export default function Signup() {
           </div>
 
           <button type="button" className="auth-primary-btn" onClick={continueWithPhone} disabled={loading}>
-            {loading ? 'Please wait...' : 'Continue'}
+            {loading ? 'Please wait...' : 'Send OTP'}
           </button>
 
           {formError ? <div className="auth-info"><Phone size={16} /><span>{formError}</span></div> : null}
@@ -214,6 +249,32 @@ export default function Signup() {
               <span>Change Number</span>
             </button>
           </div>
+
+          {!isVerified ? (
+            <div className="auth-input-group">
+              <label className="auth-label" htmlFor="signup-otp">Enter OTP</label>
+              <div className="auth-input-row">
+                <input
+                  id="signup-otp"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className="auth-input"
+                  placeholder="Enter OTP"
+                  value={otp}
+                  onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))}
+                />
+              </div>
+              {!otpSent ? (
+                <button type="button" className="auth-secondary-btn" onClick={sendOtpForLockedPhone} disabled={loading}>
+                  {loading ? 'Sending...' : 'Send OTP'}
+                </button>
+              ) : null}
+              <button type="button" className="auth-secondary-btn" onClick={verifyOtp} disabled={loading}>
+                {loading ? 'Verifying...' : 'Verify OTP'}
+              </button>
+            </div>
+          ) : null}
 
           <label className="auth-checkbox-row">
             <input type="checkbox" className="auth-checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
