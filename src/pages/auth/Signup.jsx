@@ -16,6 +16,7 @@ import {
 } from '../../utils/msg91Widget';
 import './AuthModal.css';
 
+const normalizePhoneInput = (value) => String(value || '').replace(/\D/g, '').slice(-10);
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
 const normalizePhone = (value) => `+91${String(value).replace(/\D/g, '').slice(-10)}`;
 
@@ -26,7 +27,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const [role, setRole] = useState('owner');
   const [fullName, setFullName] = useState('');
-  const [phoneInput, setPhoneInput] = useState(searchParams.get('phone') || '');
+  const [phoneInput, setPhoneInput] = useState(normalizePhoneInput(searchParams.get('phone')));
   const [otp, setOtp] = useState('');
   const [isVerified, setIsVerified] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -37,7 +38,7 @@ export default function Signup() {
   const [termsError, setTermsError] = useState('');
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
-  const phone = searchParams.get('phone') || '';
+  const phone = normalizePhoneInput(searchParams.get('phone'));
   const hasLockedPhone = isValidPhone(phone);
   const backgroundLocation = location.state?.backgroundLocation;
   const closeTarget = useMemo(() => '/', []);
@@ -76,6 +77,7 @@ export default function Signup() {
     setLoading(true);
     try {
       const normalizedPhone = normalizePhone(phoneInput);
+      const phoneDigits = normalizePhoneInput(phoneInput);
       const response = await userService.checkPhone({ phone: normalizedPhone });
       const exists = response.data?.data?.exists;
 
@@ -138,14 +140,14 @@ export default function Signup() {
       );
 
       if (exists) {
-        navigate(`/login?phone=${normalizedPhone}`, {
+        navigate(`/login?phone=${phoneDigits}`, {
           replace: true,
           state: { backgroundLocation: backgroundLocation || closeTarget },
         });
         return;
       }
 
-      navigate(`/signup?phone=${normalizedPhone}`, {
+      navigate(`/signup?phone=${phoneDigits}`, {
         replace: true,
         state: { backgroundLocation: backgroundLocation || closeTarget, otpSent: true },
       });
@@ -346,8 +348,8 @@ export default function Signup() {
                 className="auth-phone-input"
                 placeholder="Enter phone number"
                 value={phoneInput}
-                onChange={(event) => setPhoneInput(event.target.value.replace(/\D/g, ''))}
-              />
+                  onChange={(event) => setPhoneInput(normalizePhoneInput(event.target.value))}
+                />
             </div>
             {phoneError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{phoneError}</span></div> : null}
           </div>

@@ -16,6 +16,7 @@ import {
 } from '../../utils/msg91Widget';
 import './AuthModal.css';
 
+const normalizePhoneInput = (value) => String(value || '').replace(/\D/g, '').slice(-10);
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
 const normalizePhone = (value) => `+91${String(value).replace(/\D/g, '').slice(-10)}`;
 
@@ -24,7 +25,7 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [phone, setPhone] = useState(searchParams.get('phone') || '');
+  const [phone, setPhone] = useState(normalizePhoneInput(searchParams.get('phone')));
   const [otp, setOtp] = useState('');
   const [normalizedPhone, setNormalizedPhone] = useState('');
   const [step, setStep] = useState('phone');
@@ -198,7 +199,7 @@ export default function Login() {
                   className="auth-phone-input"
                   placeholder="Enter phone number"
                   value={phone}
-                  onChange={(event) => setPhone(event.target.value.replace(/\D/g, ''))}
+                  onChange={(event) => setPhone(normalizePhoneInput(event.target.value))}
                 />
               </div>
               {phoneError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{phoneError}</span></div> : null}
