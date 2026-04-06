@@ -50,6 +50,15 @@ export const extractAccessToken = (data) => (
   || data
 );
 
+export const extractReqId = (data) => (
+  data?.reqId
+  || data?.request_id
+  || data?.req_id
+  || data?.data?.reqId
+  || data?.data?.request_id
+  || (typeof data === 'string' ? data : '')
+);
+
 export const initWidget = (config) => {
   if (typeof window.initSendOTP !== 'function') {
     throw new Error('MSG91 widget is not available.');

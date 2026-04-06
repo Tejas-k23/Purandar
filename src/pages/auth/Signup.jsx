@@ -8,6 +8,7 @@ import env from '../../config/env';
 import {
   buildIdentifier,
   extractAccessToken,
+  extractReqId,
   initWidget,
   loadMsg91Script,
   sendOtpWithWidget,
@@ -127,7 +128,7 @@ export default function Signup() {
       sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
-          setReqId(data?.reqId || data?.request_id || '');
+          setReqId(extractReqId(data));
           setOtpSent(true);
         },
         (error) => {
@@ -159,6 +160,10 @@ export default function Signup() {
     setFormError('');
     if (!otp.trim()) {
       setFormError('Please enter the OTP.');
+      return;
+    }
+    if (!reqId) {
+      setFormError('OTP request id missing. Please resend the OTP.');
       return;
     }
 
@@ -267,7 +272,7 @@ export default function Signup() {
       sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
-          setReqId(data?.reqId || data?.request_id || '');
+          setReqId(extractReqId(data));
           setOtpSent(true);
           setFormError('OTP sent to your phone.');
         },

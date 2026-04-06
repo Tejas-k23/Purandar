@@ -64,7 +64,7 @@ VITE_COMPANY_WHATSAPP_NUMBER=9999999999
 Backend (`backend/.env`):
 ```
 PORT=5000
-NODE_ENV=development
+NODE_ENV=developmentalso
 CLIENT_URL=http://localhost:5173
 MONGODB_URI=your_mongodb_connection_string_here
 JWT_ACCESS_SECRET=your_access_secret_here

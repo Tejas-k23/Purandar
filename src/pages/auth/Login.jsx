@@ -8,6 +8,7 @@ import env from '../../config/env';
 import {
   buildIdentifier,
   extractAccessToken,
+  extractReqId,
   initWidget,
   loadMsg91Script,
   sendOtpWithWidget,
@@ -105,7 +106,7 @@ export default function Login() {
       sendOtpWithWidget(
         buildIdentifier(formattedPhone),
         (data) => {
-          setReqId(data?.reqId || data?.request_id || '');
+          setReqId(extractReqId(data));
         },
         (error) => {
           const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
@@ -127,6 +128,10 @@ export default function Login() {
     setFormMessage('');
     if (!otp.trim()) {
       setFormMessage('Please enter the OTP.');
+      return;
+    }
+    if (!reqId) {
+      setFormMessage('OTP request id missing. Please resend the OTP.');
       return;
     }
 
