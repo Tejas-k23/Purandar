@@ -50,18 +50,26 @@ const readAccessToken = (data) => (
   || data?.data?.accessToken
 );
 
+const normalizeIdentifier = (value = '') => {
+  const raw = String(value).replace(/\D/g, '');
+  if (!raw) return '';
+  if (raw.length === 10) return `91${raw}`;
+  return raw;
+};
+
 export const startMsg91Otp = async ({ identifier } = {}) => {
   if (!env.msg91WidgetId || !env.msg91TokenAuth) {
     throw new Error('MSG91 OTP is not configured.');
   }
 
   await loadMsg91Script();
+  const normalizedIdentifier = normalizeIdentifier(identifier);
 
   return new Promise((resolve, reject) => {
     const configuration = {
       widgetId: env.msg91WidgetId,
       tokenAuth: env.msg91TokenAuth,
-      identifier: identifier || undefined,
+      identifier: normalizedIdentifier || undefined,
       exposeMethods: env.msg91ExposeMethods,
       success: (data) => {
         const accessToken = readAccessToken(data);
