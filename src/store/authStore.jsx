@@ -30,7 +30,10 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const bootstrap = async () => {
       try {
-        await syncProfile();
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          await syncProfile();
+        }
       } catch (_error) {
         setUser(null);
         setProfile(null);

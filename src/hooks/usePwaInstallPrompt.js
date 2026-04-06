@@ -23,6 +23,19 @@ export default function usePwaInstallPrompt() {
     const handleBeforeInstallPrompt = (event) => {
       event.preventDefault();
       setDeferredPrompt(event);
+
+      const promptOnNextInteraction = async () => {
+        setIsInstalling(true);
+        try {
+          event.prompt();
+          await event.userChoice;
+        } finally {
+          setDeferredPrompt(null);
+          setIsInstalling(false);
+        }
+      };
+
+      window.addEventListener('pointerdown', promptOnNextInteraction, { once: true });
     };
 
     const handleAppInstalled = () => {
@@ -65,6 +78,7 @@ export default function usePwaInstallPrompt() {
   const needsIosHelp = !isInstalled && isIos && !deferredPrompt;
 
   const promptInstall = async () => {
+    if (isInstalling) return;
     if (canInstall && deferredPrompt) {
       setIsInstalling(true);
 
