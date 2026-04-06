@@ -222,7 +222,7 @@ export default function Login() {
             </div>
 
             <button type="button" className="auth-primary-btn" onClick={verifyOtp} disabled={loading}>
-              {loading ? 'Verifying...' : isExistingUser ? 'Verify & Login' : 'Verify'}
+              {loading ? 'Verifying...' : 'Verify & Login'}
             </button>
 
             <button type="button" className="auth-secondary-btn" onClick={() => { setStep('phone'); setOtp(''); }} disabled={loading}>
