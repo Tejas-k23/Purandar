@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import userService from '../../services/userService';
 import './AdminLogin.css';
 
 export default function AdminLogin() {
@@ -24,9 +23,7 @@ export default function AdminLogin() {
 
     setLoading(true);
     try {
-      const otpResponse = await userService.requestDemoOtp({ email: email.trim() });
-      const otp = otpResponse.data?.data?.otp || '123456';
-      const result = await login({ email: email.trim(), password, demoOtp: otp });
+      const result = await login({ email: email.trim(), password });
       if (result?.user?.role !== 'admin') {
         await logout();
         setMessage('Admin access only.');

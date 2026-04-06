@@ -84,7 +84,6 @@ export function AuthProvider({ children }) {
     savedPropertyIds: new Set((savedProperties || []).map((property) => property._id || property.id)),
     isAuthenticated: Boolean(user),
     loading,
-    requestDemoOtp: (payload) => userService.requestDemoOtp(payload),
     login,
     register,
     logout,

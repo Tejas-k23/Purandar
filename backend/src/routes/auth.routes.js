@@ -8,7 +8,6 @@ import {
   refresh,
   register,
   registerWithPhone,
-  requestDemoOtp,
 } from '../controllers/auth.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
@@ -18,7 +17,6 @@ router.post('/register', register);
 router.post('/register-phone', registerWithPhone);
 router.post('/login', login);
 router.post('/login-phone', loginWithPhone);
-router.post('/demo-otp', requestDemoOtp);
 router.post('/check-phone', checkPhone);
 router.post('/refresh', refresh);
 router.post('/logout', logout);

@@ -24,7 +24,6 @@ export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   MONGODB_URI: process.env.MONGODB_URI,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
-  DEMO_OTP: process.env.DEMO_OTP || '123456',
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '15m',

@@ -225,7 +225,6 @@ const run = async () => {
   console.log('Demo users created:');
   console.log('User: demo.user@purandar.local / DemoUser123!');
   console.log('Agent: demo.agent@purandar.local / DemoAgent123!');
-  console.log(`Use demo OTP: ${env.DEMO_OTP}`);
   console.log(`Seeded ${properties.length} properties and demo enquiries.`);
 
   process.exit(0);

@@ -11,10 +11,6 @@ const syncTokenFromResponse = (response) => {
 };
 
 export const userService = {
-  requestDemoOtp(payload) {
-    return api.post('/auth/demo-otp', payload);
-  },
-
   checkPhone(payload) {
     return api.post('/auth/check-phone', payload);
   },
