@@ -110,11 +110,14 @@ export default function Login() {
       sendOtpWithWidget(
         buildIdentifier(formattedPhone),
         (data) => {
+          console.log('MSG91 sendOtp success:', data);
+          window.__msg91LastSendOtpResponse = data;
           const nextReqId = extractReqId(data);
           setReqId(nextReqId);
           storeReqId(formattedPhone, nextReqId);
         },
         (error) => {
+          console.log('MSG91 sendOtp failure:', error);
           const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
           setFormMessage(msg);
         },

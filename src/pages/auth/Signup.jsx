@@ -134,12 +134,15 @@ export default function Signup() {
       sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
+          console.log('MSG91 sendOtp success:', data);
+          window.__msg91LastSendOtpResponse = data;
           const nextReqId = extractReqId(data);
           setReqId(nextReqId);
           storeReqId(normalizedPhone, nextReqId);
           setOtpSent(true);
         },
         (error) => {
+          console.log('MSG91 sendOtp failure:', error);
           const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
           setFormError(msg);
         },
@@ -285,6 +288,8 @@ export default function Signup() {
       sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
+          console.log('MSG91 sendOtp success:', data);
+          window.__msg91LastSendOtpResponse = data;
           const nextReqId = extractReqId(data);
           setReqId(nextReqId);
           storeReqId(normalizedPhone, nextReqId);
@@ -292,6 +297,7 @@ export default function Signup() {
           setFormError('OTP sent to your phone.');
         },
         (error) => {
+          console.log('MSG91 sendOtp failure:', error);
           const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
           setFormError(msg);
         },

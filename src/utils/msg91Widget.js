@@ -88,10 +88,21 @@ export const extractAccessToken = (data) => (
 
 export const extractReqId = (data) => (
   data?.reqId
+  || data?.requestId
   || data?.request_id
   || data?.req_id
+  || data?.otpId
+  || data?.otp_id
   || data?.data?.reqId
+  || data?.data?.requestId
   || data?.data?.request_id
+  || data?.data?.req_id
+  || data?.data?.otpId
+  || data?.data?.otp_id
+  || data?.details?.request_id
+  || data?.details?.reqId
+  || data?.details?.requestId
+  || data?.details?.req_id
   || (typeof data === 'string' ? data : '')
 );
 
