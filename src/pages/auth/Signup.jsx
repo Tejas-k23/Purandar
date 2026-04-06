@@ -7,11 +7,14 @@ import userService from '../../services/userService';
 import env from '../../config/env';
 import {
   buildIdentifier,
+  clearReqId,
   extractAccessToken,
   extractReqId,
   initWidget,
   loadMsg91Script,
+  readReqId,
   sendOtpWithWidget,
+  storeReqId,
   verifyOtpWithWidget,
 } from '../../utils/msg91Widget';
 import './AuthModal.css';
@@ -59,6 +62,7 @@ export default function Signup() {
   };
 
   const changeNumber = () => {
+    clearReqId(normalizePhone(phone));
     navigate(`/login?phone=${phone}`, {
       replace: true,
       state: { backgroundLocation: backgroundLocation || closeTarget },
@@ -130,7 +134,9 @@ export default function Signup() {
       sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
-          setReqId(extractReqId(data));
+          const nextReqId = extractReqId(data);
+          setReqId(nextReqId);
+          storeReqId(normalizedPhone, nextReqId);
           setOtpSent(true);
         },
         (error) => {
@@ -164,14 +170,18 @@ export default function Signup() {
       setFormError('Please enter the OTP.');
       return;
     }
-    if (!reqId) {
+    const normalizedPhone = normalizePhone(phone);
+    const storedReqId = reqId || readReqId(normalizedPhone);
+    if (!reqId && storedReqId) {
+      setReqId(storedReqId);
+    }
+    if (!storedReqId) {
       setFormError('OTP request id missing. Please resend the OTP.');
       return;
     }
 
     setLoading(true);
     try {
-      const normalizedPhone = normalizePhone(phone);
       verifyOtpWithWidget(
         otp.trim(),
         async (data) => {
@@ -199,6 +209,7 @@ export default function Signup() {
             console.log('Signup response:', res?.data || res);
             setIsVerified(true);
             await refreshProfile();
+            clearReqId(normalizedPhone);
             closeModal();
           } catch (error) {
             setFormError(error.message);
@@ -211,7 +222,7 @@ export default function Signup() {
           setFormError(msg);
           setLoading(false);
         },
-        reqId,
+        storedReqId,
       );
     } catch (error) {
       setFormError(error.message);
@@ -274,7 +285,9 @@ export default function Signup() {
       sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
-          setReqId(extractReqId(data));
+          const nextReqId = extractReqId(data);
+          setReqId(nextReqId);
+          storeReqId(normalizedPhone, nextReqId);
           setOtpSent(true);
           setFormError('OTP sent to your phone.');
         },

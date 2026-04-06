@@ -7,11 +7,14 @@ import userService from '../../services/userService';
 import env from '../../config/env';
 import {
   buildIdentifier,
+  clearReqId,
   extractAccessToken,
   extractReqId,
   initWidget,
   loadMsg91Script,
+  readReqId,
   sendOtpWithWidget,
+  storeReqId,
   verifyOtpWithWidget,
 } from '../../utils/msg91Widget';
 import './AuthModal.css';
@@ -107,7 +110,9 @@ export default function Login() {
       sendOtpWithWidget(
         buildIdentifier(formattedPhone),
         (data) => {
-          setReqId(extractReqId(data));
+          const nextReqId = extractReqId(data);
+          setReqId(nextReqId);
+          storeReqId(formattedPhone, nextReqId);
         },
         (error) => {
           const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
@@ -131,7 +136,12 @@ export default function Login() {
       setFormMessage('Please enter the OTP.');
       return;
     }
-    if (!reqId) {
+    const effectivePhone = normalizedPhone || normalizePhone(phone);
+    const storedReqId = reqId || readReqId(effectivePhone);
+    if (!reqId && storedReqId) {
+      setReqId(storedReqId);
+    }
+    if (!storedReqId) {
       setFormMessage('OTP request id missing. Please resend the OTP.');
       return;
     }
@@ -151,12 +161,13 @@ export default function Login() {
           }
           try {
             const loginResponse = await userService.verifyMsg91Token({
-              phone: normalizedPhone,
+              phone: effectivePhone,
               accessToken,
               intent: 'login',
             });
             console.log('Login response:', loginResponse?.data || loginResponse);
             await refreshProfile();
+            clearReqId(effectivePhone);
             navigate(closeTarget, { replace: true });
           } catch (error) {
             setFormMessage(error.message);
@@ -169,7 +180,7 @@ export default function Login() {
           setFormMessage(msg);
           setLoading(false);
         },
-        reqId,
+        storedReqId,
       );
     } catch (error) {
       setFormMessage(error.message);
@@ -231,7 +242,18 @@ export default function Login() {
               {loading ? 'Verifying...' : 'Verify & Login'}
             </button>
 
-            <button type="button" className="auth-secondary-btn" onClick={() => { setStep('phone'); setOtp(''); }} disabled={loading}>
+            <button
+              type="button"
+              className="auth-secondary-btn"
+              onClick={() => {
+                const effectivePhone = normalizedPhone || normalizePhone(phone);
+                clearReqId(effectivePhone);
+                setReqId('');
+                setStep('phone');
+                setOtp('');
+              }}
+              disabled={loading}
+            >
               Change number
             </button>
           </>
