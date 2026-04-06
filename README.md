@@ -1,4 +1,4 @@
-# Purandar Estate — Full-Stack Real Estate Platform
+# Purandar Estate ï¿½ Full-Stack Real Estate Platform
 
 Modern, production-ready real estate platform with property listings, projects, admin workflows, media uploads, WhatsApp engagement, and analytics. Built with a Vite + React frontend and a Node/Express + MongoDB backend.
 
@@ -86,10 +86,7 @@ MEDIA_IMAGE_MAX_MB=5
 MEDIA_VIDEO_MAX_MB=50
 ```
 
-## Admin Access
 
-- Admin login page: `/tk23`
-- Only users with `role=admin` can access `/admin`.
 
 ## Core Features
 

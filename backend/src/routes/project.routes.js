@@ -27,7 +27,7 @@ const upload = createUpload({
 
 router.get('/', optionalProtect, listProjects);
 router.get('/:id', optionalProtect, getProjectById);
-router.post('/', protect, authorize('admin'), createProject);
+router.post('/', protect, authorize('user', 'agent', 'admin'), createProject);
 router.patch('/:id', protect, authorize('admin'), updateProject);
 router.patch('/:id/visibility', protect, authorize('admin'), toggleProjectVisibility);
 router.patch('/:id/featured', protect, authorize('admin'), toggleProjectFeatured);

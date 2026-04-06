@@ -7,14 +7,29 @@ import { formatCompactPrice } from '../../utils/formatPrice';
 import { getPropertyImageUrls } from '../../utils/propertyImages';
 import Loader from '../../components/common/Loader';
 import EmptyState from '../../components/common/EmptyState';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import './MyProperties.css';
 
 export default function MyProperties() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState(null);
   const navigate = useNavigate();
   const fallbackImage = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80';
+
+  const closeConfirm = () => setConfirmDialog(null);
+  const openConfirm = (payload) => setConfirmDialog({ ...payload, busy: false });
+  const handleConfirm = async () => {
+    const action = confirmDialog?.onConfirm;
+    if (!action) return;
+    setConfirmDialog((current) => (current ? { ...current, busy: true } : current));
+    try {
+      await action();
+    } finally {
+      setConfirmDialog(null);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -30,15 +45,35 @@ export default function MyProperties() {
 
   useEffect(() => { load(); }, []);
 
-  const archiveProperty = async (propertyId) => {
-    await propertyService.remove(propertyId);
-    await load();
+  const archiveProperty = (propertyId, title) => {
+    openConfirm({
+      title: 'Archive property?',
+      message: `${title ? `"${title}"` : 'This property'} will be hidden from your listings until it is re-approved.`,
+      confirmText: 'Archive',
+      tone: 'danger',
+      onConfirm: async () => {
+        await propertyService.remove(propertyId);
+        await load();
+      },
+    });
   };
 
   if (loading) return <Loader label="Loading your properties..." />;
 
   return (
     <div className="profile-page">
+      <ConfirmModal
+        open={!!confirmDialog}
+        title={confirmDialog?.title}
+        message={confirmDialog?.message}
+        confirmText={confirmDialog?.confirmText}
+        cancelText={confirmDialog?.cancelText}
+        onConfirm={handleConfirm}
+        onClose={closeConfirm}
+        tone={confirmDialog?.tone || 'danger'}
+        showCancel={confirmDialog?.showCancel !== false}
+        busy={confirmDialog?.busy}
+      />
       <div className="page-header">
         <div>
           <h1 className="page-title">My Properties</h1>
@@ -65,7 +100,7 @@ export default function MyProperties() {
                 <div className="property-location"><MapPin className="w-4 h-4" /><span>{[property.locality, property.city].filter(Boolean).join(', ')}</span></div>
                 <div className="property-actions">
                   <button className="action-btn edit-btn" onClick={() => navigate(`/post-property/form?edit=${property._id}`)}><Pencil className="w-4 h-4" /> Edit</button>
-                  <button className="action-btn delete-btn" onClick={() => archiveProperty(property._id)}><Trash2 className="w-4 h-4" /> Archive</button>
+                  <button className="action-btn delete-btn" onClick={() => archiveProperty(property._id, property.title)}><Trash2 className="w-4 h-4" /> Archive</button>
                 </div>
               </div>
             </div>

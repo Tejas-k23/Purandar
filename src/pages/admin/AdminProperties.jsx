@@ -6,6 +6,7 @@ import AdminHeader from '../../components/admin/AdminHeader';
 import DataTable from '../../components/admin/DataTable';
 import Loader from '../../components/common/Loader';
 import ToggleSwitch from '../../components/common/ToggleSwitch';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { formatCompactPrice } from '../../utils/formatPrice';
 import { hasCompanyContact } from '../../config/companyContact';
 
@@ -18,6 +19,20 @@ export default function AdminProperties() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  const [confirmDialog, setConfirmDialog] = useState(null);
+
+  const closeConfirm = () => setConfirmDialog(null);
+  const openConfirm = (payload) => setConfirmDialog({ ...payload, busy: false });
+  const handleConfirm = async () => {
+    const action = confirmDialog?.onConfirm;
+    if (!action) return;
+    setConfirmDialog((current) => (current ? { ...current, busy: true } : current));
+    try {
+      await action();
+    } finally {
+      setConfirmDialog(null);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -168,17 +183,34 @@ export default function AdminProperties() {
     }
   };
 
-  const deleteProperty = async (propertyId) => {
-    const confirmed = window.confirm('Delete this property permanently?');
-    if (!confirmed) return;
+  const deleteProperty = (propertyId, title) => {
+    openConfirm({
+      title: 'Delete property?',
+      message: `This will permanently delete ${title ? `"${title}"` : 'this property'} and its media.`,
+      confirmText: 'Delete',
+      tone: 'danger',
+      onConfirm: async () => {
+        setBusyId(`${propertyId}:delete`);
+        try {
+          await adminService.deleteProperty(propertyId);
+          await load();
+        } finally {
+          setBusyId('');
+        }
+      },
+    });
+  };
 
-    setBusyId(`${propertyId}:delete`);
-    try {
-      await adminService.deleteProperty(propertyId);
-      await load();
-    } finally {
-      setBusyId('');
-    }
+  const confirmArchive = (propertyId, title) => {
+    openConfirm({
+      title: 'Archive property?',
+      message: `${title ? `"${title}"` : 'This property'} will be hidden from public listings until re-approved.`,
+      confirmText: 'Archive',
+      tone: 'danger',
+      onConfirm: async () => {
+        await updateStatus(propertyId, 'archived');
+      },
+    });
   };
 
   const featuredCount = useMemo(() => properties.filter((property) => property.featuredOnHome).length, [properties]);
@@ -217,6 +249,18 @@ export default function AdminProperties() {
 
   return (
     <div className="admin-page">
+      <ConfirmModal
+        open={!!confirmDialog}
+        title={confirmDialog?.title}
+        message={confirmDialog?.message}
+        confirmText={confirmDialog?.confirmText}
+        cancelText={confirmDialog?.cancelText}
+        onConfirm={handleConfirm}
+        onClose={closeConfirm}
+        tone={confirmDialog?.tone || 'danger'}
+        showCancel={confirmDialog?.showCancel !== false}
+        busy={confirmDialog?.busy}
+      />
       <AdminHeader
         title="All Properties"
         subtitle="Manage every listing, change visibility, edit records, and control which seller contact the website shows."
@@ -387,7 +431,7 @@ export default function AdminProperties() {
               render: (row) => (
                 <ToggleSwitch
                   checked={row.status === 'approved'}
-                  onChange={(value) => updateStatus(row._id, value ? 'approved' : 'archived')}
+                  onChange={(value) => (value ? updateStatus(row._id, 'approved') : confirmArchive(row._id, row.title))}
                   label="Toggle property visibility"
                   disabled={busyId === `${row._id}:approved` || busyId === `${row._id}:archived`}
                 />
@@ -440,7 +484,7 @@ export default function AdminProperties() {
                     type="button"
                     className="admin-danger-btn admin-icon-btn"
                     disabled={busyId === `${row._id}:archived`}
-                    onClick={() => updateStatus(row._id, 'archived')}
+                    onClick={() => confirmArchive(row._id, row.title)}
                     title="Hide listing"
                     aria-label="Hide listing"
                   >
@@ -450,7 +494,7 @@ export default function AdminProperties() {
                     type="button"
                     className="admin-danger-btn admin-icon-btn"
                     disabled={busyId === `${row._id}:delete`}
-                    onClick={() => deleteProperty(row._id)}
+                    onClick={() => deleteProperty(row._id, row.title)}
                     title="Delete property"
                     aria-label="Delete property"
                   >

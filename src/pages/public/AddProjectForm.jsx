@@ -5,6 +5,7 @@ import projectService from '../../services/projectService';
 import { getAmenityMeta } from '../../utils/amenityMeta';
 import { getProjectTypeProfile, PROJECT_TYPE_PROFILES } from '../../utils/projectTypeConfig';
 import MapPickerModal from '../../components/common/MapPickerModal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import useAuth from '../../hooks/useAuth';
 import env from '../../config/env';
 import './PostPropertyForm.css';
@@ -310,6 +311,7 @@ export default function AddProjectForm() {
   const [statusMessage, setStatusMessage] = useState('');
   const [mediaError, setMediaError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successDialog, setSuccessDialog] = useState(null);
   const editId = searchParams.get('edit');
   const isAdminPath = location.pathname.startsWith('/admin');
   const { user } = useAuth();
@@ -550,7 +552,7 @@ export default function AddProjectForm() {
       } else {
         const response = await projectService.create(payload);
         projectId = response?.data?.data?._id;
-        setStatusMessage('Project created successfully.');
+        setStatusMessage('');
       }
 
       const newImages = formData.projectImages.filter((image) => image?.isLocal && image?.file);
@@ -563,7 +565,14 @@ export default function AddProjectForm() {
         }
       }
 
-      window.setTimeout(() => navigate(isAdminPath ? '/admin/projects' : '/projects'), 700);
+      if (!editId) {
+        setSuccessDialog({
+          title: 'Project submitted',
+          message: 'Thanks! Our team will verify and approve your project. Once approved, it will appear in the project listings.',
+        });
+      } else {
+        window.setTimeout(() => navigate(isAdminPath ? '/admin/projects' : '/projects'), 700);
+      }
     } catch (error) {
       setStatusMessage(error.message || 'Unable to save project.');
     } finally {
@@ -1006,6 +1015,22 @@ export default function AddProjectForm() {
 
   return (
     <section className="ppf-page apf-page">
+      <ConfirmModal
+        open={!!successDialog}
+        title={successDialog?.title}
+        message={successDialog?.message}
+        confirmText="Got it"
+        showCancel={false}
+        tone="success"
+        onClose={() => {
+          setSuccessDialog(null);
+          navigate(isAdminPath ? '/admin/projects' : '/projects');
+        }}
+        onConfirm={() => {
+          setSuccessDialog(null);
+          navigate(isAdminPath ? '/admin/projects' : '/projects');
+        }}
+      />
       <div className="ppf-layout">
         <aside className="ppf-sidebar">
           <div className="ppf-stepper">

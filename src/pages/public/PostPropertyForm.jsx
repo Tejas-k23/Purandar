@@ -8,6 +8,7 @@ import Step5Amenities from '../../components/forms/post-property/Step5Amenities'
 import propertyService from '../../services/propertyService';
 import adminService from '../../services/adminService';
 import Loader from '../../components/common/Loader';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import useAuth from '../../hooks/useAuth';
 import './PostPropertyForm.css';
 
@@ -103,6 +104,7 @@ export default function PostPropertyForm() {
   const [statusMessage, setStatusMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [successDialog, setSuccessDialog] = useState(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -187,7 +189,7 @@ export default function PostPropertyForm() {
       } else {
         const response = await propertyService.create(payload);
         propertyId = response?.data?.data?._id;
-        setStatusMessage('Property submitted successfully.');
+        setStatusMessage('');
       }
 
       const newImages = (formData.photos || []).filter((photo) => photo?.isLocal && photo?.file);
@@ -199,7 +201,14 @@ export default function PostPropertyForm() {
         await propertyService.uploadVideos(propertyId, [formData.videoFile]);
       }
 
-      setTimeout(() => navigate(isAdminPath ? '/admin/properties' : '/profile/properties'), 800);
+      if (!editId) {
+        setSuccessDialog({
+          title: 'Property submitted',
+          message: 'Thanks! Our team will verify and approve your property. Once approved, it will appear in the listings.',
+        });
+      } else {
+        setTimeout(() => navigate(isAdminPath ? '/admin/properties' : '/profile/properties'), 800);
+      }
     } catch (error) {
       setStatusMessage(error.message);
     } finally {
@@ -221,6 +230,22 @@ export default function PostPropertyForm() {
 
   return (
     <section className="ppf-page" id="post-property-form">
+      <ConfirmModal
+        open={!!successDialog}
+        title={successDialog?.title}
+        message={successDialog?.message}
+        confirmText="Got it"
+        showCancel={false}
+        tone="success"
+        onClose={() => {
+          setSuccessDialog(null);
+          navigate(isAdminPath ? '/admin/properties' : '/profile/properties');
+        }}
+        onConfirm={() => {
+          setSuccessDialog(null);
+          navigate(isAdminPath ? '/admin/properties' : '/profile/properties');
+        }}
+      />
       <div className="ppf-layout">
         <aside className="ppf-sidebar">
           <div className="ppf-stepper">

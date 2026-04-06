@@ -54,6 +54,7 @@ export default function PropertyDetails() {
   const [enquiry, setEnquiry] = useState({ name: '', email: '', phone: '', message: '' });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [hasTouchedMessage, setHasTouchedMessage] = useState(false);
   const [sellerMessage, setSellerMessage] = useState('');
   const [showSellerDetails, setShowSellerDetails] = useState(false);
   const [sellerDetails, setSellerDetails] = useState(null);
@@ -85,6 +86,20 @@ export default function PropertyDetails() {
       active = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!property || hasTouchedMessage) return;
+    const locationLabel = [property.locality, property.city].filter(Boolean).join(', ');
+    const areaValue = property.totalArea || property.plotArea || property.carpetArea;
+    const areaText = areaValue ? `${areaValue} ${property.areaUnit || 'sq.ft'}` : '';
+    const priceText = property.price ? formatCurrency(property.price) : '';
+    const titleBase = property.title || `${property.propertyType || 'Property'} in ${locationLabel || 'Purandar'}`;
+    const detailBits = [locationLabel ? `Location: ${locationLabel}` : '', areaText ? `Area: ${areaText}` : '', priceText ? `Price: ${priceText}` : '']
+      .filter(Boolean)
+      .join(' • ');
+    const prefilled = `Hi, I'm interested in ${titleBase}.${detailBits ? ` (${detailBits})` : ''} Please share availability and a good time for a site visit.`;
+    setEnquiry((current) => ({ ...current, message: prefilled }));
+  }, [property, hasTouchedMessage]);
 
   const submitEnquiry = async (event) => {
     event.preventDefault();
@@ -287,7 +302,16 @@ export default function PropertyDetails() {
               <input value={enquiry.name} onChange={(e) => setEnquiry({ ...enquiry, name: e.target.value })} placeholder="Your name" className="styled-input" />
               <input value={enquiry.email} onChange={(e) => setEnquiry({ ...enquiry, email: e.target.value })} placeholder="Email" className="styled-input" />
               <input value={enquiry.phone} onChange={(e) => setEnquiry({ ...enquiry, phone: e.target.value })} placeholder="Phone" className="styled-input" />
-              <textarea value={enquiry.message} onChange={(e) => setEnquiry({ ...enquiry, message: e.target.value })} placeholder="Message" className="styled-textarea" rows={4} />
+              <textarea
+                value={enquiry.message}
+                onChange={(e) => {
+                  setHasTouchedMessage(true);
+                  setEnquiry({ ...enquiry, message: e.target.value });
+                }}
+                placeholder="Message"
+                className="styled-textarea"
+                rows={4}
+              />
               <button type="submit" className="pd-contact-btn"><Phone size={16} /> Contact Seller</button>
             </form>
             {message ? <p style={{ marginTop: 12 }}>{message}</p> : null}

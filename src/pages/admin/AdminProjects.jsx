@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import AdminHeader from '../../components/admin/AdminHeader';
 import DataTable from '../../components/admin/DataTable';
 import ToggleSwitch from '../../components/common/ToggleSwitch';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import projectService from '../../services/projectService';
 import { formatCompactPrice } from '../../utils/formatPrice';
 import { hasCompanyContact } from '../../config/companyContact';
@@ -16,6 +17,20 @@ export default function AdminProjects() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  const [confirmDialog, setConfirmDialog] = useState(null);
+
+  const closeConfirm = () => setConfirmDialog(null);
+  const openConfirm = (payload) => setConfirmDialog({ ...payload, busy: false });
+  const handleConfirm = async () => {
+    const action = confirmDialog?.onConfirm;
+    if (!action) return;
+    setConfirmDialog((current) => (current ? { ...current, busy: true } : current));
+    try {
+      await action();
+    } finally {
+      setConfirmDialog(null);
+    }
+  };
 
   const load = async () => {
     const response = await projectService.getAll({ includeHidden: true });
@@ -145,12 +160,22 @@ export default function AdminProjects() {
     }
   };
 
-  const deleteProject = async (projectId) => {
-    if (!window.confirm('Delete this project permanently?')) return;
-    setBusyId(`${projectId}:delete`);
-    await projectService.remove(projectId);
-    await load();
-    setBusyId('');
+  const deleteProject = (projectId, projectName) => {
+    openConfirm({
+      title: 'Delete project?',
+      message: `This will permanently delete ${projectName ? `"${projectName}"` : 'this project'} and its media.`,
+      confirmText: 'Delete',
+      tone: 'danger',
+      onConfirm: async () => {
+        setBusyId(`${projectId}:delete`);
+        try {
+          await projectService.remove(projectId);
+          await load();
+        } finally {
+          setBusyId('');
+        }
+      },
+    });
   };
 
   const featuredCount = useMemo(() => projects.filter((item) => item.featuredOnHome).length, [projects]);
@@ -186,6 +211,18 @@ export default function AdminProjects() {
 
   return (
     <div className="admin-page">
+      <ConfirmModal
+        open={!!confirmDialog}
+        title={confirmDialog?.title}
+        message={confirmDialog?.message}
+        confirmText={confirmDialog?.confirmText}
+        cancelText={confirmDialog?.cancelText}
+        onConfirm={handleConfirm}
+        onClose={closeConfirm}
+        tone={confirmDialog?.tone || 'danger'}
+        showCancel={confirmDialog?.showCancel !== false}
+        busy={confirmDialog?.busy}
+      />
       <AdminHeader
         title="All Projects"
         subtitle="Manage project visibility, featured placement, and the contact information shown on project details pages."
@@ -388,7 +425,7 @@ export default function AdminProjects() {
                   <button
                     type="button"
                     className="admin-danger-btn admin-icon-btn"
-                    onClick={() => deleteProject(row._id)}
+                    onClick={() => deleteProject(row._id, row.projectName)}
                     disabled={busyId === `${row._id}:delete`}
                     title="Delete project"
                     aria-label="Delete project"
