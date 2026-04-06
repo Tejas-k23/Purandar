@@ -93,12 +93,18 @@ export const extractReqId = (data) => (
   || data?.req_id
   || data?.otpId
   || data?.otp_id
+  || data?.message
+  || data?.messageId
+  || data?.message_id
   || data?.data?.reqId
   || data?.data?.requestId
   || data?.data?.request_id
   || data?.data?.req_id
   || data?.data?.otpId
   || data?.data?.otp_id
+  || data?.data?.message
+  || data?.data?.messageId
+  || data?.data?.message_id
   || data?.details?.request_id
   || data?.details?.reqId
   || data?.details?.requestId
