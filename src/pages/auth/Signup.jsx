@@ -8,6 +8,7 @@ import { startMsg91Otp } from '../../utils/msg91Otp';
 import './AuthModal.css';
 
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
+const normalizePhone = (value) => `+91${String(value).replace(/\D/g, '').slice(-10)}`;
 
 export default function Signup() {
   const { refreshProfile } = useAuth();
@@ -62,10 +63,15 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      const normalizedPhone = phoneInput.trim();
+      const normalizedPhone = normalizePhone(phoneInput);
       const response = await userService.checkPhone({ phone: normalizedPhone });
       const exists = response.data?.data?.exists;
-      const nextToken = await startMsg91Otp({ identifier: normalizedPhone });
+      const otpResult = await startMsg91Otp({ identifier: normalizedPhone });
+      const nextToken = otpResult?.otpToken;
+      if (!nextToken) {
+        console.error('MSG91 OTP token missing.', otpResult);
+        throw new Error('OTP verified but token was missing.');
+      }
       setOtpToken(nextToken);
 
       if (exists) {
@@ -110,11 +116,17 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      const nextToken = otpToken || await startMsg91Otp({ identifier: phone });
+      const normalizedPhone = normalizePhone(phone);
+      const otpResult = otpToken ? { otpToken } : await startMsg91Otp({ identifier: normalizedPhone });
+      const nextToken = otpResult?.otpToken;
+      if (!nextToken) {
+        console.error('MSG91 OTP token missing.', otpResult);
+        throw new Error('OTP verified but token was missing.');
+      }
 
       await userService.registerWithPhone({
         name: fullName.trim(),
-        phone,
+        phone: normalizedPhone,
         role: role === 'broker' ? 'agent' : 'user',
         otpToken: nextToken,
       });

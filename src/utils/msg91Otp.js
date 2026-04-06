@@ -48,13 +48,17 @@ const readAccessToken = (data) => (
   || data?.tokenAuth
   || data?.authToken
   || data?.data?.accessToken
+  || data?.data?.access_token
+  || data?.data?.token
+  || data?.data?.tokenAuth
 );
 
 const normalizeIdentifier = (value = '') => {
   const raw = String(value).replace(/\D/g, '');
   if (!raw) return '';
-  if (raw.length === 10) return `91${raw}`;
-  return raw;
+  if (raw.length === 10) return `+91${raw}`;
+  if (raw.startsWith('91') && raw.length === 12) return `+${raw}`;
+  return raw.startsWith('+') ? raw : `+${raw}`;
 };
 
 export const startMsg91Otp = async ({ identifier } = {}) => {
@@ -73,11 +77,14 @@ export const startMsg91Otp = async ({ identifier } = {}) => {
       exposeMethods: env.msg91ExposeMethods,
       success: (data) => {
         const accessToken = readAccessToken(data);
+        window.__msg91LastOtpResponse = data;
+        // Debug: keep raw response for inspection
+        console.log('MSG91 OTP response:', data);
         if (!accessToken) {
-          reject(new Error('OTP verified but access token was missing.'));
+          reject(new Error('OTP verified but access token was missing. Check MSG91 widget settings for access token.'));
           return;
         }
-        resolve(accessToken);
+        resolve({ otpToken: accessToken, response: data });
       },
       failure: (error) => {
         reject(new Error(error?.message || 'OTP verification failed.'));

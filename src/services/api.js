@@ -10,7 +10,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -36,10 +36,12 @@ api.interceptors.response.use(
 export const setAccessToken = (token) => {
   if (token) {
     localStorage.setItem('accessToken', token);
+    localStorage.setItem('token', token);
     return;
   }
 
   localStorage.removeItem('accessToken');
+  localStorage.removeItem('token');
 };
 
 export default api;

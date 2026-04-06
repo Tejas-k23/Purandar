@@ -8,6 +8,7 @@ import { startMsg91Otp } from '../../utils/msg91Otp';
 import './AuthModal.css';
 
 const isValidPhone = (value) => /^\d{10}$/.test(value.trim());
+const normalizePhone = (value) => `+91${String(value).replace(/\D/g, '').slice(-10)}`;
 
 export default function Login() {
   const { login, refreshProfile } = useAuth();
@@ -48,13 +49,19 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const normalizedPhone = phone.trim();
+      const normalizedPhone = normalizePhone(phone);
       const response = await userService.checkPhone({ phone: normalizedPhone });
       const exists = response.data?.data?.exists;
-      const otpToken = await startMsg91Otp({ identifier: normalizedPhone });
+      const otpResult = await startMsg91Otp({ identifier: normalizedPhone });
+      const otpToken = otpResult?.otpToken;
+      if (!otpToken) {
+        console.error('MSG91 OTP token missing.', otpResult);
+        throw new Error('OTP verified but token was missing.');
+      }
 
       if (exists) {
-        await userService.loginWithPhone({ phone: normalizedPhone, otpToken });
+        const loginResponse = await userService.loginWithPhone({ phone: normalizedPhone, otpToken });
+        console.log('Login response:', loginResponse?.data || loginResponse);
         await refreshProfile();
         navigate(closeTarget, { replace: true });
         return;
