@@ -28,13 +28,21 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [phone, setPhone] = useState(normalizePhoneInput(searchParams.get('phone')));
+  const initialPhone = normalizePhoneInput(searchParams.get('phone'));
+  const otpSentFromSignup = Boolean(location.state?.otpSent);
+  const [phone, setPhone] = useState(initialPhone);
   const [otp, setOtp] = useState('');
-  const [normalizedPhone, setNormalizedPhone] = useState('');
-  const [step, setStep] = useState('phone');
-  const [reqId, setReqId] = useState('');
+  const [normalizedPhone, setNormalizedPhone] = useState(
+    otpSentFromSignup && initialPhone ? normalizePhone(initialPhone) : '',
+  );
+  const [step, setStep] = useState(otpSentFromSignup ? 'otp' : 'phone');
+  const [reqId, setReqId] = useState(
+    otpSentFromSignup && initialPhone ? readReqId(normalizePhone(initialPhone)) : '',
+  );
   const [phoneError, setPhoneError] = useState('');
-  const [formMessage, setFormMessage] = useState('');
+  const [formMessage, setFormMessage] = useState(
+    otpSentFromSignup ? 'OTP already sent to your phone.' : '',
+  );
   const [loading, setLoading] = useState(false);
 
   const backgroundLocation = location.state?.backgroundLocation;
@@ -58,6 +66,8 @@ export default function Login() {
   const continueWithPhone = async () => {
     setPhoneError('');
     setFormMessage('');
+    setReqId('');
+    setOtp('');
 
     if (!isValidPhone(phone)) {
       setPhoneError('Please enter a valid 10-digit phone number');
@@ -107,6 +117,7 @@ export default function Login() {
         },
       });
 
+      clearReqId(formattedPhone);
       sendOtpWithWidget(
         buildIdentifier(formattedPhone),
         (data) => {
@@ -115,6 +126,8 @@ export default function Login() {
           const nextReqId = extractReqId(data);
           setReqId(nextReqId);
           storeReqId(formattedPhone, nextReqId);
+          setStep('otp');
+          setFormMessage('OTP sent to your phone.');
         },
         (error) => {
           console.log('MSG91 sendOtp failure:', error);
@@ -124,8 +137,6 @@ export default function Login() {
       );
 
       setNormalizedPhone(formattedPhone);
-      setStep('otp');
-      setFormMessage('OTP sent to your phone.');
     } catch (error) {
       setFormMessage(error.message);
     } finally {

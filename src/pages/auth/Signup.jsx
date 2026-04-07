@@ -72,6 +72,9 @@ export default function Signup() {
   const continueWithPhone = async () => {
     setPhoneError('');
     setFormError('');
+    setReqId('');
+    setOtp('');
+    setOtpSent(false);
 
     if (!isValidPhone(phoneInput)) {
       setPhoneError('Please enter a valid 10-digit phone number');
@@ -131,6 +134,7 @@ export default function Signup() {
         },
       });
 
+      clearReqId(normalizedPhone);
       sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
@@ -140,6 +144,19 @@ export default function Signup() {
           setReqId(nextReqId);
           storeReqId(normalizedPhone, nextReqId);
           setOtpSent(true);
+
+          if (exists) {
+            navigate(`/login?phone=${phoneDigits}`, {
+              replace: true,
+              state: { backgroundLocation: backgroundLocation || closeTarget, otpSent: true },
+            });
+            return;
+          }
+
+          navigate(`/signup?phone=${phoneDigits}`, {
+            replace: true,
+            state: { backgroundLocation: backgroundLocation || closeTarget, otpSent: true },
+          });
         },
         (error) => {
           console.log('MSG91 sendOtp failure:', error);
@@ -147,19 +164,6 @@ export default function Signup() {
           setFormError(msg);
         },
       );
-
-      if (exists) {
-        navigate(`/login?phone=${phoneDigits}`, {
-          replace: true,
-          state: { backgroundLocation: backgroundLocation || closeTarget },
-        });
-        return;
-      }
-
-      navigate(`/signup?phone=${phoneDigits}`, {
-        replace: true,
-        state: { backgroundLocation: backgroundLocation || closeTarget, otpSent: true },
-      });
     } catch (error) {
       setFormError(error.message);
     } finally {
@@ -236,6 +240,9 @@ export default function Signup() {
 
   const sendOtpForLockedPhone = async () => {
     setFormError('');
+    setReqId('');
+    setOtp('');
+    setOtpSent(false);
     setLoading(true);
     try {
       const normalizedPhone = normalizePhone(phone);
@@ -285,6 +292,7 @@ export default function Signup() {
         },
       });
 
+      clearReqId(normalizedPhone);
       sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
