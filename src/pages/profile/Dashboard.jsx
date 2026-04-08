@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+ï»¿import React, { useEffect, useMemo, useState } from 'react';
 import { BarChart3, Bookmark, Building2, Clock3, MessageSquareMore, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
@@ -31,7 +31,9 @@ export default function Dashboard() {
           propertyService.getMyStats(),
         ]);
 
-        setProperties(propertiesResponse.data.data || []);
+        const data = propertiesResponse.data.data || [];
+        const propertyList = Array.isArray(data) ? data : (data.properties || []);
+        setProperties(propertyList);
         setEnquiries(enquiriesResponse.data.data || []);
         setStats(statsResponse.data.data || null);
       } finally {
@@ -128,13 +130,13 @@ export default function Dashboard() {
                 <article key={lead._id} className="dashboard-lead-card">
                   <div className="dashboard-lead-main">
                     <h3>{lead.property?.title || 'Property lead'}</h3>
-                    <p>{lead.name} · {lead.email}</p>
+                    <p>{lead.name} Â· {lead.email}</p>
                   </div>
                   <div className="dashboard-lead-meta">
                     <span className={`dashboard-status-badge ${lead.status}`}>{lead.status}</span>
                     <span>{formatDate(lead.createdAt)}</span>
                   </div>
-                  <p className="dashboard-lead-message">Phone: {lead.phone || 'Not shared'} · Requested seller contact details.</p>
+                  <p className="dashboard-lead-message">Phone: {lead.phone || 'Not shared'} Â· Requested seller contact details.</p>
                 </article>
               ))}
             </div>
@@ -175,5 +177,6 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 

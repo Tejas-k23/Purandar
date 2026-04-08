@@ -1511,7 +1511,7 @@
 
 .pd-feedback-grid {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     gap: 18px;
 }
 
@@ -1519,10 +1519,82 @@
     background: var(--white);
     border: 1px solid var(--gray-200);
     border-radius: 16px;
-    padding: 18px;
+    padding: 16px;
     display: grid;
     gap: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.pd-feedback-form--locked {
+    gap: 14px;
+}
+
+.pd-feedback-lock {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+}
+
+.pd-feedback-lock-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--indigo-50);
+    color: var(--indigo-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pd-feedback-lock-title {
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 2px;
+}
+
+.pd-feedback-lock-text {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--gray-500);
+}
+
+.pd-feedback-user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+}
+
+.pd-feedback-user-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pd-feedback-user-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.pd-feedback-user-name {
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.pd-feedback-user-sub {
+    font-size: 0.75rem;
+    color: var(--gray-400);
 }
 
 .pd-feedback-label {
@@ -1542,7 +1614,7 @@
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     color: var(--gray-400);
     cursor: pointer;
     transition: all 0.2s;
@@ -1550,8 +1622,9 @@
 
 .pd-rating-star-btn.active,
 .pd-rating-star-btn:hover {
-    border-color: var(--indigo-300);
-    color: var(--orange);
+    border-color: #f3c25c;
+    color: #f5c451;
+    background: rgba(245, 196, 81, 0.12);
     transform: translateY(-1px);
 }
 
@@ -1569,8 +1642,8 @@
 .pd-feedback-card {
     background: var(--white);
     border: 1px solid var(--gray-200);
-    border-radius: 16px;
-    padding: 16px;
+    border-radius: 14px;
+    padding: 12px 14px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -1593,8 +1666,28 @@
 }
 
 .pd-feedback-stars {
-    color: var(--orange);
+    color: #f5c451;
     font-size: 0.95rem;
+    letter-spacing: 0.5px;
+}
+
+.pd-feedback-userline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pd-feedback-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--indigo-50);
+    border: 1px solid var(--indigo-100);
+    color: var(--indigo-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .pd-feedback-text {

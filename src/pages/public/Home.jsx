@@ -184,8 +184,10 @@ function PropertySection() {
 
         if (!active) return;
 
+        const data = propertiesResponse.data.data || [];
+        const propertyList = Array.isArray(data) ? data : (data.properties || []);
         setActivity({
-          properties: (propertiesResponse.data.data || []).length,
+          properties: propertyList.length,
           leads: (enquiriesResponse.data.data || []).length,
           loading: false,
         });

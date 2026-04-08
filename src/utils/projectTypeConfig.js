@@ -4,6 +4,8 @@ const SHARED_AMENITIES = [
   'Power Backup',
 ];
 
+const formatCount = (value) => (value === null || value === undefined || value === '' ? 'NA' : value);
+
 export const PROJECT_TYPE_PROFILES = {
   Residential: {
     helper: 'Best for apartment, villa, and family township projects.',
@@ -27,7 +29,7 @@ export const PROJECT_TYPE_PROFILES = {
       approvalAuthority: 'Approval Authority',
       additionalDescription: 'Residential scale, lifestyle planning, and authority approval details.',
       summaryLabel: 'Towers / Floors / Units',
-      summaryValue: (project) => `${project.totalTowers || 0} / ${project.totalFloors || 0} / ${project.totalUnits || 0}`,
+      summaryValue: (project) => `${formatCount(project.totalTowers)} / ${formatCount(project.totalFloors)} / ${formatCount(project.totalUnits)}`,
     },
   },
   Commercial: {
@@ -52,7 +54,7 @@ export const PROJECT_TYPE_PROFILES = {
       approvalAuthority: 'Approval Authority / Local Body',
       additionalDescription: 'Commercial inventory scale, circulation planning, and approval details.',
       summaryLabel: 'Blocks / Floors / Units',
-      summaryValue: (project) => `${project.totalTowers || 0} / ${project.totalFloors || 0} / ${project.totalUnits || 0}`,
+      summaryValue: (project) => `${formatCount(project.totalTowers)} / ${formatCount(project.totalFloors)} / ${formatCount(project.totalUnits)}`,
     },
   },
   'Mixed Use': {
@@ -77,7 +79,7 @@ export const PROJECT_TYPE_PROFILES = {
       approvalAuthority: 'Approval Authority',
       additionalDescription: 'Capture the combined scale of the township, its inventory mix, and approval details.',
       summaryLabel: 'Blocks / Floors / Units',
-      summaryValue: (project) => `${project.totalTowers || 0} / ${project.totalFloors || 0} / ${project.totalUnits || 0}`,
+      summaryValue: (project) => `${formatCount(project.totalTowers)} / ${formatCount(project.totalFloors)} / ${formatCount(project.totalUnits)}`,
     },
   },
   Plots: {
@@ -102,7 +104,7 @@ export const PROJECT_TYPE_PROFILES = {
       approvalAuthority: 'Approval Authority / Layout Sanction',
       additionalDescription: 'Capture phase planning, total plots, development stages, and approval details.',
       summaryLabel: 'Phases / Stages / Plots',
-      summaryValue: (project) => `${project.totalTowers || 0} / ${project.totalFloors || 0} / ${project.totalUnits || 0}`,
+      summaryValue: (project) => `${formatCount(project.totalTowers)} / ${formatCount(project.totalFloors)} / ${formatCount(project.totalUnits)}`,
     },
   },
 };
@@ -129,7 +131,7 @@ const fallbackProfile = {
     approvalAuthority: 'Approval Authority',
     additionalDescription: 'Project scale, open space, and authority approval details.',
     summaryLabel: 'Towers / Floors / Units',
-    summaryValue: (project) => `${project.totalTowers || 0} / ${project.totalFloors || 0} / ${project.totalUnits || 0}`,
+    summaryValue: (project) => `${formatCount(project.totalTowers)} / ${formatCount(project.totalFloors)} / ${formatCount(project.totalUnits)}`,
   },
 };
 

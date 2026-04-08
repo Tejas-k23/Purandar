@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Property from '../models/Property.js';
+import Project from '../models/Project.js';
 import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
@@ -44,7 +45,21 @@ export const getMyProperties = asyncHandler(async (req, res) => {
     status: { $ne: 'archived' },
   }).sort({ updatedAt: -1 });
 
-  res.json({ success: true, data: properties });
+  const projects = await Project.find({
+    owner: req.user._id,
+    status: { $ne: 'archived' },
+  }).sort({ updatedAt: -1 });
+
+  projects.forEach((project) => {
+    if (!Array.isArray(project.projectImages) || project.projectImages.length === 0) {
+      const fallback = (project.images || []).map((image) => image?.url).filter(Boolean);
+      if (fallback.length) {
+        project.projectImages = fallback;
+      }
+    }
+  });
+
+  res.json({ success: true, data: { properties, projects } });
 });
 
 export const getSavedProperties = asyncHandler(async (req, res) => {

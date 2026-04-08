@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Property from '../models/Property.js';
+import Project from '../models/Project.js';
 import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
@@ -169,6 +170,77 @@ export const getEnquiries = asyncHandler(async (_req, res) => {
     .populate('user', 'name email phone');
 
   res.json({ success: true, data: enquiries });
+});
+
+export const getAdminProjects = asyncHandler(async (req, res) => {
+  const filter = {};
+
+  if (req.query.status && req.query.status !== 'all') {
+    filter.status = req.query.status;
+  }
+  if (req.query.city) {
+    filter.city = new RegExp(req.query.city, 'i');
+  }
+  if (req.query.featuredOnHome === 'true') {
+    filter.featuredOnHome = true;
+  }
+
+  const projects = await Project.find(filter)
+    .sort({ featuredOnHome: -1, createdAt: -1 })
+    .populate('owner', 'name email phone role');
+
+  res.json({ success: true, data: projects });
+});
+
+export const updateProjectStatus = asyncHandler(async (req, res) => {
+  const { status, moderationMessage = '' } = req.body;
+  if (!['approved', 'rejected', 'pending', 'archived'].includes(status)) {
+    throw new ApiError(400, 'Invalid moderation status');
+  }
+
+  const project = await Project.findById(req.params.id);
+  if (!project) {
+    throw new ApiError(404, 'Project not found');
+  }
+
+  project.status = status;
+  project.moderationMessage = moderationMessage;
+  project.approvedAt = status === 'approved' ? new Date() : null;
+  project.publishedAt = status === 'approved' ? (project.publishedAt || new Date()) : project.publishedAt;
+  project.rejectedAt = status === 'rejected' ? new Date() : null;
+  if (status !== 'approved') {
+    project.featuredOnHome = false;
+  }
+
+  await project.save();
+
+  res.json({
+    success: true,
+    message: 'Project status updated',
+    data: project,
+  });
+});
+
+export const deleteAdminProject = asyncHandler(async (req, res) => {
+  const project = await Project.findByIdAndDelete(req.params.id);
+
+  if (!project) {
+    throw new ApiError(404, 'Project not found');
+  }
+
+  const keys = [
+    ...(project.images || []).map((image) => image.key),
+    ...(project.videos || []).map((video) => video.key),
+  ].filter(Boolean);
+
+  await deleteManyFromR2(keys);
+
+  await Enquiry.deleteMany({ project: project._id });
+
+  res.json({
+    success: true,
+    message: 'Project deleted permanently',
+  });
 });
 
 export const updateEnquiryStatus = asyncHandler(async (req, res) => {

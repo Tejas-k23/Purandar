@@ -21,12 +21,20 @@ const projectService = {
     return api.delete(`/projects/${projectId}`);
   },
 
+  removeAdmin(projectId) {
+    return api.delete(`/admin/projects/${projectId}`);
+  },
+
   toggleVisibility(projectId, visible) {
     return api.patch(`/projects/${projectId}/visibility`, { visible });
   },
 
   toggleFeatured(projectId, featuredOnHome) {
     return api.patch(`/projects/${projectId}/featured`, { featuredOnHome });
+  },
+
+  updateStatus(projectId, status, moderationMessage = '') {
+    return api.patch(`/admin/projects/${projectId}/status`, { status, moderationMessage });
   },
 
   uploadMedia(projectId, { images = [], videos = [] }) {

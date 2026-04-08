@@ -11,6 +11,7 @@ const mediaSchema = new mongoose.Schema(
 
 const projectSchema = new mongoose.Schema(
   {
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     projectName: { type: String, trim: true, default: '' },
     slug: { type: String, trim: true, default: '' },
     projectType: { type: String, trim: true, default: '' },
@@ -28,6 +29,11 @@ const projectSchema = new mongoose.Schema(
     plotUnit: { type: String, trim: true, default: 'sq.ft' },
     minPlotSize: { type: Number, default: null },
     maxPlotSize: { type: Number, default: null },
+    totalTowers: { type: Number, default: null },
+    totalUnits: { type: Number, default: null },
+    totalFloors: { type: Number, default: null },
+    openSpace: { type: Number, default: null },
+    approvalAuthority: { type: String, trim: true, default: '' },
     totalPlots: { type: Number, default: null },
     amenities: { type: [String], default: [] },
     tags: { type: [String], default: [] },
@@ -43,6 +49,9 @@ const projectSchema = new mongoose.Schema(
       default: 'original',
     },
     useCustomContactDetails: { type: Boolean, default: false },
+    contactPersonName: { type: String, trim: true, default: '' },
+    phoneNumber: { type: String, trim: true, default: '' },
+    email: { type: String, trim: true, default: '' },
     contactName: { type: String, trim: true, default: '' },
     contactPhone: { type: String, trim: true, default: '' },
     contactEmail: { type: String, trim: true, default: '' },
@@ -62,9 +71,21 @@ const projectSchema = new mongoose.Schema(
     videoUrl: { type: String, trim: true, default: '' },
     images: { type: [mediaSchema], default: [] },
     videos: { type: [mediaSchema], default: [] },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected', 'archived'],
+      default: 'pending',
+    },
+    moderationMessage: { type: String, trim: true, default: '' },
+    approvedAt: { type: Date, default: null },
+    rejectedAt: { type: Date, default: null },
+    publishedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
+
+projectSchema.index({ status: 1, featuredOnHome: 1, publishedAt: -1 });
+projectSchema.index({ owner: 1, status: 1, updatedAt: -1 });
 
 const Project = mongoose.model('Project', projectSchema);
 

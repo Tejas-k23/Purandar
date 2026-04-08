@@ -1,9 +1,11 @@
 ﻿import { Router } from 'express';
 import {
   createBlog,
+  deleteAdminProject,
   deleteAdminProperty,
   deleteBlog,
   getAdminProperties,
+  getAdminProjects,
   getAdminPropertyById,
   getAdminBlogById,
   getDashboard,
@@ -14,6 +16,7 @@ import {
   updateBlog,
   updateEnquiryStatus,
   updatePropertyStatus,
+  updateProjectStatus,
 } from '../controllers/admin.controller.js';
 import { deleteFeedback, listAllFeedback } from '../controllers/feedback.controller.js';
 import { authorize, protect } from '../middlewares/auth.middleware.js';
@@ -33,6 +36,9 @@ router.get('/properties/:id', getAdminPropertyById);
 router.patch('/properties/:id/status', updatePropertyStatus);
 router.patch('/properties/:id/featured', togglePropertyFeatured);
 router.delete('/properties/:id', deleteAdminProperty);
+router.get('/projects', getAdminProjects);
+router.patch('/projects/:id/status', updateProjectStatus);
+router.delete('/projects/:id', deleteAdminProject);
 router.get('/users', getUsers);
 router.get('/enquiries', getEnquiries);
 router.patch('/enquiries/:id/status', updateEnquiryStatus);

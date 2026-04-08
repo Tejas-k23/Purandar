@@ -48,6 +48,6 @@ router.post(
   uploadProjectMedia,
 );
 
-router.delete('/:id', protect, authorize('admin'), deleteProject);
+router.delete('/:id', protect, authorize('user', 'agent', 'admin'), deleteProject);
 
 export default router;

@@ -18,6 +18,7 @@ export default function AdminProjects() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const approvalStatuses = ['pending', 'approved', 'rejected', 'archived'];
 
   const closeConfirm = () => setConfirmDialog(null);
   const openConfirm = (payload) => setConfirmDialog({ ...payload, busy: false });
@@ -51,6 +52,13 @@ export default function AdminProjects() {
   const toggleFeatured = async (projectId, featuredOnHome) => {
     setBusyId(`${projectId}:featured`);
     await projectService.toggleFeatured(projectId, featuredOnHome);
+    await load();
+    setBusyId('');
+  };
+
+  const updateApprovalStatus = async (projectId, status) => {
+    setBusyId(`${projectId}:status:${status}`);
+    await projectService.updateStatus(projectId, status);
     await load();
     setBusyId('');
   };
@@ -169,7 +177,7 @@ export default function AdminProjects() {
       onConfirm: async () => {
         setBusyId(`${projectId}:delete`);
         try {
-          await projectService.remove(projectId);
+          await projectService.removeAdmin(projectId);
           await load();
         } finally {
           setBusyId('');
@@ -297,6 +305,27 @@ export default function AdminProjects() {
               ),
             },
             { key: 'status', label: 'Status', render: (row) => <span className="admin-table-badge success">{row.projectStatus}</span> },
+            {
+              key: 'approval',
+              label: 'Approval',
+              render: (row) => (
+                <div className="admin-cell-stack">
+                  <span className={`admin-table-badge ${row.status === 'approved' ? 'success' : row.status === 'rejected' ? 'danger' : row.status === 'archived' ? 'muted' : 'warning'}`}>
+                    {row.status || 'pending'}
+                  </span>
+                  <select
+                    className="admin-filter-select"
+                    value={row.status || 'pending'}
+                    onChange={(event) => updateApprovalStatus(row._id, event.target.value)}
+                    disabled={busyId.startsWith(`${row._id}:status`)}
+                  >
+                    {approvalStatuses.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+              ),
+            },
             { key: 'price', label: 'Price', render: (row) => `${formatCompactPrice((row.startingPrice || 0) * (row.priceUnit === 'Crore' ? 10000000 : 100000))} - ${formatCompactPrice((row.endingPrice || 0) * (row.priceUnit === 'Crore' ? 10000000 : 100000))}` },
             {
               key: 'contactDisplay',
@@ -416,7 +445,7 @@ export default function AdminProjects() {
                     type="button"
                     className={`admin-secondary-btn admin-secondary-btn-inline admin-feature-btn admin-icon-btn ${row.featuredOnHome ? 'is-featured' : ''}`}
                     onClick={() => toggleFeatured(row._id, !row.featuredOnHome)}
-                    disabled={busyId === `${row._id}:featured`}
+                    disabled={busyId === `${row._id}:featured` || row.status !== 'approved'}
                     title={row.featuredOnHome ? 'Remove from featured' : 'Feature on home'}
                     aria-label={row.featuredOnHome ? 'Remove from featured' : 'Feature on home'}
                   >

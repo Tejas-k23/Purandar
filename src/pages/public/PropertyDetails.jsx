@@ -104,6 +104,10 @@ export default function PropertyDetails() {
   const submitEnquiry = async (event) => {
     event.preventDefault();
     try {
+      if (!enquiry.name.trim() || !enquiry.email.trim()) {
+        setMessage('Please enter your name and email to submit the enquiry.');
+        return;
+      }
       await propertyService.createEnquiry(id, enquiry);
       setMessage('Enquiry submitted successfully.');
       setEnquiry({ name: '', email: '', phone: '', message: '' });

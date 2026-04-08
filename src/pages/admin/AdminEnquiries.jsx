@@ -59,12 +59,13 @@ export default function AdminEnquiries() {
   }), [rows, leadFilter, sourceFilter]);
 
   const exportCsv = () => {
-    const header = ['Type', 'User Name', 'User Phone', 'User Email', 'Property/Project', 'Status', 'Created'];
+    const header = ['Type', 'User Name', 'User Phone', 'User Email', 'Message', 'Property/Project', 'Status', 'Created'];
     const body = enquiries.map((item) => [
       formatLeadType(item.leadType),
       item.user?.name || item.name || '',
       item.user?.phone || item.phone || '',
       item.user?.email || item.email || '',
+      item.message || '',
       item.property?.title || item.project?.projectName || '-',
       item.status || 'new',
       new Date(item.createdAt).toLocaleString('en-IN'),
@@ -130,6 +131,7 @@ export default function AdminEnquiries() {
             { key: 'userName', label: 'User', render: (row) => row.user?.name || row.name || '-' },
             { key: 'userPhone', label: 'Phone', render: (row) => row.user?.phone || row.phone || '-' },
             { key: 'userEmail', label: 'Email', render: (row) => row.user?.email || row.email || '-' },
+            { key: 'message', label: 'Message', render: (row) => row.message || '-' },
             {
               key: 'target',
               label: 'Property/Project',

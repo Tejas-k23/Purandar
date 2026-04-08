@@ -52,7 +52,7 @@ router.post(
   }).array('videos', 2),
   uploadPropertyVideos,
 );
-router.delete('/:id', protect, authorize('admin'), deleteProperty);
+router.delete('/:id', protect, authorize('user', 'agent', 'admin'), deleteProperty);
 router.post('/:id/seller-details', protect, authorize('user', 'agent', 'admin'), unlockSellerDetails);
 router.post('/:id/enquiries', createEnquiry);
 router.get('/:id/enquiries', protect, authorize('user', 'agent', 'admin'), listPropertyEnquiries);

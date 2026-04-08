@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Bath, Building2, CalendarDays, CarFront, Dumbbell, FileText, Mail, MapPin, MapPinned, Phone, ShieldCheck, Trees, Waves, Users, Building, Lock, Blocks, Sparkles } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Bath, Building2, CalendarDays, CarFront, Dumbbell, FileText, Mail, MapPin, MapPinned, Phone, ShieldCheck, Trees, Waves, Users, Building, Lock, Blocks, Sparkles, UserCircle } from 'lucide-react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
 import Loader from '../../components/common/Loader';
 import ProjectCard from '../../components/project/ProjectCard';
@@ -131,13 +131,17 @@ function Gallery({ images = [], status }) {
 
 function InfoGrid({ project }) {
   const profile = getProjectTypeProfile(project.projectType);
+  const launchDate = formatDate(project.launchDate);
   const cards = [
     { icon: Blocks, label: 'Configurations', value: project.configurationTypes?.concat(project.extraConfigurations || []).filter(Boolean).join(', ') || 'NA' },
     { icon: Bath, label: profile.labels.areaRange, value: project.areaRange || 'NA' },
     { icon: Building2, label: profile.labels.summaryLabel, value: profile.labels.summaryValue(project) },
+    { icon: CalendarDays, label: 'Launch Date', value: launchDate || 'NA' },
     { icon: CalendarDays, label: profile.labels.possessionDate, value: project.possessionDate || 'NA' },
     { icon: Building, label: profile.labels.developer, value: project.developerName || 'NA' },
     { icon: ShieldCheck, label: profile.labels.rera, value: project.reraNumber || 'NA' },
+    { icon: ShieldCheck, label: profile.labels.openSpace, value: project.openSpace || project.openSpace === 0 ? `${project.openSpace}%` : 'NA' },
+    { icon: FileText, label: profile.labels.approvalAuthority, value: project.approvalAuthority || 'NA' },
   ];
 
   if (project.projectType === 'Plots') {
@@ -225,6 +229,7 @@ function ProjectMap({ project }) {
 export default function ProjectDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user } = useAuth();
   const [project, setProject] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -234,6 +239,12 @@ export default function ProjectDetails() {
   const [feedbackItems, setFeedbackItems] = useState([]);
   const [feedbackForm, setFeedbackForm] = useState({ name: '', rating: 0, feedback: '' });
   const [feedbackStatus, setFeedbackStatus] = useState('');
+  const authRouteState = { backgroundLocation: location };
+  const feedbackUserName = isAuthenticated ? (user?.name || user?.phone || user?.email || 'User') : '';
+
+  useEffect(() => {
+    setFeedbackForm((current) => ({ ...current, name: feedbackUserName }));
+  }, [feedbackUserName]);
 
   useEffect(() => {
     let active = true;
@@ -249,6 +260,15 @@ export default function ProjectDetails() {
         setProject(projectResponse.data.data);
         setProjects(listResponse.data.data.items || []);
         setFeedbackItems(feedbackResponse.data.data || []);
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log('[Project] Details media', {
+            projectImages: projectResponse.data.data?.projectImages,
+            images: projectResponse.data.data?.images,
+            videos: projectResponse.data.data?.videos,
+            videoUrl: projectResponse.data.data?.videoUrl,
+          });
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -262,6 +282,10 @@ export default function ProjectDetails() {
   const submitEnquiry = async (event) => {
     event.preventDefault();
     try {
+      if (!enquiry.name.trim() || !enquiry.email.trim()) {
+        setMessage('Please enter your name and email to submit the enquiry.');
+        return;
+      }
       await projectService.createEnquiry(id, enquiry);
       setMessage('Enquiry submitted successfully.');
       setEnquiry({ name: '', email: '', phone: '', message: '' });
@@ -273,6 +297,11 @@ export default function ProjectDetails() {
   const submitFeedback = async (event) => {
     event.preventDefault();
     setFeedbackStatus('');
+
+    if (!isAuthenticated) {
+      setFeedbackStatus('Please login to submit feedback.');
+      return;
+    }
 
     if (!feedbackForm.name.trim()) {
       setFeedbackStatus('Please enter your name.');
@@ -450,71 +479,98 @@ export default function ProjectDetails() {
       ) : null}
 
       <section className="pd-feedback-section">
-        <div className="pd-feedback-header">
-          <h2 className="pd-similar-title">Project Feedback</h2>
-          <p className="pd-feedback-subtitle">Share a rating and a short note (max 200 characters).</p>
-        </div>
+  <div className="pd-feedback-header">
+    <h2 className="pd-similar-title">Project Feedback</h2>
+    <p className="pd-feedback-subtitle">Share a rating and a short note (max 200 characters).</p>
+  </div>
 
-        <div className="pd-feedback-grid">
-          <form className="pd-feedback-form" onSubmit={submitFeedback}>
-            <label className="pd-feedback-label">Your Name</label>
-            <input
-              className="styled-input"
-              value={feedbackForm.name}
-              onChange={(event) => setFeedbackForm((current) => ({ ...current, name: event.target.value }))}
-              placeholder="Enter your name"
-            />
-
-            <label className="pd-feedback-label">Rating</label>
-            <div className="pd-feedback-rating">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={`pd-rating-star-btn ${feedbackForm.rating >= value ? 'active' : ''}`}
-                  onClick={() => setFeedbackForm((current) => ({ ...current, rating: value }))}
-                >
-                  ★
-                </button>
-              ))}
-            </div>
-
-            <label className="pd-feedback-label">Short Feedback</label>
-            <textarea
-              className="styled-textarea"
-              rows={4}
-              maxLength={200}
-              value={feedbackForm.feedback}
-              onChange={(event) => setFeedbackForm((current) => ({ ...current, feedback: event.target.value }))}
-              placeholder="Write a short feedback..."
-            />
-            <div className="pd-feedback-count">{feedbackForm.feedback.length} / 200</div>
-
-            <button type="submit" className="pd-contact-btn">Submit Feedback</button>
-            {feedbackStatus ? <p style={{ marginTop: 10 }}>{feedbackStatus}</p> : null}
-          </form>
-
-          <div className="pd-feedback-list">
-            {feedbackItems.length === 0 ? (
-              <div className="pd-feedback-empty">No feedback yet. Be the first to share.</div>
-            ) : (
-              feedbackItems.map((item) => (
-                <div key={item._id} className="pd-feedback-card">
-                  <div className="pd-feedback-top">
-                    <div>
-                      <div className="pd-feedback-name">{item.name}</div>
-                      <div className="pd-feedback-date">{new Date(item.createdAt).toLocaleDateString('en-IN')}</div>
-                    </div>
-                    <div className="pd-feedback-stars">{'★'.repeat(item.rating || 0)}</div>
-                  </div>
-                  <p className="pd-feedback-text">{item.feedback}</p>
-                </div>
-              ))
-            )}
+  <div className="pd-feedback-grid">
+    {isAuthenticated ? (
+      <form className="pd-feedback-form" onSubmit={submitFeedback}>
+        <div className="pd-feedback-user-card">
+          <div className="pd-feedback-avatar" aria-hidden="true">
+            <UserCircle size={18} />
+          </div>
+          <div className="pd-feedback-user-meta">
+            <span className="pd-feedback-user-label">Signed in as</span>
+            <span className="pd-feedback-user-name">{feedbackUserName}</span>
+            {user?.email ? <span className="pd-feedback-user-sub">{user.email}</span> : null}
           </div>
         </div>
-      </section>
+
+        <label className="pd-feedback-label">Rating</label>
+        <div className="pd-feedback-rating">
+          {[1, 2, 3, 4, 5].map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`pd-rating-star-btn ${feedbackForm.rating >= value ? 'active' : ''}`}
+              onClick={() => setFeedbackForm((current) => ({ ...current, rating: value }))}
+              aria-label={`Rate ${value} star`}
+            >
+              {"\u2605"}
+            </button>
+          ))}
+        </div>
+
+        <label className="pd-feedback-label">Short Feedback</label>
+        <textarea
+          className="styled-textarea"
+          rows={4}
+          maxLength={200}
+          value={feedbackForm.feedback}
+          onChange={(event) => setFeedbackForm((current) => ({ ...current, feedback: event.target.value }))}
+          placeholder="Write a short feedback..."
+        />
+        <div className="pd-feedback-count">{feedbackForm.feedback.length} / 200</div>
+
+        <button type="submit" className="pd-contact-btn">Submit Feedback</button>
+        {feedbackStatus ? <p style={{ marginTop: 10 }}>{feedbackStatus}</p> : null}
+      </form>
+    ) : (
+      <div className="pd-feedback-form pd-feedback-form--locked">
+        <div className="pd-feedback-lock">
+          <div className="pd-feedback-lock-icon"><Lock size={18} /></div>
+          <div>
+            <div className="pd-feedback-lock-title">Login required</div>
+            <p className="pd-feedback-lock-text">Please log in to add your feedback.</p>
+          </div>
+        </div>
+        <button type="button" className="pd-contact-btn" onClick={() => navigate('/login', { state: authRouteState })}>
+          Login to add feedback
+        </button>
+      </div>
+    )}
+
+    <div className="pd-feedback-list">
+      {feedbackItems.length === 0 ? (
+        <div className="pd-feedback-empty">No feedback yet. Be the first to share.</div>
+      ) : (
+        feedbackItems.map((item) => (
+          <div key={item._id} className="pd-feedback-card">
+            <div className="pd-feedback-top">
+              <div className="pd-feedback-userline">
+                <div className="pd-feedback-avatar" aria-hidden="true">
+                  <UserCircle size={16} />
+                </div>
+                <div>
+                  <div className="pd-feedback-name">{item.name}</div>
+                  <div className="pd-feedback-date">{new Date(item.createdAt).toLocaleDateString('en-IN')}</div>
+                </div>
+              </div>
+              <div className="pd-feedback-stars">{"\u2605".repeat(item.rating || 0)}</div>
+            </div>
+            <p className="pd-feedback-text">{item.feedback}</p>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+</section>
     </div>
   );
 }
+
+
+
 

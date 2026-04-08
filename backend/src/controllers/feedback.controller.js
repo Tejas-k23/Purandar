@@ -17,7 +17,7 @@ export const listProjectFeedback = asyncHandler(async (req, res) => {
   const identifier = req.params.id;
   const project = await getProjectByIdentifier(identifier);
 
-  if (!project || project.visible === false) {
+  if (!project || project.visible === false || project.status !== 'approved') {
     throw new ApiError(404, 'Project not found');
   }
 
@@ -32,7 +32,7 @@ export const createProjectFeedback = asyncHandler(async (req, res) => {
   const identifier = req.params.id;
   const project = await getProjectByIdentifier(identifier);
 
-  if (!project || project.visible === false) {
+  if (!project || project.visible === false || project.status !== 'approved') {
     throw new ApiError(404, 'Project not found');
   }
 

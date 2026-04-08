@@ -519,8 +519,11 @@ export const createEnquiry = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Property not found');
   }
 
-  const { name, email, phone, message, leadType } = req.body;
-  if (!name || !email) {
+  const rawName = req.body.name || req.user?.name || '';
+  const rawEmail = req.body.email || req.user?.email || '';
+  const rawPhone = req.body.phone || req.user?.phone || '';
+  const { message, leadType } = req.body;
+  if (!rawName || !rawEmail) {
     throw new ApiError(400, 'Name and email are required');
   }
 
@@ -528,9 +531,9 @@ export const createEnquiry = asyncHandler(async (req, res) => {
     property: property._id,
     propertyOwner: property.owner,
     user: req.user?._id || null,
-    name,
-    email,
-    phone,
+    name: rawName,
+    email: rawEmail,
+    phone: rawPhone,
     message,
     leadType: leadType === 'whatsapp' ? 'whatsapp' : 'enquiry',
   });

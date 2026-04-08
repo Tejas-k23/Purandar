@@ -6,7 +6,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import slugify from '../utils/slugify.js';
 import {
   buildFileName,
-  toPublicUrl,
+  getImageUrl,
   validateImageFile,
   validateVideoFile,
 } from '../utils/media.js';
@@ -34,6 +34,10 @@ const normalizePayload = (payload = {}) => {
   if ('pricePerSqFt' in next) next.pricePerSqFt = toNumberOrNull(next.pricePerSqFt);
   if ('minPlotSize' in next) next.minPlotSize = toNumberOrNull(next.minPlotSize);
   if ('maxPlotSize' in next) next.maxPlotSize = toNumberOrNull(next.maxPlotSize);
+  if ('totalTowers' in next) next.totalTowers = toNumberOrNull(next.totalTowers);
+  if ('totalUnits' in next) next.totalUnits = toNumberOrNull(next.totalUnits);
+  if ('totalFloors' in next) next.totalFloors = toNumberOrNull(next.totalFloors);
+  if ('openSpace' in next) next.openSpace = toNumberOrNull(next.openSpace);
   if ('totalPlots' in next) next.totalPlots = toNumberOrNull(next.totalPlots);
   if ('showWhatsappButton' in next) next.showWhatsappButton = toBoolean(next.showWhatsappButton);
 
@@ -65,12 +69,38 @@ const findProjectByIdentifier = (identifier) => {
   return Project.findOne({ slug: identifier });
 };
 
+const getOwnedProject = async (identifier, user) => {
+  if (user?.role === 'admin') {
+    return findProjectByIdentifier(identifier);
+  }
+
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    return Project.findOne({
+      owner: user?._id,
+      $or: [{ _id: identifier }, { slug: identifier }],
+    });
+  }
+
+  return Project.findOne({ owner: user?._id, slug: identifier });
+};
+
+const ensureProjectImages = (project) => {
+  if (!project) return project;
+  if (Array.isArray(project.projectImages) && project.projectImages.length) return project;
+  const fallback = (project.images || []).map((image) => image?.url).filter(Boolean);
+  if (fallback.length) {
+    project.projectImages = fallback;
+  }
+  return project;
+};
+
 export const listProjects = asyncHandler(async (req, res) => {
   const includeHidden = req.query.includeHidden === 'true' && req.user?.role === 'admin';
   const filter = {};
 
   if (!includeHidden) {
     filter.visible = { $ne: false };
+    filter.status = 'approved';
   }
   if (req.query.featuredOnHome === 'true') {
     filter.featuredOnHome = true;
@@ -89,6 +119,7 @@ export const listProjects = asyncHandler(async (req, res) => {
   }
 
   const items = await Project.find(filter).sort({ createdAt: -1 });
+  items.forEach(ensureProjectImages);
 
   res.json({
     success: true,
@@ -102,12 +133,13 @@ export const listProjects = asyncHandler(async (req, res) => {
 export const getProjectById = asyncHandler(async (req, res) => {
   const identifier = req.params.id;
   const project = await findProjectByIdentifier(identifier);
+  ensureProjectImages(project);
 
   if (!project) {
     throw new ApiError(404, 'Project not found');
   }
 
-  if (project.visible === false && req.user?.role !== 'admin') {
+  if ((project.visible === false || project.status !== 'approved') && req.user?.role !== 'admin') {
     throw new ApiError(404, 'Project not found');
   }
 
@@ -116,24 +148,37 @@ export const getProjectById = asyncHandler(async (req, res) => {
 
 export const createProject = asyncHandler(async (req, res) => {
   const payload = normalizePayload(req.body);
-  const project = await Project.create(payload);
+  const isAdmin = req.user?.role === 'admin';
+  const project = await Project.create({
+    ...payload,
+    owner: req.user?._id || null,
+    status: isAdmin ? 'approved' : 'pending',
+    approvedAt: isAdmin ? new Date() : null,
+    publishedAt: isAdmin ? new Date() : null,
+  });
 
   res.status(201).json({
     success: true,
-    message: 'Project created successfully',
+    message: isAdmin ? 'Project created successfully' : 'Project submitted for review',
     data: project,
   });
 });
 
 export const updateProject = asyncHandler(async (req, res) => {
   const payload = normalizePayload(req.body);
-  const project = await Project.findById(req.params.id);
+  const project = await getOwnedProject(req.params.id, req.user);
 
   if (!project) {
     throw new ApiError(404, 'Project not found');
   }
 
   Object.assign(project, payload);
+  if (req.user?.role !== 'admin') {
+    project.status = 'pending';
+    project.moderationMessage = '';
+    project.approvedAt = null;
+    project.rejectedAt = null;
+  }
   await project.save();
 
   res.json({
@@ -165,6 +210,9 @@ export const toggleProjectFeatured = asyncHandler(async (req, res) => {
   if (!project) {
     throw new ApiError(404, 'Project not found');
   }
+  if (project.status !== 'approved' && featuredOnHome) {
+    throw new ApiError(400, 'Only approved projects can be featured on the home page');
+  }
   project.featuredOnHome = Boolean(featuredOnHome);
   await project.save();
 
@@ -176,7 +224,7 @@ export const toggleProjectFeatured = asyncHandler(async (req, res) => {
 });
 
 export const uploadProjectMedia = asyncHandler(async (req, res) => {
-  const project = await Project.findById(req.params.id);
+  const project = await getOwnedProject(req.params.id, req.user);
 
   if (!project) {
     throw new ApiError(404, 'Project not found');
@@ -232,7 +280,7 @@ export const uploadProjectMedia = asyncHandler(async (req, res) => {
     }
 
     return {
-      url: toPublicUrl(key),
+      url: getImageUrl(key),
       key,
       type: 'image',
     };
@@ -257,7 +305,7 @@ export const uploadProjectMedia = asyncHandler(async (req, res) => {
     }
 
     return {
-      url: toPublicUrl(key),
+      url: getImageUrl(key),
       key,
       type: 'video',
     };
@@ -288,7 +336,7 @@ export const uploadProjectMedia = asyncHandler(async (req, res) => {
 });
 
 export const deleteProject = asyncHandler(async (req, res) => {
-  const project = await Project.findByIdAndDelete(req.params.id);
+  const project = await getOwnedProject(req.params.id, req.user);
 
   if (!project) {
     throw new ApiError(404, 'Project not found');
@@ -301,29 +349,36 @@ export const deleteProject = asyncHandler(async (req, res) => {
 
   await deleteManyFromR2(keys);
 
-  res.json({
-    success: true,
-    message: 'Project deleted permanently',
-  });
+  project.images = [];
+  project.videos = [];
+  project.projectImages = [];
+  project.videoUrl = '';
+  project.status = 'archived';
+  await project.save();
+
+  res.json({ success: true, message: 'Project archived successfully' });
 });
 
 export const createProjectEnquiry = asyncHandler(async (req, res) => {
   const project = await findProjectByIdentifier(req.params.id);
-  if (!project || project.visible === false) {
+  if (!project || project.visible === false || project.status !== 'approved') {
     throw new ApiError(404, 'Project not found');
   }
 
-  const { name, email, phone, message, leadType } = req.body;
-  if (!name || !email) {
+  const rawName = req.body.name || req.user?.name || '';
+  const rawEmail = req.body.email || req.user?.email || '';
+  const rawPhone = req.body.phone || req.user?.phone || '';
+  const { message, leadType } = req.body;
+  if (!rawName || !rawEmail) {
     throw new ApiError(400, 'Name and email are required');
   }
 
   const enquiry = await Enquiry.create({
     project: project._id,
     user: req.user?._id || null,
-    name,
-    email,
-    phone,
+    name: rawName,
+    email: rawEmail,
+    phone: rawPhone,
     message,
     leadType: leadType === 'whatsapp' ? 'whatsapp' : 'enquiry',
   });

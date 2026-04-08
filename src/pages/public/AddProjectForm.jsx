@@ -334,6 +334,15 @@ export default function AddProjectForm() {
       try {
         const response = await projectService.getById(editId);
         const project = response.data.data;
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log('[Project] Loaded project media', {
+            projectImages: project.projectImages,
+            images: project.images,
+            videos: project.videos,
+            videoUrl: project.videoUrl,
+          });
+        }
         const contactDisplayMode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
         const whatsappDisplayMode = project.whatsappDisplayMode || (project.useCustomWhatsappDetails ? 'custom' : 'original');
         setFormData({
@@ -561,7 +570,11 @@ export default function AddProjectForm() {
         if (newImages.length) mediaPayload.images = newImages.map((image) => image.file);
         if (formData.videoFile) mediaPayload.videos = [formData.videoFile];
         if (Object.keys(mediaPayload).length) {
-          await projectService.uploadMedia(projectId, mediaPayload);
+          const uploadResponse = await projectService.uploadMedia(projectId, mediaPayload);
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.log('[Project] Media upload response', uploadResponse?.data);
+          }
         }
       }
 
