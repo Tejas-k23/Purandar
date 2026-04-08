@@ -33,6 +33,8 @@ const numericFields = [
   'warehouseHeight',
   'floorsInProperty',
   'floorArea',
+  'latitude',
+  'longitude',
   'score',
 ];
 

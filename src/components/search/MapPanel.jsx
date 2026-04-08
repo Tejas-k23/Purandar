@@ -10,21 +10,25 @@ import './MapPanel.css';
 
 const baseLongitude = 73.98;
 const baseLatitude = 18.28;
+const isValidCoord = (value) => Number.isFinite(Number(value));
 
 export default function MapPanel({ properties = [], activePropertyId = '', intent = 'sell' }) {
   const navigate = useNavigate();
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  const items = useMemo(() => properties.slice(0, 12).map((property, index) => ({
-    ...property,
-    longitude: baseLongitude + (index % 4) * 0.02,
-    latitude: baseLatitude + Math.floor(index / 4) * 0.018,
-  })), [properties]);
+  const items = useMemo(() => properties.slice(0, 12).map((property, index) => {
+    const hasCoords = isValidCoord(property.longitude) && isValidCoord(property.latitude);
+    return {
+      ...property,
+      longitude: hasCoords ? Number(property.longitude) : baseLongitude + (index % 4) * 0.02,
+      latitude: hasCoords ? Number(property.latitude) : baseLatitude + Math.floor(index / 4) * 0.018,
+    };
+  }), [properties]);
 
   const activeProperty = items.find((property) => property._id === activePropertyId);
   const [viewState, setViewState] = useState({
-    longitude: baseLongitude + 0.03,
-    latitude: baseLatitude + 0.02,
+    longitude: items[0]?.longitude || (baseLongitude + 0.03),
+    latitude: items[0]?.latitude || (baseLatitude + 0.02),
     zoom: 10.5,
   });
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
@@ -34,8 +38,14 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
   useEffect(() => {
     if (activeProperty) {
       setViewState({ longitude: activeProperty.longitude, latitude: activeProperty.latitude, zoom: 12.6 });
+    } else if (!activePropertyId && items.length) {
+      setViewState((current) => ({
+        ...current,
+        longitude: items[0].longitude,
+        latitude: items[0].latitude,
+      }));
     }
-  }, [activeProperty]);
+  }, [activeProperty, activePropertyId, items]);
 
   useEffect(() => {
     if (activePropertyId) {

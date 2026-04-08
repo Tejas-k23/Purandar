@@ -94,6 +94,8 @@ const propertySchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    latitude: { type: Number, default: null },
+    longitude: { type: Number, default: null },
     subLocality: { type: String, trim: true, default: '' },
     landmark: { type: String, trim: true, default: '' },
     flatNo: { type: String, trim: true, default: '' },

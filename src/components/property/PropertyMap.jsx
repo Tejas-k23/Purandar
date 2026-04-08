@@ -4,15 +4,18 @@ import { MapPin, MapPinned } from 'lucide-react';
 import env from '../../config/env';
 
 export default function PropertyMap({ property = {} }) {
-  const longitude = 73.98;
-  const latitude = 18.28;
+  const fallbackLongitude = 73.98;
+  const fallbackLatitude = 18.28;
+  const longitude = Number.isFinite(property.longitude) ? property.longitude : fallbackLongitude;
+  const latitude = Number.isFinite(property.latitude) ? property.latitude : fallbackLatitude;
+  const hasCoords = Number.isFinite(property.longitude) && Number.isFinite(property.latitude);
 
   return (
     <div>
       <h2 className="pd-section-title"><MapPinned size={18} />Location in {property.city}</h2>
       <div className="pd-map-container" style={{ position: 'relative', overflow: 'hidden' }}>
         <Map
-          initialViewState={{ longitude, latitude, zoom: 11.5 }}
+          initialViewState={{ longitude, latitude, zoom: hasCoords ? 13.5 : 11.5 }}
           mapStyle="mapbox://styles/mapbox/streets-v12"
           mapboxAccessToken={env.mapboxAccessToken}
           scrollZoom={true}
