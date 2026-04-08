@@ -1,9 +1,11 @@
 ﻿import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown, Home, Building2, KeyRound, Phone, PlusCircle, User, Heart, List, LogOut, BarChart3, Shield } from 'lucide-react';
+import { Bell, ChevronDown, Home, Building2, KeyRound, Phone, PlusCircle, User, Heart, List, LogOut, BarChart3, Shield } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import CitySearch from './CitySearch';
 import useAuth from '../../hooks/useAuth';
+import { requestNotifications } from '../../lib/firebaseMessaging';
+import notificationService, { getOrCreateBrowserId } from '../../services/notificationService';
 
 const navItems = [
   { label: 'Home', to: '/', icon: Home },
@@ -23,6 +25,7 @@ export default function Navbar() {
   const displayEmail = user?.email || 'Welcome to Purandar Estate';
   const avatarInitial = (displayName || 'G').trim().charAt(0).toUpperCase();
   const authRouteState = { backgroundLocation: location };
+  const [notifyStatus, setNotifyStatus] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -38,6 +41,25 @@ export default function Navbar() {
     await logout();
     setProfileOpen(false);
     navigate('/');
+  };
+
+  const enableNotifications = async () => {
+    setNotifyStatus('');
+    try {
+      const token = await requestNotifications();
+      if (!token) {
+        setNotifyStatus('Notifications not enabled.');
+        return;
+      }
+      await notificationService.subscribe({
+        token,
+        role: isAuthenticated ? (user?.role || 'user') : 'guest',
+        browserId: getOrCreateBrowserId(),
+      });
+      setNotifyStatus('Notifications enabled.');
+    } catch (_error) {
+      setNotifyStatus('Unable to enable notifications.');
+    }
   };
 
   const mobileTabs = [
@@ -71,6 +93,9 @@ export default function Navbar() {
             <NavLink to="/post-property" className="btn-sell"><PlusCircle className="w-4 h-4" />Add Property</NavLink>
             <button className="icon-button" onClick={() => navigate(isAuthenticated ? '/profile/saved' : '/login', isAuthenticated ? undefined : { state: authRouteState })} aria-label="Favorite properties">
               <Heart className="w-[22px] h-[22px]" />
+            </button>
+            <button className="icon-button" onClick={enableNotifications} aria-label="Enable notifications">
+              <Bell className="w-[22px] h-[22px]" />
             </button>
 
             {!isAuthenticated ? (
@@ -113,6 +138,7 @@ export default function Navbar() {
             ) : null}
           </div>
         </div>
+        {notifyStatus ? <p className="navbar-notice">{notifyStatus}</p> : null}
       </nav>
 
       <nav className="mobile-bottom-nav" aria-label="Mobile navigation">

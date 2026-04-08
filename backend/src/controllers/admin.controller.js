@@ -5,6 +5,12 @@ import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { deleteManyFromR2 } from '../utils/r2.js';
+import {
+  fetchTokens,
+  removeInvalidTokens,
+  saveNotificationsForUsers,
+  sendNotificationToTokens,
+} from '../utils/notifications.js';
 export {
   listAdminBlogs,
   getAdminBlogById,
@@ -110,6 +116,51 @@ export const updatePropertyStatus = asyncHandler(async (req, res) => {
     message: 'Property status updated',
     data: property,
   });
+
+  if (status === 'approved') {
+    const userTokens = await fetchTokens({
+      role: { $in: ['user', 'agent'] },
+      enabledTypes: 'property_approved',
+    });
+    const guestTokens = await fetchTokens({
+      role: 'guest',
+      enabledTypes: 'guest_property',
+    });
+    const title = 'New property added';
+    const body = `${property.title || 'A new property'} is now live.`;
+    const data = { type: 'property_approved', propertyId: property._id.toString() };
+    const context = { city: property.city, intent: property.intent, propertyType: property.propertyType };
+
+    if (userTokens.length) {
+      const response = await sendNotificationToTokens({ tokens: userTokens, title, body, data, context });
+      const invalid = userTokens
+        .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
+        .map((token) => token.token);
+      await removeInvalidTokens(invalid);
+      await saveNotificationsForUsers({
+        users: [...new Set(userTokens.map((token) => token.user).filter(Boolean))],
+        role: 'user',
+        title,
+        body,
+        data,
+      });
+    }
+
+    if (guestTokens.length) {
+      const guestBody = `${property.title || 'A new property'} is live. Sign up to get full details.`;
+      const response = await sendNotificationToTokens({
+        tokens: guestTokens,
+        title: 'New property alert',
+        body: guestBody,
+        data: { ...data, cta: 'signup' },
+        context,
+      });
+      const invalid = guestTokens
+        .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
+        .map((token) => token.token);
+      await removeInvalidTokens(invalid);
+    }
+  }
 });
 
 export const togglePropertyFeatured = asyncHandler(async (req, res) => {
@@ -263,6 +314,51 @@ export const updateProjectStatus = asyncHandler(async (req, res) => {
     message: 'Project status updated',
     data: project,
   });
+
+  if (status === 'approved') {
+    const userTokens = await fetchTokens({
+      role: { $in: ['user', 'agent'] },
+      enabledTypes: 'project_approved',
+    });
+    const guestTokens = await fetchTokens({
+      role: 'guest',
+      enabledTypes: 'guest_project',
+    });
+    const title = 'New project launched';
+    const body = `${project.projectName || 'A new project'} is now live.`;
+    const data = { type: 'project_approved', projectId: project._id.toString() };
+    const context = { city: project.city, propertyType: project.projectType };
+
+    if (userTokens.length) {
+      const response = await sendNotificationToTokens({ tokens: userTokens, title, body, data, context });
+      const invalid = userTokens
+        .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
+        .map((token) => token.token);
+      await removeInvalidTokens(invalid);
+      await saveNotificationsForUsers({
+        users: [...new Set(userTokens.map((token) => token.user).filter(Boolean))],
+        role: 'user',
+        title,
+        body,
+        data,
+      });
+    }
+
+    if (guestTokens.length) {
+      const guestBody = `${project.projectName || 'A new project'} is live. Create an account to explore more.`;
+      const response = await sendNotificationToTokens({
+        tokens: guestTokens,
+        title: 'New project alert',
+        body: guestBody,
+        data: { ...data, cta: 'signup' },
+        context,
+      });
+      const invalid = guestTokens
+        .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
+        .map((token) => token.token);
+      await removeInvalidTokens(invalid);
+    }
+  }
 });
 
 export const deleteAdminProject = asyncHandler(async (req, res) => {

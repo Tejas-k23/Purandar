@@ -14,6 +14,11 @@ import {
   validateVideoFile,
 } from '../utils/media.js';
 import { deleteManyFromR2, uploadToR2 } from '../utils/r2.js';
+import {
+  fetchTokens,
+  removeInvalidTokens,
+  sendNotificationToTokens,
+} from '../utils/notifications.js';
 
 const numericFields = [
   'bedrooms',
@@ -269,6 +274,23 @@ export const createProperty = asyncHandler(async (req, res) => {
     message: req.user.role === 'admin' ? 'Property created successfully' : 'Property submitted for review',
     data: property,
   });
+
+  if (!isAdmin) {
+    const adminTokens = await fetchTokens({ role: 'admin', enabledTypes: 'property_pending' });
+    if (adminTokens.length) {
+      const response = await sendNotificationToTokens({
+        tokens: adminTokens,
+        title: 'New property awaiting approval',
+        body: `${property.title || 'A new property'} needs approval.`,
+        data: { type: 'property_pending', propertyId: property._id.toString() },
+        context: { city: property.city, intent: property.intent, propertyType: property.propertyType },
+      });
+      const invalid = adminTokens
+        .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
+        .map((token) => token.token);
+      await removeInvalidTokens(invalid);
+    }
+  }
 });
 
 export const updateProperty = asyncHandler(async (req, res) => {
@@ -545,6 +567,21 @@ export const createEnquiry = asyncHandler(async (req, res) => {
     message: 'Enquiry submitted successfully',
     data: enquiry,
   });
+
+  const adminTokens = await fetchTokens({ role: 'admin', enabledTypes: 'enquiry' });
+  if (adminTokens.length) {
+    const response = await sendNotificationToTokens({
+      tokens: adminTokens,
+      title: 'New property enquiry',
+      body: `${rawName || 'A user'} sent an enquiry.`,
+      data: { type: 'enquiry', propertyId: property._id.toString() },
+      context: { city: property.city, intent: property.intent, propertyType: property.propertyType },
+    });
+    const invalid = adminTokens
+      .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
+      .map((token) => token.token);
+    await removeInvalidTokens(invalid);
+  }
 });
 
 export const listPropertyEnquiries = asyncHandler(async (req, res) => {
