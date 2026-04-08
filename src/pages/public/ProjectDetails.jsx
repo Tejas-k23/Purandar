@@ -286,6 +286,10 @@ export default function ProjectDetails() {
         setMessage('Please enter your name and email to submit the enquiry.');
         return;
       }
+      if (!isAuthenticated && !enquiry.phone.trim()) {
+        setMessage('Please enter your phone number to submit the enquiry.');
+        return;
+      }
       await projectService.createEnquiry(id, enquiry);
       setMessage('Enquiry submitted successfully.');
       setEnquiry({ name: '', email: '', phone: '', message: '' });

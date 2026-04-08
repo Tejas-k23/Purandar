@@ -18,6 +18,7 @@ import MyProfile from '../pages/profile/MyProfile';
 import SavedProperties from '../pages/profile/SavedProperties';
 import MyProperties from '../pages/profile/MyProperties';
 import Dashboard from '../pages/profile/Dashboard';
+import MyEnquiries from '../pages/profile/MyEnquiries';
 import Login from '../pages/auth/Login';
 import Signup from '../pages/auth/Signup';
 import ProtectedRoute from './ProtectedRoute';
@@ -66,7 +67,7 @@ export default function AppRoutes() {
             <Route path="saved" element={<SavedProperties />} />
             <Route path="properties" element={<MyProperties />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="enquiries" element={<Navigate to="/profile/dashboard" replace />} />
+            <Route path="enquiries" element={<MyEnquiries />} />
           </Route>
         </Route>
 

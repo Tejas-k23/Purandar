@@ -120,6 +120,7 @@ export const getMyEnquiries = asyncHandler(async (req, res) => {
   })
     .sort({ createdAt: -1 })
     .populate('property', 'title city locality price photos status')
+    .populate('project', 'projectName city area slug')
     .populate('user', 'name email phone');
 
   res.json({ success: true, data: enquiries });

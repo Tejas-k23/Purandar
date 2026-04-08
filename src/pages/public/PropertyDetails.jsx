@@ -108,6 +108,10 @@ export default function PropertyDetails() {
         setMessage('Please enter your name and email to submit the enquiry.');
         return;
       }
+      if (!isAuthenticated && !enquiry.phone.trim()) {
+        setMessage('Please enter your phone number to submit the enquiry.');
+        return;
+      }
       await propertyService.createEnquiry(id, enquiry);
       setMessage('Enquiry submitted successfully.');
       setEnquiry({ name: '', email: '', phone: '', message: '' });

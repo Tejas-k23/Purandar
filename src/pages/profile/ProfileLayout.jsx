@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { BarChart3, Heart, Home, List, User } from 'lucide-react';
+import { BarChart3, Heart, Home, List, Mail, User } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 import './ProfileLayout.css';
 
@@ -8,6 +8,7 @@ const sidebarItems = [
   { label: 'My Profile', to: '/profile', icon: User, end: true },
   { label: 'Saved Properties', to: '/profile/saved', icon: Heart },
   { label: 'My Properties', to: '/profile/properties', icon: List },
+  { label: 'My Enquiries', to: '/profile/enquiries', icon: Mail },
   { label: 'Dashboard', to: '/profile/dashboard', icon: BarChart3 },
 ];
 

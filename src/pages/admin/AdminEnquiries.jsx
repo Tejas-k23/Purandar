@@ -131,7 +131,19 @@ export default function AdminEnquiries() {
             { key: 'userName', label: 'User', render: (row) => row.user?.name || row.name || '-' },
             { key: 'userPhone', label: 'Phone', render: (row) => row.user?.phone || row.phone || '-' },
             { key: 'userEmail', label: 'Email', render: (row) => row.user?.email || row.email || '-' },
-            { key: 'message', label: 'Message', render: (row) => row.message || '-' },
+            {
+              key: 'message',
+              label: 'Message',
+              render: (row) => {
+                const sourceLabel = row.project ? 'Project' : row.property ? 'Property' : 'Lead';
+                return (
+                  <div className="admin-cell-stack">
+                    <span className="admin-table-badge">{sourceLabel}</span>
+                    <span>{row.message || '-'}</span>
+                  </div>
+                );
+              },
+            },
             {
               key: 'target',
               label: 'Property/Project',
