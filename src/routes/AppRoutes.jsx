@@ -35,6 +35,7 @@ import ScrollToTop from '../components/common/ScrollToTop';
 import AdminEnquiries from '../pages/admin/AdminEnquiries';
 import AdminLogin from '../pages/admin/AdminLogin';
 import AdminFeedback from '../pages/admin/AdminFeedback';
+import AdminNotifications from '../pages/admin/AdminNotifications';
 
 export default function AppRoutes() {
   const location = useLocation();
@@ -76,6 +77,7 @@ export default function AppRoutes() {
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="enquiries" element={<AdminEnquiries />} />
+            <Route path="notifications" element={<AdminNotifications />} />
             <Route path="feedback" element={<AdminFeedback />} />
             <Route path="properties" element={<AdminProperties />} />
             <Route path="properties/form" element={<PostPropertyForm />} />

@@ -52,6 +52,10 @@ export const adminService = {
   deleteFeedback(feedbackId) {
     return api.delete(`/admin/feedback/${feedbackId}`);
   },
+
+  sendNotification(payload) {
+    return api.post('/admin/notifications/broadcast', payload);
+  },
 };
 
 export default adminService;

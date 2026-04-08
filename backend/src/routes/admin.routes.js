@@ -12,6 +12,7 @@ import {
   getEnquiries,
   getUsers,
   deleteUser,
+  sendCustomNotification,
   listAdminBlogs,
   togglePropertyFeatured,
   updateBlog,
@@ -42,6 +43,7 @@ router.patch('/projects/:id/status', updateProjectStatus);
 router.delete('/projects/:id', deleteAdminProject);
 router.get('/users', getUsers);
 router.delete('/users/:id', deleteUser);
+router.post('/notifications/broadcast', sendCustomNotification);
 router.get('/enquiries', getEnquiries);
 router.patch('/enquiries/:id/status', updateEnquiryStatus);
 router.get('/feedback', listAllFeedback);
