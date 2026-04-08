@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Project from '../models/Project.js';
 import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
@@ -57,6 +58,13 @@ const normalizePayload = (payload = {}) => {
   return next;
 };
 
+const findProjectByIdentifier = (identifier) => {
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    return Project.findOne({ $or: [{ _id: identifier }, { slug: identifier }] });
+  }
+  return Project.findOne({ slug: identifier });
+};
+
 export const listProjects = asyncHandler(async (req, res) => {
   const includeHidden = req.query.includeHidden === 'true' && req.user?.role === 'admin';
   const filter = {};
@@ -93,9 +101,7 @@ export const listProjects = asyncHandler(async (req, res) => {
 
 export const getProjectById = asyncHandler(async (req, res) => {
   const identifier = req.params.id;
-  const project = await Project.findOne({
-    $or: [{ _id: identifier }, { slug: identifier }],
-  });
+  const project = await findProjectByIdentifier(identifier);
 
   if (!project) {
     throw new ApiError(404, 'Project not found');
@@ -302,7 +308,7 @@ export const deleteProject = asyncHandler(async (req, res) => {
 });
 
 export const createProjectEnquiry = asyncHandler(async (req, res) => {
-  const project = await Project.findById(req.params.id);
+  const project = await findProjectByIdentifier(req.params.id);
   if (!project || project.visible === false) {
     throw new ApiError(404, 'Project not found');
   }

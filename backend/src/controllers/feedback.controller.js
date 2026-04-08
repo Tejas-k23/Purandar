@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Feedback from '../models/Feedback.js';
 import Project from '../models/Project.js';
 import ApiError from '../utils/ApiError.js';
@@ -5,9 +6,12 @@ import asyncHandler from '../utils/asyncHandler.js';
 
 const MAX_FEEDBACK_LENGTH = 200;
 
-const getProjectByIdentifier = async (identifier) => Project.findOne({
-  $or: [{ _id: identifier }, { slug: identifier }],
-});
+const getProjectByIdentifier = async (identifier) => {
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    return Project.findOne({ $or: [{ _id: identifier }, { slug: identifier }] });
+  }
+  return Project.findOne({ slug: identifier });
+};
 
 export const listProjectFeedback = asyncHandler(async (req, res) => {
   const identifier = req.params.id;
