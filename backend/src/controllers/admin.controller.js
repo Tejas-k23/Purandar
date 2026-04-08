@@ -161,6 +161,50 @@ export const getUsers = asyncHandler(async (_req, res) => {
   res.json({ success: true, data: users });
 });
 
+export const deleteUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  if (user.role === 'admin') {
+    throw new ApiError(400, 'Admin users cannot be deleted');
+  }
+
+  if (String(user._id) === String(req.user?._id)) {
+    throw new ApiError(400, 'You cannot delete your own account');
+  }
+
+  const [properties, projects] = await Promise.all([
+    Property.find({ owner: user._id }),
+    Project.find({ owner: user._id }),
+  ]);
+
+  const propertyKeys = properties.flatMap((property) => [
+    ...(property.images || []).map((image) => image.key),
+    ...(property.videos || []).map((video) => video.key),
+  ]).filter(Boolean);
+
+  const projectKeys = projects.flatMap((project) => [
+    ...(project.images || []).map((image) => image.key),
+    ...(project.videos || []).map((video) => video.key),
+  ]).filter(Boolean);
+
+  if (propertyKeys.length || projectKeys.length) {
+    await deleteManyFromR2([...propertyKeys, ...projectKeys]);
+  }
+
+  await Promise.all([
+    Property.deleteMany({ owner: user._id }),
+    Project.deleteMany({ owner: user._id }),
+    Enquiry.deleteMany({ user: user._id }),
+    Enquiry.deleteMany({ propertyOwner: user._id }),
+    User.findByIdAndDelete(user._id),
+  ]);
+
+  res.json({ success: true, message: 'User deleted successfully' });
+});
+
 export const getEnquiries = asyncHandler(async (_req, res) => {
   const enquiries = await Enquiry.find()
     .sort({ createdAt: -1 })

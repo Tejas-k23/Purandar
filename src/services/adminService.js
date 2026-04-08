@@ -33,6 +33,10 @@ export const adminService = {
     return api.get('/admin/users', { params });
   },
 
+  deleteUser(userId) {
+    return api.delete(`/admin/users/${userId}`);
+  },
+
   getEnquiries(params = {}) {
     return api.get('/admin/enquiries', { params });
   },

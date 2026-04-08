@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Heart, Phone, UserRound } from 'lucide-react';
+import { Heart, Phone, Share2, UserRound } from 'lucide-react';
 import propertyService from '../../services/propertyService';
 import useAuth from '../../hooks/useAuth';
 import Loader from '../../components/common/Loader';
@@ -54,6 +54,7 @@ export default function PropertyDetails() {
   const [enquiry, setEnquiry] = useState({ name: '', email: '', phone: '', message: '' });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [shareMessage, setShareMessage] = useState('');
   const [hasTouchedMessage, setHasTouchedMessage] = useState(false);
   const [sellerMessage, setSellerMessage] = useState('');
   const [showSellerDetails, setShowSellerDetails] = useState(false);
@@ -184,6 +185,27 @@ export default function PropertyDetails() {
     }
     window.open(`https://wa.me/${whatsappNumber}`, '_blank');
   };
+
+  const shareProperty = async () => {
+    if (!property?._id) return;
+    const url = `${window.location.origin}/property/${property._id}`;
+    const title = property.title || 'Property';
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setShareMessage('Share link copied to clipboard.');
+        window.setTimeout(() => setShareMessage(''), 2500);
+        return;
+      }
+    } catch (_error) {
+      // fall back to prompt
+    }
+    window.prompt('Copy link to share this property:', url);
+  };
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Residence',
@@ -265,7 +287,16 @@ export default function PropertyDetails() {
                 <div className="pd-price-amount">{formatCurrency(property.price)}</div>
                 <div className="pd-price-per-sqft">{property.propertyType} • {[property.locality, property.city].filter(Boolean).join(', ')}</div>
               </div>
-              {isAuthenticated ? <button className="pd-icon-btn pd-icon-btn--heart" onClick={() => toggleSavedProperty(property._id)}><Heart size={18} fill={savedPropertyIds.has(property._id) ? 'currentColor' : 'none'} /></button> : null}
+              <div className="pd-title-actions">
+                <button className="pd-icon-btn" onClick={shareProperty} aria-label="Share property">
+                  <Share2 size={18} />
+                </button>
+                {isAuthenticated ? (
+                  <button className="pd-icon-btn pd-icon-btn--heart" onClick={() => toggleSavedProperty(property._id)} aria-label="Save property">
+                    <Heart size={18} fill={savedPropertyIds.has(property._id) ? 'currentColor' : 'none'} />
+                  </button>
+                ) : null}
+              </div>
             </div>
 
             <div className="pd-cta-group">
@@ -275,6 +306,7 @@ export default function PropertyDetails() {
             </div>
 
             {sellerMessage ? <p style={{ marginTop: 12 }}>{sellerMessage}</p> : null}
+            {shareMessage ? <p style={{ marginTop: 8 }}>{shareMessage}</p> : null}
 
             {showSellerDetails && sellerDetails ? (
               <div className="pd-trust" style={{ marginTop: 16 }}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MapPin, Heart, ShieldCheck, BedDouble, Bath, Ruler, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Heart, ShieldCheck, BedDouble, Bath, Ruler, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatCompactPrice } from '../../utils/formatPrice';
 import { getPropertyImageUrls } from '../../utils/propertyImages';
@@ -33,6 +33,25 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
   const goNextImage = (event) => {
     event.stopPropagation();
     setActiveImageIndex((current) => (current === images.length - 1 ? 0 : current + 1));
+  };
+
+  const shareProperty = async (event) => {
+    event.stopPropagation();
+    const url = `${window.location.origin}/property/${property._id}`;
+    const title = property.title || 'Property';
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        return;
+      }
+    } catch (_error) {
+      // fall back to prompt
+    }
+    window.prompt('Copy link to share this property:', url);
   };
 
   return (
@@ -73,11 +92,16 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
             <div className="listing-mode-badge">{property.intent === 'rent' ? 'For Rent' : 'For Sale'}</div>
             {showBachelorsBadge ? <div className="listing-mode-badge listing-mode-badge--bachelors">Bachelors Allowed</div> : null}
           </div>
-          {onToggleSave ? (
-            <button className={`save-btn ${isSaved ? 'saved' : ''}`} onClick={(event) => { event.stopPropagation(); onToggleSave(property._id); }}>
-              <Heart className={`w-4 h-4 ${isSaved ? 'fill-red-500 text-red-500' : ''}`} />
+          <div className="card-action-buttons">
+            <button className="save-btn share-btn" onClick={shareProperty} aria-label="Share property">
+              <Share2 className="w-4 h-4" />
             </button>
-          ) : null}
+            {onToggleSave ? (
+              <button className={`save-btn ${isSaved ? 'saved' : ''}`} onClick={(event) => { event.stopPropagation(); onToggleSave(property._id); }}>
+                <Heart className={`w-4 h-4 ${isSaved ? 'fill-red-500 text-red-500' : ''}`} />
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
 

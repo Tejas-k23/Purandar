@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Download, FileDown } from 'lucide-react';
+import { Download, FileDown, Trash2 } from 'lucide-react';
 import adminService from '../../services/adminService';
 import AdminHeader from '../../components/admin/AdminHeader';
 import DataTable from '../../components/admin/DataTable';
 import Loader from '../../components/common/Loader';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const escapeCsv = (value) => {
   const text = String(value ?? '');
@@ -26,17 +27,31 @@ const downloadBlob = (content, filename, type) => {
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState(null);
+
+  const closeConfirm = () => setConfirmDialog(null);
+  const openConfirm = (payload) => setConfirmDialog({ ...payload, busy: false });
+  const handleConfirm = async () => {
+    const action = confirmDialog?.onConfirm;
+    if (!action) return;
+    setConfirmDialog((current) => (current ? { ...current, busy: true } : current));
+    try {
+      await action();
+    } finally {
+      setConfirmDialog(null);
+    }
+  };
+
+  const load = async () => {
+    try {
+      const response = await adminService.getUsers();
+      setUsers(response.data.data || []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const response = await adminService.getUsers();
-        setUsers(response.data.data || []);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     load();
   }, []);
 
@@ -121,6 +136,19 @@ export default function AdminUsers() {
         }
       />
 
+      <ConfirmModal
+        open={!!confirmDialog}
+        title={confirmDialog?.title}
+        message={confirmDialog?.message}
+        confirmText={confirmDialog?.confirmText}
+        cancelText={confirmDialog?.cancelText}
+        onConfirm={handleConfirm}
+        onClose={closeConfirm}
+        tone={confirmDialog?.tone || 'danger'}
+        showCancel={confirmDialog?.showCancel !== false}
+        busy={confirmDialog?.busy}
+      />
+
       <div className="admin-panel-card">
         <DataTable
           emptyMessage="No users found."
@@ -131,6 +159,28 @@ export default function AdminUsers() {
             { key: 'role', label: 'Role', render: (row) => <span className="admin-table-badge">{row.role}</span> },
             { key: 'status', label: 'Status', render: (row) => <span className={`admin-table-badge ${row.isActive ? 'success' : 'muted'}`}>{row.isActive ? 'Active' : 'Inactive'}</span> },
             { key: 'createdAt', label: 'Joined', render: (row) => new Date(row.createdAt).toLocaleDateString('en-IN') },
+            {
+              key: 'actions',
+              label: 'Actions',
+              render: (row) => (
+                <button
+                  type="button"
+                  className="admin-danger-btn admin-icon-btn"
+                  onClick={() => openConfirm({
+                    title: 'Delete user?',
+                    message: `This will permanently delete ${row.name || 'this user'} and remove their listings.`,
+                    confirmText: 'Delete',
+                    tone: 'danger',
+                    onConfirm: async () => {
+                      await adminService.deleteUser(row._id);
+                      await load();
+                    },
+                  })}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              ),
+            },
           ]}
           rows={rows}
         />

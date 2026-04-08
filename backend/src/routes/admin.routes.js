@@ -11,6 +11,7 @@ import {
   getDashboard,
   getEnquiries,
   getUsers,
+  deleteUser,
   listAdminBlogs,
   togglePropertyFeatured,
   updateBlog,
@@ -40,6 +41,7 @@ router.get('/projects', getAdminProjects);
 router.patch('/projects/:id/status', updateProjectStatus);
 router.delete('/projects/:id', deleteAdminProject);
 router.get('/users', getUsers);
+router.delete('/users/:id', deleteUser);
 router.get('/enquiries', getEnquiries);
 router.patch('/enquiries/:id/status', updateEnquiryStatus);
 router.get('/feedback', listAllFeedback);
