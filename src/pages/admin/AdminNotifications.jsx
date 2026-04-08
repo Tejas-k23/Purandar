@@ -18,15 +18,28 @@ export default function AdminNotifications() {
   const [intent, setIntent] = useState('');
   const [propertyType, setPropertyType] = useState('');
   const [status, setStatus] = useState('');
+  const [statusKind, setStatusKind] = useState('');
+  const [isSending, setIsSending] = useState(false);
+
+  const audienceLabel = audiences.find((item) => item.value === audience)?.label || 'All Users';
+  const formatCriteria = () => {
+    const cityLabel = city.trim() ? city.trim() : 'Any';
+    const intentLabel = intent.trim() ? intent.trim() : 'Any';
+    const propertyTypeLabel = propertyType.trim() ? propertyType.trim() : 'Any';
+    return `Audience: ${audienceLabel} • City: ${cityLabel} • Intent: ${intentLabel} • Property Type: ${propertyTypeLabel}`;
+  };
 
   const submit = async (event) => {
     event.preventDefault();
     setStatus('');
+    setStatusKind('');
     if (!title.trim() || !body.trim()) {
       setStatus('Title and message are required.');
+      setStatusKind('error');
       return;
     }
 
+    setIsSending(true);
     try {
       const response = await adminService.sendNotification({
         title: title.trim(),
@@ -39,11 +52,15 @@ export default function AdminNotifications() {
         },
       });
       const successCount = response.data?.data?.successCount ?? 0;
-      setStatus(`Notification sent. Delivered to ${successCount} device(s).`);
+      setStatus(`Success. Delivered to ${successCount} device(s). ${formatCriteria()}`);
+      setStatusKind('success');
       setTitle('');
       setBody('');
     } catch (error) {
       setStatus(error.message || 'Unable to send notification.');
+      setStatusKind('error');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -114,8 +131,14 @@ export default function AdminNotifications() {
               />
             </div>
           </div>
-          <button type="submit" className="admin-primary-btn">Send Notification</button>
-          {status ? <p style={{ margin: 0 }}>{status}</p> : null}
+          <button type="submit" className="admin-primary-btn" disabled={isSending}>
+            {isSending ? 'Sending...' : 'Send Notification'}
+          </button>
+          {status ? (
+            <p style={{ margin: 0, color: statusKind === 'error' ? '#b42318' : '#067647' }}>
+              {status}
+            </p>
+          ) : null}
         </form>
       </div>
     </div>

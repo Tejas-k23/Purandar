@@ -5,9 +5,39 @@ const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || '';
 const PUSH_SCOPE = '/firebase-cloud-messaging-push-scope';
 const TOKEN_STORAGE_KEY = 'fcmToken';
 
+const getFirebaseConfig = () => ({
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+});
+
+const sendConfigToServiceWorker = async (registration) => {
+  if (!registration) return;
+  const config = getFirebaseConfig();
+  if (!config.apiKey || !config.projectId || !config.messagingSenderId) return;
+
+  const payload = { type: 'FIREBASE_CONFIG', config };
+  if (registration.active) {
+    registration.active.postMessage(payload);
+    return;
+  }
+
+  try {
+    const ready = await navigator.serviceWorker.ready;
+    ready?.active?.postMessage(payload);
+  } catch (_error) {
+    // Ignore SW readiness issues
+  }
+};
+
 const registerMessagingServiceWorker = async () => {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return null;
-  return navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: PUSH_SCOPE });
+  const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: PUSH_SCOPE });
+  await sendConfigToServiceWorker(registration);
+  return registration;
 };
 
 export const initMessaging = async () => {

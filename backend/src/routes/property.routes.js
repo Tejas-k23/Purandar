@@ -12,7 +12,7 @@ import {
   unlockSellerDetails,
   updateProperty,
 } from '../controllers/property.controller.js';
-import { authorize, protect } from '../middlewares/auth.middleware.js';
+import { authorize, optionalProtect, protect } from '../middlewares/auth.middleware.js';
 import { uploadRateLimit } from '../middlewares/rateLimit.middleware.js';
 import { requireMultipart, requireStandardHeaders } from '../middlewares/security.middleware.js';
 import { createUpload } from '../middlewares/upload.middleware.js';
@@ -23,7 +23,7 @@ const router = Router();
 
 router.get('/', listProperties);
 router.get('/stats/mine', protect, getPropertyStats);
-router.get('/:id', getPropertyById);
+router.get('/:id', optionalProtect, getPropertyById);
 router.post('/', protect, authorize('user', 'agent', 'admin'), createProperty);
 router.patch('/:id', protect, authorize('user', 'agent', 'admin'), updateProperty);
 router.post(
