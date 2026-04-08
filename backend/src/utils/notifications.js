@@ -12,6 +12,14 @@ const initFirebase = () => {
   if (admin.apps.length) return admin.app();
   const { projectId, clientEmail, privateKey } = getFirebaseConfig();
   if (!projectId || !clientEmail || !privateKey) {
+    if (process.env.NOTIFICATIONS_DEBUG === 'true') {
+      // eslint-disable-next-line no-console
+      console.warn('[Notify] Firebase admin config missing.', {
+        projectId: Boolean(projectId),
+        clientEmail: Boolean(clientEmail),
+        privateKey: Boolean(privateKey),
+      });
+    }
     return null;
   }
   return admin.initializeApp({
@@ -57,6 +65,17 @@ export const sendNotificationToTokens = async ({
     tokens: filtered.map((item) => item.token),
     ...payload,
   });
+
+  if (process.env.NOTIFICATIONS_DEBUG === 'true') {
+    // eslint-disable-next-line no-console
+    console.info('[Notify] Multicast response', {
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      title,
+      body,
+      data,
+    });
+  }
 
   return response;
 };

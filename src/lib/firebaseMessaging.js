@@ -38,7 +38,12 @@ export const requestNotifications = async () => {
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return null;
 
-  return initMessaging();
+  const token = await initMessaging();
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log('[FCM] Token', token);
+  }
+  return token;
 };
 
 export const listenToForegroundMessages = (callback) => {

@@ -277,6 +277,10 @@ export const createProperty = asyncHandler(async (req, res) => {
 
   if (!isAdmin) {
     const adminTokens = await fetchTokens({ role: 'admin', enabledTypes: 'property_pending' });
+    if (process.env.NOTIFICATIONS_DEBUG === 'true') {
+      // eslint-disable-next-line no-console
+      console.info('[Notify] Admin tokens for property_pending:', adminTokens.length);
+    }
     if (adminTokens.length) {
       const response = await sendNotificationToTokens({
         tokens: adminTokens,
