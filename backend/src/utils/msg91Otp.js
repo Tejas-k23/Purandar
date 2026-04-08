@@ -45,7 +45,7 @@ const normalizePhone = (value = '') => {
 };
 
 const assertConfigured = () => {
-  if (!env.MSG91_AUTH_KEY) {
+  if (!env.MSG91_AUTHKEY) {
     throw new ApiError(500, 'MSG91 auth key is not configured');
   }
   if (!env.MSG91_TEMPLATE_ID) {
@@ -63,7 +63,7 @@ export const sendOtpViaMsg91 = async (phone) => {
   const url = new URL(SEND_OTP_URL);
   url.searchParams.set('template_id', env.MSG91_TEMPLATE_ID);
   url.searchParams.set('mobile', mobile);
-  url.searchParams.set('authkey', env.MSG91_AUTH_KEY);
+  url.searchParams.set('authkey', env.MSG91_AUTHKEY);
 
   const response = await requestJson(url.toString(), { method: 'POST' });
   if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -97,7 +97,7 @@ export const verifyOtpViaMsg91 = async ({ phone, otp }) => {
   const response = await requestJson(url.toString(), {
     method: 'GET',
     headers: {
-      authkey: env.MSG91_AUTH_KEY,
+      authkey: env.MSG91_AUTHKEY,
     },
   });
 
