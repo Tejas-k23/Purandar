@@ -73,11 +73,32 @@ const INFO_COLOR_CLASS = [
 function Gallery({ images = [], status }) {
   const items = images.length ? images : ['https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80'];
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
   const showGalleryControls = items.length > 1;
+
+  useEffect(() => {
+    if (!isViewerOpen) return undefined;
+    const handleKey = (event) => {
+      if (event.key === 'Escape') {
+        setIsViewerOpen(false);
+      } else if (event.key === 'ArrowLeft' && showGalleryControls) {
+        setActiveIndex((current) => (current - 1 + items.length) % items.length);
+      } else if (event.key === 'ArrowRight' && showGalleryControls) {
+        setActiveIndex((current) => (current + 1) % items.length);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isViewerOpen, items.length, showGalleryControls]);
 
   return (
     <div className="pd-gallery">
-      <div className="pd-gallery-hero">
+      <div className="pd-gallery-hero" onClick={() => setIsViewerOpen(true)} role="button" tabIndex={0} onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          setIsViewerOpen(true);
+        }
+      }}>
         <img src={items[activeIndex]} alt="Project" />
         <div className="pd-gallery-overlay" />
         <div className="pd-gallery-top-right">
@@ -88,7 +109,10 @@ function Gallery({ images = [], status }) {
           <>
             <button
               type="button"
-              onClick={() => setActiveIndex((current) => (current - 1 + items.length) % items.length)}
+              onClick={(event) => {
+                event.stopPropagation();
+                setActiveIndex((current) => (current - 1 + items.length) % items.length);
+              }}
               className="pd-gallery-nav pd-gallery-nav--prev"
               aria-label="View previous project image"
             >
@@ -96,7 +120,10 @@ function Gallery({ images = [], status }) {
             </button>
             <button
               type="button"
-              onClick={() => setActiveIndex((current) => (current + 1) % items.length)}
+              onClick={(event) => {
+                event.stopPropagation();
+                setActiveIndex((current) => (current + 1) % items.length);
+              }}
               className="pd-gallery-nav pd-gallery-nav--next"
               aria-label="View next project image"
             >
@@ -123,6 +150,38 @@ function Gallery({ images = [], status }) {
               aria-label={`Go to project image ${index + 1}`}
             />
           ))}
+        </div>
+      ) : null}
+
+      {isViewerOpen ? (
+        <div className="pd-image-modal" role="dialog" aria-modal="true" aria-label="Project image preview">
+          <button type="button" className="pd-image-modal-backdrop" onClick={() => setIsViewerOpen(false)} aria-label="Close image preview" />
+          <div className="pd-image-modal-content">
+            <img src={items[activeIndex]} alt={`Project view ${activeIndex + 1}`} />
+            <button type="button" className="pd-image-modal-close" onClick={() => setIsViewerOpen(false)} aria-label="Close image preview">
+              ✕
+            </button>
+            {showGalleryControls ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveIndex((current) => (current - 1 + items.length) % items.length)}
+                  className="pd-image-modal-nav pd-image-modal-nav--prev"
+                  aria-label="View previous project image"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveIndex((current) => (current + 1) % items.length)}
+                  className="pd-image-modal-nav pd-image-modal-nav--next"
+                  aria-label="View next project image"
+                >
+                  <ArrowLeft size={20} style={{ transform: 'rotate(180deg)' }} />
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>

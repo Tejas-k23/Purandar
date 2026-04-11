@@ -5,6 +5,7 @@ import projectService from '../../services/projectService';
 import { getAmenityMeta } from '../../utils/amenityMeta';
 import { getProjectTypeProfile, PROJECT_TYPE_PROFILES } from '../../utils/projectTypeConfig';
 import MapPickerModal from '../../components/common/MapPickerModal';
+import MapboxSuggestInput from '../../components/common/MapboxSuggestInput';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useAuth from '../../hooks/useAuth';
 import env from '../../config/env';
@@ -312,9 +313,6 @@ export default function AddProjectForm() {
   const [mediaError, setMediaError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successDialog, setSuccessDialog] = useState(null);
-  const [citySuggestions, setCitySuggestions] = useState([]);
-  const [cityLoading, setCityLoading] = useState(false);
-  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [customTagInput, setCustomTagInput] = useState('');
   const editId = searchParams.get('edit');
   const isAdminPath = location.pathname.startsWith('/admin');
@@ -382,48 +380,6 @@ export default function AddProjectForm() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentStep]);
-
-  useEffect(() => {
-    if (!env.mapboxAccessToken) {
-      setCitySuggestions([]);
-      return;
-    }
-
-    const query = formData.city.trim();
-    if (query.length < 2) {
-      setCitySuggestions([]);
-      return;
-    }
-
-    const controller = new AbortController();
-    const timer = window.setTimeout(async () => {
-      setCityLoading(true);
-      try {
-        const encoded = encodeURIComponent(query);
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?types=place&autocomplete=true&limit=6&country=IN&access_token=${env.mapboxAccessToken}`;
-        const response = await fetch(url, { signal: controller.signal });
-        if (!response.ok) throw new Error('Mapbox request failed');
-        const data = await response.json();
-        const suggestions = (data.features || []).map((feature) => ({
-          id: feature.id,
-          label: feature.text,
-          placeName: feature.place_name,
-        }));
-        setCitySuggestions(suggestions);
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          setCitySuggestions([]);
-        }
-      } finally {
-        setCityLoading(false);
-      }
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [formData.city, env.mapboxAccessToken]);
 
   const completionScore = useMemo(() => {
     const trackedFields = [
@@ -741,58 +697,47 @@ export default function AddProjectForm() {
         return (
           <SectionCard id="location" title="2. Location Details" description="Address, city, locality, pincode, and optional map coordinates.">
             <Field label="Address" required error={errors.address} icon={MapPin}>
-              <TextAreaInput name="address" rows="4" placeholder="Enter full project address" value={formData.address} onChange={(event) => updateField('address', event.target.value)} error={errors.address} />
+              <MapboxSuggestInput
+                name="address"
+                value={formData.address}
+                placeholder="Enter full project address"
+                types="address,poi,locality,place"
+                displayKey="place_name"
+                valueKey="place_name"
+                queryContext={formData.city}
+                onChange={(val) => updateField('address', val)}
+                error={errors.address}
+              />
             </Field>
 
             <div className="ppf-form-row">
-              <Field label="City" required error={errors.city}>
-                <div className="apf-suggest-wrap">
-                  <TextInput
-                    name="city"
-                    type="text"
-                    placeholder="Enter city"
-                    value={formData.city}
-                    onChange={(event) => {
-                      updateField('city', event.target.value);
-                      setShowCitySuggestions(true);
-                    }}
-                    onBlur={() => {
-                      window.setTimeout(() => setShowCitySuggestions(false), 120);
-                    }}
-                    onFocus={() => setShowCitySuggestions(true)}
-                    autoComplete="off"
-                    error={errors.city}
-                  />
-                  {showCitySuggestions && env.mapboxAccessToken ? (
-                    <div className="apf-suggest-list" role="listbox">
-                      {cityLoading ? (
-                        <div className="apf-suggest-item apf-suggest-muted">Searching...</div>
-                      ) : null}
-                      {!cityLoading && citySuggestions.length === 0 ? (
-                        <div className="apf-suggest-item apf-suggest-muted">No suggestions</div>
-                      ) : null}
-                      {!cityLoading && citySuggestions.map((item) => (
-                        <button
-                          type="button"
-                          key={item.id}
-                          className="apf-suggest-item"
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => {
-                            updateField('city', item.label);
-                            setShowCitySuggestions(false);
-                          }}
-                        >
-                          <span className="apf-suggest-title">{item.label}</span>
-                          <span className="apf-suggest-subtitle">{item.placeName}</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-                {!env.mapboxAccessToken ? <p className="apf-field-hint">Mapbox token missing, suggestions are disabled.</p> : null}
+              <Field label="City" required error={errors.city} hint={!env.mapboxAccessToken ? 'Mapbox token missing, suggestions are disabled.' : ''}>
+                <MapboxSuggestInput
+                  name="city"
+                  value={formData.city}
+                  placeholder="Enter city"
+                  types="place"
+                  displayKey="place_name"
+                  valueKey="text"
+                  onChange={(val) => {
+                    updateField('city', val);
+                    if (formData.area) updateField('area', '');
+                  }}
+                  error={errors.city}
+                />
               </Field>
               <Field label="Area / Locality" required error={errors.area}>
-                <TextInput name="area" type="text" placeholder="Enter area or locality" value={formData.area} onChange={(event) => updateField('area', event.target.value)} error={errors.area} />
+                <MapboxSuggestInput
+                  name="area"
+                  value={formData.area}
+                  placeholder="Enter area or locality"
+                  types="locality,neighborhood,address,place"
+                  displayKey="place_name"
+                  valueKey="text"
+                  queryContext={formData.city}
+                  onChange={(val) => updateField('area', val)}
+                  error={errors.area}
+                />
               </Field>
               <Field label="Pincode" required error={errors.pincode}>
                 <TextInput name="pincode" type="number" placeholder="Enter pincode" value={formData.pincode} onChange={(event) => updateField('pincode', event.target.value)} error={errors.pincode} />

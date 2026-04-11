@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { MapPinned } from 'lucide-react';
 import MapPickerModal from '../../common/MapPickerModal';
+import MapboxSuggestInput from '../../common/MapboxSuggestInput';
 import env from '../../../config/env';
 
 const cityData = {
@@ -103,55 +104,117 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
     const [mapOpen, setMapOpen] = useState(false);
     const hasCoords = formData.latitude && formData.longitude;
     const mapDisabled = !env.mapboxAccessToken;
+    const hasMapbox = !!env.mapboxAccessToken;
 
     return (
         <div className="ppf-step-content" key="step2">
             <h2 className="ppf-heading"><span className="ppf-heading-icon"><MapPinned size={18} /></span>Where is your property located?</h2>
 
             <div className="ppf-form-row">
-                <SearchableDropdown
-                    label="City"
-                    required
-                    value={formData.city}
-                    options={cities}
-                    onChange={(val) => {
-                        updateField('city', val);
-                        updateField('locality', '');
-                    }}
-                    placeholder="Search city..."
-                    error={errors.city}
-                />
-                <SearchableDropdown
-                    label="Locality / Area"
-                    required
-                    value={formData.locality}
-                    options={localities}
-                    onChange={(val) => updateField('locality', val)}
-                    placeholder={formData.city ? 'Search locality...' : 'Select city first'}
-                    error={errors.locality}
-                />
+                {hasMapbox ? (
+                    <>
+                        <div className="ppf-field">
+                            <label className="ppf-field-label">
+                                City<span className="required">*</span>
+                            </label>
+                            <MapboxSuggestInput
+                                name="city"
+                                value={formData.city}
+                                placeholder="Search city..."
+                                types="place"
+                                onChange={(val) => {
+                                    updateField('city', val);
+                                    updateField('locality', '');
+                                }}
+                                error={!!errors.city}
+                            />
+                            {errors.city && <p className="ppf-input-error">{errors.city}</p>}
+                        </div>
+                        <div className="ppf-field">
+                            <label className="ppf-field-label">
+                                Locality / Area<span className="required">*</span>
+                            </label>
+                            <MapboxSuggestInput
+                                name="locality"
+                                value={formData.locality}
+                                placeholder={formData.city ? 'Search locality...' : 'Search locality'}
+                                types="locality,neighborhood,address,place"
+                                queryContext={formData.city}
+                                onChange={(val) => updateField('locality', val)}
+                                error={!!errors.locality}
+                            />
+                            {errors.locality && <p className="ppf-input-error">{errors.locality}</p>}
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <SearchableDropdown
+                            label="City"
+                            required
+                            value={formData.city}
+                            options={cities}
+                            onChange={(val) => {
+                                updateField('city', val);
+                                updateField('locality', '');
+                            }}
+                            placeholder="Search city..."
+                            error={errors.city}
+                        />
+                        <SearchableDropdown
+                            label="Locality / Area"
+                            required
+                            value={formData.locality}
+                            options={localities}
+                            onChange={(val) => updateField('locality', val)}
+                            placeholder={formData.city ? 'Search locality...' : 'Select city first'}
+                            error={errors.locality}
+                        />
+                    </>
+                )}
             </div>
 
             <div className="ppf-form-row">
                 <div className="ppf-field">
                     <label className="ppf-field-label">Sub-locality</label>
-                    <input
-                        className="ppf-input"
-                        type="text"
-                        placeholder="Enter sub-locality"
-                        value={formData.subLocality}
-                        onChange={(e) => updateField('subLocality', e.target.value)}
-                    />
+                    {hasMapbox ? (
+                        <MapboxSuggestInput
+                            name="subLocality"
+                            value={formData.subLocality}
+                            placeholder="Enter sub-locality"
+                            types="neighborhood,locality,address"
+                            queryContext={formData.city}
+                            onChange={(val) => updateField('subLocality', val)}
+                        />
+                    ) : (
+                        <input
+                            className="ppf-input"
+                            type="text"
+                            placeholder="Enter sub-locality"
+                            value={formData.subLocality}
+                            onChange={(e) => updateField('subLocality', e.target.value)}
+                        />
+                    )}
                 </div>
                 <div className="ppf-field">
                     <label className="ppf-field-label">Landmark</label>
-                    <input
-                        className="ppf-input"
-                        type="text"
-                        placeholder="Nearby landmark"
-                        value={formData.landmark}
-                        onChange={(e) => updateField('landmark', e.target.value)}
-                    />
+                    {hasMapbox ? (
+                        <MapboxSuggestInput
+                            name="landmark"
+                            value={formData.landmark}
+                            placeholder="Nearby landmark"
+                            types="poi,neighborhood,address"
+                            queryContext={formData.city}
+                            onChange={(val) => updateField('landmark', val)}
+                        />
+                    ) : (
+                        <input
+                            className="ppf-input"
+                            type="text"
+                            placeholder="Nearby landmark"
+                            value={formData.landmark}
+                            onChange={(e) => updateField('landmark', e.target.value)}
+                        />
+                    )}
                 </div>
             </div>
 
