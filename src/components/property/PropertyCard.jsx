@@ -61,7 +61,13 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
       onMouseEnter={() => onHover?.(property._id)}
     >
       <div className="property-image-container">
-        <img src={images[activeImageIndex]} alt={property.title} className="property-image" />
+        <img
+          src={images[activeImageIndex]}
+          alt={property.title}
+          className="property-image"
+          loading="lazy"
+          decoding="async"
+        />
         {showCarouselControls ? (
           <>
             <button type="button" className="property-carousel-btn property-carousel-btn-left" onClick={goPrevImage} aria-label="Previous image">

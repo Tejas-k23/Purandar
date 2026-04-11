@@ -203,13 +203,51 @@ export const listProperties = asyncHandler(async (req, res) => {
   const filter = buildPublicFilters(req.query);
   const sort = sortOptions[req.query.sort] || sortOptions.newest;
 
+  const allowedFields = new Set([
+    'title',
+    'propertyType',
+    'city',
+    'locality',
+    'subLocality',
+    'price',
+    'bedrooms',
+    'bathrooms',
+    'totalArea',
+    'plotArea',
+    'carpetArea',
+    'areaUnit',
+    'photos',
+    'images',
+    'intent',
+    'status',
+    'displaySellerName',
+    'userName',
+    'contactDisplayMode',
+    'useOriginalSellerContact',
+    'owner',
+  ]);
+
+  const rawFields = String(req.query.fields || '').trim();
+  const requestedFields = rawFields
+    ? rawFields.split(',').map((field) => field.trim()).filter(Boolean)
+    : [];
+  const safeFields = requestedFields.filter((field) => allowedFields.has(field));
+  const select = safeFields.length ? safeFields.join(' ') : '-moderationMessage';
+  const shouldPopulateOwner = safeFields.includes('owner');
+
+  let query = Property.find(filter)
+    .sort(sort)
+    .skip(skip)
+    .limit(limit)
+    .select(select)
+    .lean();
+
+  if (shouldPopulateOwner) {
+    query = query.populate('owner', 'name');
+  }
+
   const [items, total] = await Promise.all([
-    Property.find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .select('-moderationMessage')
-      .populate('owner', 'name'),
+    query,
     Property.countDocuments(filter),
   ]);
 

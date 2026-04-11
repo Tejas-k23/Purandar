@@ -158,7 +158,33 @@ const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
 
 function PropertySection() {
   const location = useLocation();
-  const { properties, loading } = useProperties({ limit: 8, sort: 'newest', featuredOnHome: true });
+  const { properties, loading } = useProperties({
+    limit: 8,
+    sort: 'newest',
+    featuredOnHome: true,
+    fields: [
+      'title',
+      'propertyType',
+      'city',
+      'locality',
+      'subLocality',
+      'price',
+      'bedrooms',
+      'bathrooms',
+      'totalArea',
+      'plotArea',
+      'carpetArea',
+      'areaUnit',
+      'photos',
+      'images',
+      'intent',
+      'status',
+      'displaySellerName',
+      'userName',
+      'contactDisplayMode',
+      'useOriginalSellerContact',
+    ].join(','),
+  });
   const { savedProperties, savedPropertyIds, toggleSavedProperty, isAuthenticated, user } = useAuth();
   const [activity, setActivity] = useState({ properties: 0, leads: 0, loading: false });
   const featured = useMemo(() => properties.slice(0, 4), [properties]);
