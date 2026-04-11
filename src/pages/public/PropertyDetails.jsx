@@ -13,6 +13,7 @@ import PropertyMap from '../../components/property/PropertyMap';
 import SimilarProperties from '../../components/property/SimilarProperties';
 import { formatCurrency } from '../../utils/formatPrice';
 import { getPropertyImageUrls } from '../../utils/propertyImages';
+import { getPropertyVideoUrl } from '../../utils/propertyVideos';
 import { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
 import SeoManager from '../../components/common/SeoManager';
 import './PropertyDetails.css';
@@ -165,7 +166,8 @@ export default function PropertyDetails() {
   ].filter(Boolean);
   const seoDescription = property.description || summaryBits.join(' ');
   const primaryImage = getPropertyImageUrls(property)[0] || '';
-  const videoEmbedUrl = getYoutubeEmbedUrl(property.videoUrl || '');
+  const resolvedVideoUrl = getPropertyVideoUrl(property.videoUrl || '');
+  const videoEmbedUrl = getYoutubeEmbedUrl(resolvedVideoUrl);
   const uploadedDate = formatDate(property.createdAt);
   const pageUrl = `${window.location.origin}/property/${property._id}`;
   const whatsappMessage = `WhatsApp chat started for ${titleBase}`;
@@ -249,7 +251,7 @@ export default function PropertyDetails() {
         <div className="pd-main">
           <button onClick={() => navigate(-1)} className="pd-back-btn">Back to listings</button>
           <PropertyGallery photos={property.photos} images={property.images} intent={property.intent} />
-          {property.videoUrl ? (
+          {resolvedVideoUrl ? (
             <div className="pd-card">
               <h2 className="pd-section-title">Property Video</h2>
               <div className="pd-video">
@@ -261,7 +263,7 @@ export default function PropertyDetails() {
                     allowFullScreen
                   />
                 ) : (
-                  <video controls src={property.videoUrl} />
+                  <video controls src={resolvedVideoUrl} />
                 )}
               </div>
             </div>
