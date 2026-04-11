@@ -101,7 +101,13 @@ const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
     const row = rowRef.current;
     if (!row) return;
 
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const shouldDisableAuto =
+      window.matchMedia
+      && (window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        || window.matchMedia('(pointer: coarse)').matches
+        || window.matchMedia('(max-width: 768px)').matches);
+
+    if (shouldDisableAuto) {
       return;
     }
 

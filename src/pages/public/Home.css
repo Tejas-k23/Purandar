@@ -87,6 +87,7 @@
     overflow-y: hidden;
     padding-bottom: var(--space-2);
     scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
 }
 
 .home-live-grid > * {
