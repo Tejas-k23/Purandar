@@ -13,6 +13,7 @@ import NewsInsights from '../pages/public/NewsInsights';
 import NewsInsightDetail from '../pages/public/NewsInsightDetail';
 import WhyInvestPurandar from '../pages/public/WhyInvestPurandar';
 import PropertyDetails from '../pages/public/PropertyDetails';
+import LocationListingsPage from '../pages/public/LocationListingsPage';
 import ProfileLayout from '../pages/profile/ProfileLayout';
 import MyProfile from '../pages/profile/MyProfile';
 import SavedProperties from '../pages/profile/SavedProperties';
@@ -53,6 +54,8 @@ export default function AppRoutes() {
         <Route path="/news-insights" element={<NewsInsights />} />
         <Route path="/news-insights/:slug" element={<NewsInsightDetail />} />
         <Route path="/property/:id" element={<PropertyDetails />} />
+        <Route path="/property-in-:location" element={<LocationListingsPage mode="location" />} />
+        <Route path="/property-near-:landmark" element={<LocationListingsPage mode="landmark" />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/why-invest" element={<WhyInvestPurandar />} />
         <Route path="/post-property" element={<PostProperty />} />

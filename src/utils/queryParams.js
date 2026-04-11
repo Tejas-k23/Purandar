@@ -28,6 +28,8 @@ export const parseSearchParams = (searchParams) => {
   return {
     city: entries.city || '',
     locality: entries.locality || '',
+    location: entries.location || '',
+    landmark: entries.landmark || '',
     propertyType: entries.propertyType || '',
     category: entries.category || '',
     bedrooms: entries.bedrooms || '',
@@ -49,6 +51,8 @@ export const getAreaParams = (value = '') => areaRanges[value] || {};
 export const buildPropertyApiParams = (filters = {}) => sanitizeQueryParams({
   city: filters.city,
   locality: filters.locality,
+  location: filters.location,
+  landmark: filters.landmark,
   propertyType: filters.propertyType,
   category: filters.category,
   bedrooms: filters.bedrooms,

@@ -128,15 +128,32 @@ const buildAreaFilter = (query) => {
   };
 };
 
+const escapeRegex = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const buildPublicFilters = (query) => {
   const filter = { status: 'approved' };
 
   if (query.intent) filter.intent = query.intent;
   if (query.category) filter.category = query.category;
-  if (query.city) filter.city = new RegExp(query.city, 'i');
-  if (query.locality) filter.locality = new RegExp(query.locality, 'i');
+  if (query.city) filter.city = new RegExp(escapeRegex(query.city), 'i');
+  if (query.locality) filter.locality = new RegExp(escapeRegex(query.locality), 'i');
   if (query.propertyType) filter.propertyType = query.propertyType;
   if (query.featuredOnHome === 'true') filter.featuredOnHome = true;
+
+  if (query.location) {
+    const locationRegex = new RegExp(escapeRegex(query.location), 'i');
+    const locationOr = [
+      { city: locationRegex },
+      { locality: locationRegex },
+      { subLocality: locationRegex },
+    ];
+    filter.$and = [...(filter.$and || []), { $or: locationOr }];
+  }
+
+  if (query.landmark) {
+    const landmarkRegex = new RegExp(escapeRegex(query.landmark), 'i');
+    filter.$and = [...(filter.$and || []), { landmark: landmarkRegex }];
+  }
 
   if (query.bedrooms) {
     filter.bedrooms = query.bedrooms === '5' ? { $gte: 5 } : Number(query.bedrooms);

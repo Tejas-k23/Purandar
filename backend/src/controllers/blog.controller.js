@@ -1,4 +1,5 @@
 import Blog from '../models/Blog.js';
+import Property from '../models/Property.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { sanitizeHtml, sanitizePlainText } from '../utils/sanitizeHtml.js';
@@ -145,8 +146,31 @@ export const deleteBlog = asyncHandler(async (req, res) => {
 
 export const getSitemapXml = asyncHandler(async (_req, res) => {
   const blogs = await Blog.find({ status: 'published' }).select('slug updatedAt publishDate').sort({ publishDate: -1 });
+  const [cities, localities, subLocalities, landmarks] = await Promise.all([
+    Property.distinct('city', { status: 'approved' }),
+    Property.distinct('locality', { status: 'approved' }),
+    Property.distinct('subLocality', { status: 'approved' }),
+    Property.distinct('landmark', { status: 'approved' }),
+  ]);
   const base = env.CLIENT_URL.replace(/\/$/, '');
   const staticRoutes = ['/', '/buy', '/rent', '/projects', '/news-insights'];
+
+  const uniqueBySlug = (values = []) => {
+    const map = new Map();
+    values
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .forEach((value) => {
+        const slug = slugify(value);
+        if (slug && !map.has(slug)) {
+          map.set(slug, value);
+        }
+      });
+    return Array.from(map.entries()).map(([slug, label]) => ({ slug, label }));
+  };
+
+  const locationSlugs = uniqueBySlug([...cities, ...localities, ...subLocalities]);
+  const landmarkSlugs = uniqueBySlug(landmarks);
 
   const urls = [
     ...staticRoutes.map((path) => ({
@@ -156,6 +180,14 @@ export const getSitemapXml = asyncHandler(async (_req, res) => {
     ...blogs.map((blog) => ({
       loc: `${base}/news-insights/${blog.slug}`,
       lastmod: (blog.updatedAt || blog.publishDate || new Date()).toISOString(),
+    })),
+    ...locationSlugs.map((item) => ({
+      loc: `${base}/property-in-${item.slug}`,
+      lastmod: new Date().toISOString(),
+    })),
+    ...landmarkSlugs.map((item) => ({
+      loc: `${base}/property-near-${item.slug}`,
+      lastmod: new Date().toISOString(),
     })),
   ];
 
