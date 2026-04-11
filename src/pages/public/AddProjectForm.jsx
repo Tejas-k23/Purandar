@@ -312,6 +312,10 @@ export default function AddProjectForm() {
   const [mediaError, setMediaError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successDialog, setSuccessDialog] = useState(null);
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const [customTagInput, setCustomTagInput] = useState('');
   const editId = searchParams.get('edit');
   const isAdminPath = location.pathname.startsWith('/admin');
   const { user } = useAuth();
@@ -378,6 +382,48 @@ export default function AddProjectForm() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentStep]);
+
+  useEffect(() => {
+    if (!env.mapboxAccessToken) {
+      setCitySuggestions([]);
+      return;
+    }
+
+    const query = formData.city.trim();
+    if (query.length < 2) {
+      setCitySuggestions([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setCityLoading(true);
+      try {
+        const encoded = encodeURIComponent(query);
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?types=place&autocomplete=true&limit=6&country=IN&access_token=${env.mapboxAccessToken}`;
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error('Mapbox request failed');
+        const data = await response.json();
+        const suggestions = (data.features || []).map((feature) => ({
+          id: feature.id,
+          label: feature.text,
+          placeName: feature.place_name,
+        }));
+        setCitySuggestions(suggestions);
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          setCitySuggestions([]);
+        }
+      } finally {
+        setCityLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [formData.city, env.mapboxAccessToken]);
 
   const completionScore = useMemo(() => {
     const trackedFields = [
@@ -458,6 +504,21 @@ export default function AddProjectForm() {
     const current = formData[field];
     const next = current.includes(value) ? current.filter((item) => item !== value) : [...current, value];
     updateField(field, next);
+  };
+
+  const addCustomTag = () => {
+    const next = customTagInput.trim();
+    if (!next) return;
+    if (formData.tags.includes(next)) {
+      setCustomTagInput('');
+      return;
+    }
+    updateField('tags', [...formData.tags, next]);
+    setCustomTagInput('');
+  };
+
+  const removeTag = (tag) => {
+    updateField('tags', formData.tags.filter((item) => item !== tag));
   };
 
   const handleImageUpload = (event) => {
@@ -645,6 +706,34 @@ export default function AddProjectForm() {
                   <ToggleChip key={tag} label={tag} selected={formData.tags.includes(tag)} onClick={() => toggleArrayValue('tags', tag)} />
                 ))}
               </div>
+              <div className="apf-tag-row">
+                <TextInput
+                  name="customTag"
+                  type="text"
+                  placeholder="Add custom tag (e.g., 15 km from Purandar International Airport)"
+                  value={customTagInput}
+                  onChange={(event) => setCustomTagInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      addCustomTag();
+                    }
+                  }}
+                />
+                <button type="button" className="ppf-btn-back apf-mini-btn" onClick={addCustomTag}>
+                  Add tag
+                </button>
+              </div>
+              {formData.tags.length ? (
+                <div className="apf-tag-list">
+                  {formData.tags.map((tag) => (
+                    <button key={tag} type="button" className="apf-tag-pill" onClick={() => removeTag(tag)}>
+                      {tag}
+                      <span className="apf-tag-remove">×</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </Field>
           </SectionCard>
         );
@@ -657,7 +746,50 @@ export default function AddProjectForm() {
 
             <div className="ppf-form-row">
               <Field label="City" required error={errors.city}>
-                <TextInput name="city" type="text" placeholder="Enter city" value={formData.city} onChange={(event) => updateField('city', event.target.value)} error={errors.city} />
+                <div className="apf-suggest-wrap">
+                  <TextInput
+                    name="city"
+                    type="text"
+                    placeholder="Enter city"
+                    value={formData.city}
+                    onChange={(event) => {
+                      updateField('city', event.target.value);
+                      setShowCitySuggestions(true);
+                    }}
+                    onBlur={() => {
+                      window.setTimeout(() => setShowCitySuggestions(false), 120);
+                    }}
+                    onFocus={() => setShowCitySuggestions(true)}
+                    autoComplete="off"
+                    error={errors.city}
+                  />
+                  {showCitySuggestions && env.mapboxAccessToken ? (
+                    <div className="apf-suggest-list" role="listbox">
+                      {cityLoading ? (
+                        <div className="apf-suggest-item apf-suggest-muted">Searching...</div>
+                      ) : null}
+                      {!cityLoading && citySuggestions.length === 0 ? (
+                        <div className="apf-suggest-item apf-suggest-muted">No suggestions</div>
+                      ) : null}
+                      {!cityLoading && citySuggestions.map((item) => (
+                        <button
+                          type="button"
+                          key={item.id}
+                          className="apf-suggest-item"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => {
+                            updateField('city', item.label);
+                            setShowCitySuggestions(false);
+                          }}
+                        >
+                          <span className="apf-suggest-title">{item.label}</span>
+                          <span className="apf-suggest-subtitle">{item.placeName}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+                {!env.mapboxAccessToken ? <p className="apf-field-hint">Mapbox token missing, suggestions are disabled.</p> : null}
               </Field>
               <Field label="Area / Locality" required error={errors.area}>
                 <TextInput name="area" type="text" placeholder="Enter area or locality" value={formData.area} onChange={(event) => updateField('area', event.target.value)} error={errors.area} />

@@ -10,6 +10,9 @@ export default function ProjectCard({ project, variant = 'default' }) {
   const navigate = useNavigate();
   const cover = useMemo(() => project.projectImages?.[0] || fallbackImage, [project]);
   const priceLabel = `${formatCompactPrice((project.startingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000))} - ${formatCompactPrice((project.endingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000))}`;
+  const tags = project.tags || [];
+  const visibleTags = tags.slice(0, 2);
+  const remainingCount = tags.length - visibleTags.length;
 
   return (
     <div className={`property-card ${variant === 'compact' ? 'property-card-compact' : ''}`} onClick={() => navigate(`/projects/${project.slug || project._id}`)}>
@@ -29,6 +32,16 @@ export default function ProjectCard({ project, variant = 'default' }) {
           <span className="property-type-badge">{project.priceUnit}</span>
         </div>
         <h3 className="property-title">{project.projectName}</h3>
+        {visibleTags.length ? (
+          <div className="project-tag-row">
+            {visibleTags.map((tag) => (
+              <span key={tag} className="project-tag">{tag}</span>
+            ))}
+            {remainingCount > 0 ? (
+              <span className="project-tag project-tag-muted">+{remainingCount} more</span>
+            ) : null}
+          </div>
+        ) : null}
         <div className="property-location">
           <MapPin className="w-3.5 h-3.5" />
           <span>{[project.area, project.city].filter(Boolean).join(', ')}</span>

@@ -215,6 +215,30 @@
     margin: 0;
 }
 
+.project-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.project-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(255, 107, 0, 0.12);
+    border: 1px solid rgba(255, 107, 0, 0.22);
+    color: #9a4b00;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.project-tag-muted {
+    background: var(--color-bg-section);
+    border-color: var(--color-border);
+    color: var(--gray-600);
+}
+
 .property-location {
     display: flex;
     align-items: center;
