@@ -250,14 +250,19 @@ export const createProject = asyncHandler(async (req, res) => {
 
 export const updateProject = asyncHandler(async (req, res) => {
   const payload = normalizePayload(req.body);
-  const validationErrors = validateProjectPayload(payload);
-  if (validationErrors.length) {
-    throw new ApiError(400, validationErrors[0]);
-  }
   const project = await getOwnedProject(req.params.id, req.user);
 
   if (!project) {
     throw new ApiError(404, 'Project not found');
+  }
+
+  const mergedPayload = normalizePayload({
+    ...project.toObject(),
+    ...payload,
+  });
+  const validationErrors = validateProjectPayload(mergedPayload);
+  if (validationErrors.length) {
+    throw new ApiError(400, validationErrors[0]);
   }
 
   Object.assign(project, payload);

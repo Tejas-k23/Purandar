@@ -87,7 +87,8 @@
     margin-top: var(--space-3);
     font-size: 13px;
     color: var(--gray-500);
-    display: inline-flex;
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-1);
+    gap: var(--space-3);
 }

@@ -356,16 +356,21 @@ export const createProperty = asyncHandler(async (req, res) => {
 export const updateProperty = asyncHandler(async (req, res) => {
   const property = await getOwnedProperty(req.params.id, req.user);
   const payload = normalizePayload(req.body);
-  const validationErrors = validatePropertyPayload(payload);
-  if (validationErrors.length) {
-    throw new ApiError(400, validationErrors[0]);
-  }
 
   if (req.user.role !== 'admin' && payload.contactDisplayMode === 'company') {
     payload.contactDisplayMode = payload.useOriginalSellerContact ? 'original' : 'custom';
   }
   if (req.user.role !== 'admin' && payload.whatsappDisplayMode === 'company') {
     payload.whatsappDisplayMode = payload.useCustomWhatsappDetails ? 'custom' : 'original';
+  }
+
+  const mergedPayload = normalizePayload({
+    ...property.toObject(),
+    ...payload,
+  });
+  const validationErrors = validatePropertyPayload(mergedPayload);
+  if (validationErrors.length) {
+    throw new ApiError(400, validationErrors[0]);
   }
 
   Object.assign(property, payload);

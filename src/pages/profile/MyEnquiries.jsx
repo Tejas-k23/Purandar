@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Mail, MessageSquareMore } from 'lucide-react';
+import { Mail, MessageSquareMore, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import userService from '../../services/userService';
 import Loader from '../../components/common/Loader';
@@ -71,6 +71,7 @@ export default function MyEnquiries() {
                 </div>
                 <p className="my-enquiry-message">{row.message || 'No message provided.'}</p>
                 <div className="my-enquiry-contact">
+                  <span><Phone size={14} /> {row.phone || row.user?.phone || 'Not shared'}</span>
                   <span><Mail size={14} /> {row.email || row.user?.email || '-'}</span>
                 </div>
               </article>
