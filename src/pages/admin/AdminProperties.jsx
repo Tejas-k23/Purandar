@@ -98,20 +98,37 @@ export default function AdminProperties() {
 
     const currentMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
     const canSwitchToCustom = hasCompleteCustomContact(property);
-    const nextMode = nextValue
-      ? 'original'
-      : currentMode !== 'original'
-        ? currentMode
-        : (hasCompanyContact ? 'company' : 'custom');
+    
+    // If toggling OFF (nextValue = false) and currently showing original seller details
+    if (!nextValue && currentMode === 'original') {
+      // Must switch to custom contact (company contact isn't an option for this toggle)
+      if (!canSwitchToCustom) {
+        openContactEditor(property);
+        return;
+      }
+      const nextMode = 'custom';
+      setBusyId(`${propertyId}:contact`);
+      setProperties((current) => current.map((item) => (
+        item._id === propertyId ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: false } : item
+      )));
 
-    if (!nextValue && nextMode === 'custom' && !canSwitchToCustom) {
-      openContactEditor(property);
+      try {
+        await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
+      } catch (_error) {
+        setProperties((current) => current.map((item) => (
+          item._id === propertyId ? { ...item, contactDisplayMode: currentMode, useOriginalSellerContact: true } : item
+        )));
+      } finally {
+        setBusyId('');
+      }
       return;
     }
-
+    
+    // Otherwise, toggle to show original seller details
+    const nextMode = 'original';
     setBusyId(`${propertyId}:contact`);
     setProperties((current) => current.map((item) => (
-      item._id === propertyId ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: nextMode === 'original' } : item
+      item._id === propertyId ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: true } : item
     )));
 
     try {
@@ -177,7 +194,16 @@ export default function AdminProperties() {
   const saveCustomContact = async (propertyId) => {
     const draft = contactDrafts[propertyId];
     if (!draft) return;
+    
+    // Validate all fields are filled
+    if (!draft.displaySellerName?.trim() || !draft.displaySellerPhone?.trim() || !draft.displaySellerEmail?.trim()) {
+      alert('Please fill in all custom contact fields');
+      return;
+    }
+    
     setBusyId(`${propertyId}:contact-edit`);
+    const previousProperty = properties.find((item) => item._id === propertyId);
+    
     setProperties((current) => current.map((item) => (
       item._id === propertyId
         ? {
@@ -192,15 +218,35 @@ export default function AdminProperties() {
     )));
 
     try {
-      await adminService.updateProperty(propertyId, {
+      const response = await adminService.updateProperty(propertyId, {
         contactDisplayMode: 'custom',
         displaySellerName: draft.displaySellerName,
         displaySellerPhone: draft.displaySellerPhone,
         displaySellerEmail: draft.displaySellerEmail,
       });
+      
+      // Update with response data to ensure consistency
+      if (response.data?.data) {
+        setProperties((current) => current.map((item) => 
+          item._id === propertyId ? response.data.data : item
+        ));
+      }
+      
       setContactEditorId('');
+      setContactDrafts((current) => {
+        const next = { ...current };
+        delete next[propertyId];
+        return next;
+      });
     } catch (_error) {
-      await load();
+      // Revert to previous state on error
+      if (previousProperty) {
+        setProperties((current) => current.map((item) => 
+          item._id === propertyId ? previousProperty : item
+        ));
+      }
+      console.error('Failed to save custom contact:', _error);
+      alert('Failed to save custom contact. Please try again.');
     } finally {
       setBusyId('');
     }
