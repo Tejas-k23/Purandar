@@ -222,6 +222,22 @@ export function validatePropertyPayload(payload = {}) {
     if (!payload.displaySellerName?.trim()) errors.push('displaySellerName is required');
     if (!payload.displaySellerPhone?.trim()) errors.push('displaySellerPhone is required');
     if (!payload.displaySellerEmail?.trim()) errors.push('displaySellerEmail is required');
+
+    // Validate email format
+    if (payload.displaySellerEmail?.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(payload.displaySellerEmail.trim())) {
+        errors.push('displaySellerEmail must be a valid email address');
+      }
+    }
+
+    // Validate phone - at least 10 digits
+    if (payload.displaySellerPhone?.trim()) {
+      const phoneDigits = String(payload.displaySellerPhone).replace(/\D/g, '');
+      if (phoneDigits.length < 10) {
+        errors.push('displaySellerPhone must contain at least 10 digits');
+      }
+    }
   }
   if (payload.showWhatsappButton && payload.whatsappDisplayMode === 'custom' && !payload.customWhatsappNumber?.trim()) {
     errors.push('customWhatsappNumber is required');

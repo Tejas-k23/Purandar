@@ -113,17 +113,26 @@ export default function AdminProperties() {
       )));
 
       try {
-        await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
+        const response = await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
+        // Update with server response to ensure consistency
+        if (response.data?.data) {
+          setProperties((current) => current.map((item) =>
+            item._id === propertyId ? response.data.data : item
+          ));
+        }
       } catch (_error) {
+        const errorMessage = _error.response?.data?.message || _error.message || 'Failed to update contact mode';
         setProperties((current) => current.map((item) => (
           item._id === propertyId ? { ...item, contactDisplayMode: currentMode, useOriginalSellerContact: true } : item
         )));
+        console.error('Error toggling contact mode:', _error);
+        alert(`Error: ${errorMessage}`);
       } finally {
         setBusyId('');
       }
       return;
     }
-    
+
     // Otherwise, toggle to show original seller details
     const nextMode = 'original';
     setBusyId(`${propertyId}:contact`);
@@ -132,32 +141,20 @@ export default function AdminProperties() {
     )));
 
     try {
-      await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
+      const response = await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
+      // Update with server response to ensure consistency
+      if (response.data?.data) {
+        setProperties((current) => current.map((item) =>
+          item._id === propertyId ? response.data.data : item
+        ));
+      }
     } catch (_error) {
+      const errorMessage = _error.response?.data?.message || _error.message || 'Failed to update contact mode';
       setProperties((current) => current.map((item) => (
         item._id === propertyId ? { ...item, contactDisplayMode: currentMode, useOriginalSellerContact: currentMode === 'original' } : item
       )));
-    } finally {
-      setBusyId('');
-    }
-  };
-
-  const setContactMode = async (propertyId, nextMode) => {
-    const property = properties.find((item) => item._id === propertyId);
-    if (!property) return;
-
-    const currentMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
-    if (currentMode === nextMode) return;
-    if (nextMode === 'custom' && !hasCompleteCustomContact(property)) {
-      openContactEditor(property);
-      return;
-    }
-
-    setBusyId(`${propertyId}:contact`);
-    setProperties((current) => current.map((item) => (
-      item._id === propertyId ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: nextMode === 'original' } : item
-    )));
-
+      console.error('Error toggling contact mode:', _error);
+      alert(`Error: ${errorMessage}`);
     try {
       await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
     } catch (_error) {
@@ -191,19 +188,44 @@ export default function AdminProperties() {
     }));
   };
 
+  const validateCustomContact = (draft) => {
+    const name = draft.displaySellerName?.trim() || '';
+    const phone = draft.displaySellerPhone?.trim() || '';
+    const email = draft.displaySellerEmail?.trim() || '';
+
+    if (!name) return 'Seller name is required';
+    if (!phone) return 'Phone number is required';
+    if (!email) return 'Email is required';
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address (e.g., contact@example.com)';
+    }
+
+    // Validate phone - at least 10 digits
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+      return 'Phone number must contain at least 10 digits';
+    }
+
+    return null;
+  };
+
   const saveCustomContact = async (propertyId) => {
     const draft = contactDrafts[propertyId];
     if (!draft) return;
-    
-    // Validate all fields are filled
-    if (!draft.displaySellerName?.trim() || !draft.displaySellerPhone?.trim() || !draft.displaySellerEmail?.trim()) {
-      alert('Please fill in all custom contact fields');
+
+    // Validate all fields
+    const validationError = validateCustomContact(draft);
+    if (validationError) {
+      alert(validationError);
       return;
     }
-    
+
     setBusyId(`${propertyId}:contact-edit`);
     const previousProperty = properties.find((item) => item._id === propertyId);
-    
+
     setProperties((current) => current.map((item) => (
       item._id === propertyId
         ? {
@@ -224,14 +246,14 @@ export default function AdminProperties() {
         displaySellerPhone: draft.displaySellerPhone,
         displaySellerEmail: draft.displaySellerEmail,
       });
-      
+
       // Update with response data to ensure consistency
       if (response.data?.data) {
-        setProperties((current) => current.map((item) => 
+        setProperties((current) => current.map((item) =>
           item._id === propertyId ? response.data.data : item
         ));
       }
-      
+
       setContactEditorId('');
       setContactDrafts((current) => {
         const next = { ...current };
@@ -241,12 +263,15 @@ export default function AdminProperties() {
     } catch (_error) {
       // Revert to previous state on error
       if (previousProperty) {
-        setProperties((current) => current.map((item) => 
+        setProperties((current) => current.map((item) =>
           item._id === propertyId ? previousProperty : item
         ));
       }
+
+      // Extract detailed error message from response
+      const errorMessage = _error.response?.data?.message || _error.message || 'Failed to save custom contact';
       console.error('Failed to save custom contact:', _error);
-      alert('Failed to save custom contact. Please try again.');
+      alert(`Error: ${errorMessage}`);
     } finally {
       setBusyId('');
     }
