@@ -36,6 +36,10 @@ const normalizePayload = (payload = {}) => {
   if (!next.slug && next.projectName) {
     next.slug = slugify(next.projectName);
   }
+  if ('latitude' in next) next.latitude = toNumberOrNull(next.latitude);
+  if ('longitude' in next) next.longitude = toNumberOrNull(next.longitude);
+  if ('startingPrice' in next) next.startingPrice = toNumberOrNull(next.startingPrice);
+  if ('endingPrice' in next) next.endingPrice = toNumberOrNull(next.endingPrice);
   if ('pricePerSqFt' in next) next.pricePerSqFt = toNumberOrNull(next.pricePerSqFt);
   if ('minPlotSize' in next) next.minPlotSize = toNumberOrNull(next.minPlotSize);
   if ('maxPlotSize' in next) next.maxPlotSize = toNumberOrNull(next.maxPlotSize);
@@ -65,6 +69,60 @@ const normalizePayload = (payload = {}) => {
   next.amenities = Array.isArray(next.amenities) ? next.amenities : [];
   next.tags = Array.isArray(next.tags) ? next.tags : [];
   return next;
+};
+
+const validateProjectPayload = (payload = {}) => {
+  const errors = [];
+  const requiredFields = [
+    'projectName',
+    'projectType',
+    'developerName',
+    'projectStatus',
+    'address',
+    'city',
+    'area',
+    'areaRange',
+    'approvalAuthority',
+    'contactPersonName',
+    'phoneNumber',
+    'email',
+  ];
+
+  for (const field of requiredFields) {
+    if (!String(payload[field] ?? '').trim()) {
+      errors.push(`${field} is required`);
+    }
+  }
+
+  if (payload.startingPrice === null || payload.startingPrice === undefined) errors.push('startingPrice is required');
+  if (payload.endingPrice === null || payload.endingPrice === undefined) errors.push('endingPrice is required');
+  if (payload.startingPrice !== null && payload.endingPrice !== null && payload.startingPrice > payload.endingPrice) {
+    errors.push('endingPrice should be greater than startingPrice');
+  }
+  if (!payload.configurationTypes?.length && !(payload.extraConfigurations || []).some((item) => String(item || '').trim())) {
+    errors.push('At least one configuration is required');
+  }
+  if (payload.contactDisplayMode === 'custom') {
+    if (!payload.customContactName?.trim()) errors.push('customContactName is required');
+    if (!payload.customContactPhone?.trim()) errors.push('customContactPhone is required');
+    if (!payload.customContactEmail?.trim()) errors.push('customContactEmail is required');
+  }
+  if (payload.showWhatsappButton && payload.whatsappDisplayMode === 'custom' && !payload.customWhatsappNumber?.trim()) {
+    errors.push('customWhatsappNumber is required');
+  }
+  if (payload.videoUrl?.trim() && !/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(payload.videoUrl.trim())) {
+    errors.push('videoUrl must be a valid YouTube URL');
+  }
+  if (payload.projectType === 'Plots') {
+    if (payload.pricePerSqFt === null || payload.pricePerSqFt === undefined) errors.push('pricePerSqFt is required');
+    if (payload.minPlotSize === null || payload.minPlotSize === undefined) errors.push('minPlotSize is required');
+    if (payload.maxPlotSize === null || payload.maxPlotSize === undefined) errors.push('maxPlotSize is required');
+    if (payload.minPlotSize !== null && payload.maxPlotSize !== null && payload.minPlotSize > payload.maxPlotSize) {
+      errors.push('maxPlotSize should be greater than minPlotSize');
+    }
+  }
+
+  return errors;
 };
 
 const findProjectByIdentifier = (identifier) => {
@@ -153,6 +211,10 @@ export const getProjectById = asyncHandler(async (req, res) => {
 
 export const createProject = asyncHandler(async (req, res) => {
   const payload = normalizePayload(req.body);
+  const validationErrors = validateProjectPayload(payload);
+  if (validationErrors.length) {
+    throw new ApiError(400, validationErrors[0]);
+  }
   const isAdmin = req.user?.role === 'admin';
   const project = await Project.create({
     ...payload,
@@ -188,6 +250,10 @@ export const createProject = asyncHandler(async (req, res) => {
 
 export const updateProject = asyncHandler(async (req, res) => {
   const payload = normalizePayload(req.body);
+  const validationErrors = validateProjectPayload(payload);
+  if (validationErrors.length) {
+    throw new ApiError(400, validationErrors[0]);
+  }
   const project = await getOwnedProject(req.params.id, req.user);
 
   if (!project) {

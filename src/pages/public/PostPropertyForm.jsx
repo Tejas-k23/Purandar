@@ -10,6 +10,7 @@ import adminService from '../../services/adminService';
 import Loader from '../../components/common/Loader';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useAuth from '../../hooks/useAuth';
+import { getIntentOptions, getPropertyValidationErrors, normalizePropertyType, prunePropertyFormData } from '../../utils/propertyFormConfig';
 import './PostPropertyForm.css';
 
 const initialState = {
@@ -29,12 +30,15 @@ const initialState = {
   intent: 'sell', category: 'residential', propertyType: '', city: '', locality: '', subLocality: '', landmark: '', flatNo: '', totalFloors: '', floorNo: '',
   bedrooms: '', bathrooms: '', balconies: '', totalArea: '', areaUnit: 'sq.ft', carpetArea: '', furnishing: '', availability: '', possessionMonth: '', possessionYear: '', propertyAge: '', ownership: '', price: '', priceNegotiable: false,
   securityDeposit: '', maintenance: '', mealsIncluded: false, plotArea: '', plotLength: '', plotWidth: '', boundaryWall: '', openSides: '', constructionDone: '', superBuiltUpArea: '', washroom: '', personalWashroom: '', pantry: '', coveredParking: '', openParking: '', warehouseHeight: '', loadingUnloading: '', floorsInProperty: '', floorArea: '',
+  bedCount: '', cabinCount: '',
   tenantPreference: '',
   latitude: '',
   longitude: '',
   photos: [], videoUrl: '', societyAmenities: [], flatAmenities: [], facing: '', overlooking: [], waterSupply: '', gatedCommunity: '', description: '',
   videoFile: null,
 };
+
+const PROPERTY_DRAFT_KEY = 'purandar:property-form-draft';
 
 const STEPS = [
   { label: 'Basic Details', subtitle: 'Step 1' },
@@ -55,26 +59,7 @@ function reducer(state, action) {
   }
 }
 
-const validateStep = (step, data) => {
-  const errors = {};
-  if (step === 1) {
-    if (!data.propertyType) errors.propertyType = 'Please select a property type';
-    if (data.contactDisplayMode === 'custom') {
-      if (!data.displaySellerName?.trim()) errors.displaySellerName = 'Seller name is required';
-      if (!data.displaySellerPhone?.trim()) errors.displaySellerPhone = 'Seller phone is required';
-      if (!data.displaySellerEmail?.trim()) errors.displaySellerEmail = 'Seller email is required';
-    }
-    if (data.showWhatsappButton && data.whatsappDisplayMode === 'custom') {
-      if (!data.customWhatsappNumber?.trim()) errors.customWhatsappNumber = 'Custom WhatsApp number is required';
-    }
-  }
-  if (step === 2) {
-    if (!data.city) errors.city = 'City is required';
-    if (!data.locality) errors.locality = 'Locality is required';
-  }
-  if (step === 3 && !data.price) errors.price = 'Price is required';
-  return errors;
-};
+const validateStep = (step, data) => getPropertyValidationErrors(step, data);
 
 const mapPhotosForForm = (photos = []) => photos.map((photo, index) => ({
   id: Date.now() + index,
@@ -84,8 +69,10 @@ const mapPhotosForForm = (photos = []) => photos.map((photo, index) => ({
   isLocal: false,
 }));
 
-const buildPayload = (formData) => ({
-  ...formData,
+const buildPayload = (formData) => {
+  const { videoFile, ...serializableData } = prunePropertyFormData(formData);
+  return {
+  ...serializableData,
   contactDisplayMode: formData.contactDisplayMode || (formData.useOriginalSellerContact ? 'original' : 'custom'),
   useOriginalSellerContact: (formData.contactDisplayMode || (formData.useOriginalSellerContact ? 'original' : 'custom')) === 'original',
   whatsappDisplayMode: formData.whatsappDisplayMode || (formData.useCustomWhatsappDetails ? 'custom' : 'original'),
@@ -95,7 +82,8 @@ const buildPayload = (formData) => ({
     .filter((photo) => !photo?.isLocal)
     .map((photo) => (typeof photo === 'string' ? photo : photo.url))
     .filter(Boolean),
-});
+  };
+};
 
 export default function PostPropertyForm() {
   const [formData, dispatch] = useReducer(reducer, initialState);
@@ -126,6 +114,7 @@ export default function PostPropertyForm() {
           type: 'bulk',
           value: {
             ...property,
+            propertyType: normalizePropertyType(property.propertyType),
             contactDisplayMode,
             useOriginalSellerContact: contactDisplayMode === 'original',
             whatsappDisplayMode,
@@ -141,6 +130,18 @@ export default function PostPropertyForm() {
     };
 
     loadProperty();
+  }, [editId, isAdminPath]);
+
+  useEffect(() => {
+    if (editId) return;
+    try {
+      const rawDraft = window.localStorage.getItem(PROPERTY_DRAFT_KEY);
+      if (!rawDraft) return;
+      const parsed = JSON.parse(rawDraft);
+      dispatch({ type: 'bulk', value: prunePropertyFormData({ ...initialState, ...parsed, propertyType: normalizePropertyType(parsed.propertyType) }) });
+    } catch {
+      window.localStorage.removeItem(PROPERTY_DRAFT_KEY);
+    }
   }, [editId]);
 
   useEffect(() => {
@@ -159,6 +160,36 @@ export default function PostPropertyForm() {
   }, [formData]);
 
   const updateField = (field, value) => dispatch({ type: 'set', field, value });
+
+  useEffect(() => {
+    const nextIntentOptions = getIntentOptions(formData.propertyType, formData.category);
+    let nextState = formData;
+    let changed = false;
+
+    if (!nextIntentOptions.includes(formData.intent)) {
+      nextState = { ...nextState, intent: nextIntentOptions[0] };
+      changed = true;
+    }
+
+    const pruned = prunePropertyFormData(nextState);
+    if (JSON.stringify(pruned) !== JSON.stringify(formData)) {
+      dispatch({ type: 'bulk', value: pruned });
+      return;
+    }
+
+    if (changed) {
+      dispatch({ type: 'bulk', value: nextState });
+    }
+  }, [formData]);
+
+  useEffect(() => {
+    if (editId) return;
+    const { photos, videoFile, ...serializableDraft } = formData;
+    window.localStorage.setItem(PROPERTY_DRAFT_KEY, JSON.stringify({
+      ...serializableDraft,
+      photos: (photos || []).filter((photo) => !photo?.isLocal),
+    }));
+  }, [editId, formData]);
 
   const next = () => {
     const stepErrors = validateStep(currentStep, formData);
@@ -180,7 +211,7 @@ export default function PostPropertyForm() {
     setSubmitting(true);
     setStatusMessage('');
     try {
-      const { videoFile, ...payload } = buildPayload(formData);
+      const payload = buildPayload(formData);
       let propertyId = editId;
       if (editId) {
         const response = await propertyService.update(editId, payload);
@@ -202,6 +233,7 @@ export default function PostPropertyForm() {
       }
 
       if (!editId) {
+        window.localStorage.removeItem(PROPERTY_DRAFT_KEY);
         setSuccessDialog({
           title: 'Property submitted',
           message: 'Thanks! Our team will verify and approve your property. Once approved, it will appear in the listings.',

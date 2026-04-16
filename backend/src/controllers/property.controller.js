@@ -19,6 +19,11 @@ import {
   removeInvalidTokens,
   sendNotificationToTokens,
 } from '../utils/notifications.js';
+import {
+  normalizePropertyBooleans,
+  prunePropertyPayload,
+  validatePropertyPayload,
+} from '../utils/propertyConfig.js';
 
 const numericFields = [
   'bedrooms',
@@ -32,7 +37,9 @@ const numericFields = [
   'plotArea',
   'plotLength',
   'plotWidth',
+  'bedCount',
   'superBuiltUpArea',
+  'cabinCount',
   'coveredParking',
   'openParking',
   'warehouseHeight',
@@ -52,14 +59,8 @@ const toNumberOrNull = (value) => {
   return Number.isNaN(num) ? null : num;
 };
 
-const toBoolean = (value) => {
-  if (value === true || value === 'true' || value === 1 || value === '1') return true;
-  if (value === false || value === 'false' || value === 0 || value === '0') return false;
-  return Boolean(value);
-};
-
 const normalizePayload = (payload) => {
-  const data = { ...payload };
+  const data = normalizePropertyBooleans({ ...payload });
 
   for (const field of numericFields) {
     if (field in data) {
@@ -95,10 +96,6 @@ const normalizePayload = (payload) => {
     data.useCustomWhatsappDetails = false;
   }
 
-  if ('showWhatsappButton' in data) {
-    data.showWhatsappButton = toBoolean(data.showWhatsappButton);
-  }
-
   data.photos = Array.isArray(data.photos) ? data.photos : [];
   data.societyAmenities = Array.isArray(data.societyAmenities) ? data.societyAmenities : [];
   data.flatAmenities = Array.isArray(data.flatAmenities) ? data.flatAmenities : [];
@@ -108,7 +105,7 @@ const normalizePayload = (payload) => {
     data.title = [data.propertyType, data.locality, data.city].filter(Boolean).join(' in ');
   }
 
-  return data;
+  return prunePropertyPayload(data);
 };
 
 const buildAreaFilter = (query) => {
@@ -307,6 +304,10 @@ export const createProperty = asyncHandler(async (req, res) => {
   if (!payload.price) {
     throw new ApiError(400, 'price is required');
   }
+  const validationErrors = validatePropertyPayload(payload);
+  if (validationErrors.length) {
+    throw new ApiError(400, validationErrors[0]);
+  }
 
   const isAdmin = req.user.role === 'admin';
   if (!isAdmin && payload.contactDisplayMode === 'company') {
@@ -355,6 +356,10 @@ export const createProperty = asyncHandler(async (req, res) => {
 export const updateProperty = asyncHandler(async (req, res) => {
   const property = await getOwnedProperty(req.params.id, req.user);
   const payload = normalizePayload(req.body);
+  const validationErrors = validatePropertyPayload(payload);
+  if (validationErrors.length) {
+    throw new ApiError(400, validationErrors[0]);
+  }
 
   if (req.user.role !== 'admin' && payload.contactDisplayMode === 'company') {
     payload.contactDisplayMode = payload.useOriginalSellerContact ? 'original' : 'custom';
@@ -413,8 +418,8 @@ export const uploadPropertyImages = asyncHandler(async (req, res) => {
 
   const existingCount = property.images?.length || 0;
   const totalCount = existingCount + files.length;
-  if (totalCount > 8) {
-    throw new ApiError(400, 'Max 8 images allowed');
+  if (totalCount > 5) {
+    throw new ApiError(400, 'Max 5 images allowed');
   }
 
   for (const file of files) {

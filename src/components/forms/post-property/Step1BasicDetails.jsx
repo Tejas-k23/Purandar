@@ -1,29 +1,18 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Building2, HandCoins, Home, Mail, PenSquare, Phone, UserRound } from 'lucide-react';
-
-const residentialTypes = [
-    'Flat / Apartment',
-    'Independent House / Villa',
-    'Builder Floor',
-    'Plot / Land',
-    '1 RK / Studio Apartment',
-    'Serviced Apartment',
-    'PG / Hostel',
-    'Farmhouse',
-    'Other',
-];
-
-const commercialTypes = [
-    'Office Space',
-    'Shop / Showroom',
-    'Commercial Land',
-    'Warehouse / Godown',
-    'Industrial Building',
-    'Other',
-];
+import {
+    getIntentOptions,
+    getPropertyTypesByCategory,
+    getPropertyTypeConfig,
+} from '../../../utils/propertyFormConfig';
 
 export default function Step1BasicDetails({ formData, updateField, errors, isAdmin = false }) {
-    const types = formData.category === 'residential' ? residentialTypes : commercialTypes;
+    const types = useMemo(() => getPropertyTypesByCategory(formData.category), [formData.category]);
+    const selectedTypeConfig = getPropertyTypeConfig(formData.propertyType);
+    const intentOptions = useMemo(
+        () => getIntentOptions(formData.propertyType, formData.category),
+        [formData.propertyType, formData.category],
+    );
 
     const setContactDisplayMode = (mode) => {
         updateField('contactDisplayMode', mode);
@@ -44,11 +33,7 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
 
             <p className="ppf-section-label"><span className="ppf-section-label-icon"><HandCoins size={15} /></span>I'm looking to</p>
             <div className="ppf-pill-group" role="group" aria-label="Listing intent">
-                {[
-                    { value: 'sell', label: 'Sell' },
-                    { value: 'rent', label: 'Rent / Lease' },
-                    { value: 'pg', label: 'PG' },
-                ].map(({ value, label }) => (
+                {intentOptions.map((value) => (
                     <button
                         key={value}
                         type="button"
@@ -56,7 +41,7 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
                         className={`ppf-pill ${formData.intent === value ? 'active' : ''}`}
                         onClick={() => updateField('intent', value)}
                     >
-                        {label}
+                        {value === 'sell' ? 'Sell' : value === 'rent' ? 'Rent / Lease' : 'PG'}
                     </button>
                 ))}
             </div>
@@ -104,6 +89,11 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
                 ))}
             </div>
             {errors.propertyType ? <p className="ppf-input-error">{errors.propertyType}</p> : null}
+            {selectedTypeConfig ? (
+                <p className="ppf-input-hint" style={{ marginTop: 10 }}>
+                    Selected: {selectedTypeConfig.label}. Only relevant fields and amenities will appear in the next steps.
+                </p>
+            ) : null}
 
             <div className="ppf-field" style={{ marginTop: 18 }}>
                 <label className="ppf-field-label">

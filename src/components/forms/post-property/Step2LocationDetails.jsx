@@ -3,6 +3,7 @@ import { MapPinned } from 'lucide-react';
 import MapPickerModal from '../../common/MapPickerModal';
 import MapboxSuggestInput from '../../common/MapboxSuggestInput';
 import env from '../../../config/env';
+import { getVisibleLocationFieldKeys } from '../../../utils/propertyFormConfig';
 
 const cityData = {
     'Pune': [
@@ -98,13 +99,33 @@ function SearchableDropdown({ label, required, value, options, onChange, placeho
 
 export default function Step2LocationDetails({ formData, updateField, errors }) {
     const localities = formData.city ? (cityData[formData.city] || []) : [];
-    const isPlot = formData.propertyType === 'Plot / Land' || formData.propertyType === 'Commercial Land';
-    const isHouse = formData.propertyType === 'Independent House / Villa';
-    const showFloorNo = !isPlot && !isHouse;
+    const visibleLocationFields = getVisibleLocationFieldKeys(formData.propertyType, formData.category);
+    const showFlatNo = visibleLocationFields.has('flatNo');
+    const showTotalFloors = visibleLocationFields.has('totalFloors');
+    const showFloorNo = visibleLocationFields.has('floorNo');
     const [mapOpen, setMapOpen] = useState(false);
     const hasCoords = formData.latitude && formData.longitude;
     const mapDisabled = !env.mapboxAccessToken;
     const hasMapbox = !!env.mapboxAccessToken;
+
+    const applyFeatureLocation = (feature) => {
+        const place = feature?.context?.find((item) => item.id?.startsWith('place'));
+        const locality = feature?.context?.find((item) => item.id?.startsWith('locality') || item.id?.startsWith('neighborhood'));
+        const city = place?.text || (feature?.place_type?.includes('place') ? feature?.text : '');
+        const localityName = locality?.text || (!feature?.place_type?.includes('place') ? feature?.text : '');
+        const [longitude, latitude] = feature?.center || [];
+
+        if (city) {
+            updateField('city', city);
+        }
+        if (localityName && !formData.locality) {
+            updateField('locality', localityName);
+        }
+        if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+            updateField('latitude', latitude);
+            updateField('longitude', longitude);
+        }
+    };
 
     return (
         <div className="ppf-step-content" key="step2">
@@ -126,6 +147,7 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                                     updateField('city', val);
                                     updateField('locality', '');
                                 }}
+                                onSelect={(feature) => applyFeatureLocation(feature)}
                                 error={!!errors.city}
                             />
                             {errors.city && <p className="ppf-input-error">{errors.city}</p>}
@@ -141,6 +163,7 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                                 types="locality,neighborhood,address,place"
                                 queryContext={formData.city}
                                 onChange={(val) => updateField('locality', val)}
+                                onSelect={(feature) => applyFeatureLocation(feature)}
                                 error={!!errors.locality}
                             />
                             {errors.locality && <p className="ppf-input-error">{errors.locality}</p>}
@@ -218,7 +241,7 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                 </div>
             </div>
 
-            {formData.category === 'residential' && (
+            {showFlatNo ? (
                 <div className="ppf-field">
                     <label className="ppf-field-label">House / Flat No.</label>
                     <input
@@ -230,9 +253,9 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                         style={{ maxWidth: 280 }}
                     />
                 </div>
-            )}
+            ) : null}
 
-            {!isPlot && (
+            {showTotalFloors ? (
                 <div className="ppf-form-row">
                     <div className="ppf-field">
                         <label className="ppf-field-label">
@@ -249,7 +272,7 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                         />
                         {errors.totalFloors && <p className="ppf-input-error">{errors.totalFloors}</p>}
                     </div>
-                    {showFloorNo && (
+                    {showFloorNo ? (
                         <div className="ppf-field">
                             <label className="ppf-field-label">
                                 Floor No.<span className="required">*</span>
@@ -265,9 +288,9 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                             />
                             {errors.floorNo && <p className="ppf-input-error">{errors.floorNo}</p>}
                         </div>
-                    )}
+                    ) : null}
                 </div>
-            )}
+            ) : null}
 
             <div className="ppf-field" style={{ marginTop: 'var(--space-4)' }}>
                 <button
