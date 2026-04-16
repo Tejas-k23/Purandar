@@ -609,8 +609,11 @@ export const createEnquiry = asyncHandler(async (req, res) => {
 
   const rawName = req.body.name || req.user?.name || '';
   const rawEmail = req.body.email || req.user?.email || '';
-  const rawPhone = req.body.phone || req.user?.phone || '';
   const { message, leadType } = req.body;
+  const resolvedLeadType = leadType === 'whatsapp' ? 'whatsapp' : 'enquiry';
+  const rawPhone = resolvedLeadType === 'whatsapp'
+    ? (req.body.phone || req.user?.phone || '')
+    : (req.body.phone || '');
   if (!rawName || !rawEmail) {
     throw new ApiError(400, 'Name and email are required');
   }
@@ -623,7 +626,7 @@ export const createEnquiry = asyncHandler(async (req, res) => {
     email: rawEmail,
     phone: rawPhone,
     message,
-    leadType: leadType === 'whatsapp' ? 'whatsapp' : 'enquiry',
+    leadType: resolvedLeadType,
   });
 
   res.status(201).json({

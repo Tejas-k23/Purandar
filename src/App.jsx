@@ -1,12 +1,17 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import Navbar from './components/common/Navbar';
 import AppRoutes from './routes/AppRoutes';
 import './App.css';
-import { listenToForegroundMessages } from './lib/firebaseMessaging';
+import { listenToForegroundMessages, requestNotifications } from './lib/firebaseMessaging';
+import notificationService, { getOrCreateBrowserId } from './services/notificationService';
+import useAuth from './hooks/useAuth';
+
+const NOTIFICATION_PROMPT_KEY = 'purandar:notification-prompted';
 
 function AppShell() {
   const location = useLocation();
+  const { user, isAuthenticated } = useAuth();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
@@ -20,6 +25,29 @@ function AppShell() {
     });
     return () => unsubscribe?.();
   }, []);
+
+  useEffect(() => {
+    const maybePromptNotifications = async () => {
+      if (typeof window === 'undefined' || !('Notification' in window)) return;
+      if (Notification.permission !== 'default') return;
+      if (sessionStorage.getItem(NOTIFICATION_PROMPT_KEY) === 'true') return;
+
+      sessionStorage.setItem(NOTIFICATION_PROMPT_KEY, 'true');
+      try {
+        const token = await requestNotifications();
+        if (!token) return;
+        await notificationService.subscribe({
+          token,
+          role: isAuthenticated ? (user?.role || 'user') : 'guest',
+          browserId: getOrCreateBrowserId(),
+        });
+      } catch {
+        // Ignore notification prompt failures.
+      }
+    };
+
+    maybePromptNotifications();
+  }, [isAuthenticated, user?.role]);
 
   return (
     <div className="app-container">
@@ -42,4 +70,3 @@ function App() {
 }
 
 export default App;
-

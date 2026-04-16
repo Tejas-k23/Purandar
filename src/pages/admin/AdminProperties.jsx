@@ -10,6 +10,14 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import { formatCompactPrice } from '../../utils/formatPrice';
 import { hasCompanyContact } from '../../config/companyContact';
 
+const hasCompleteCustomContact = (property = {}) => (
+  Boolean(
+    property.displaySellerName?.trim()
+    && property.displaySellerPhone?.trim()
+    && property.displaySellerEmail?.trim(),
+  )
+);
+
 export default function AdminProperties() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,9 +57,14 @@ export default function AdminProperties() {
   }, []);
 
   const updateStatus = async (propertyId, status) => {
+    let moderationMessage = '';
+    if (status === 'rejected') {
+      moderationMessage = window.prompt('Enter rejection reason for the user:')?.trim() || '';
+      if (!moderationMessage) return;
+    }
     setBusyId(`${propertyId}:${status}`);
     try {
-      await adminService.updatePropertyStatus(propertyId, status);
+      await adminService.updatePropertyStatus(propertyId, status, moderationMessage);
       await load();
     } finally {
       setBusyId('');
@@ -84,11 +97,17 @@ export default function AdminProperties() {
     if (!property) return;
 
     const currentMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
+    const canSwitchToCustom = hasCompleteCustomContact(property);
     const nextMode = nextValue
       ? 'original'
       : currentMode !== 'original'
         ? currentMode
         : (hasCompanyContact ? 'company' : 'custom');
+
+    if (!nextValue && nextMode === 'custom' && !canSwitchToCustom) {
+      openContactEditor(property);
+      return;
+    }
 
     setBusyId(`${propertyId}:contact`);
     setProperties((current) => current.map((item) => (
@@ -112,6 +131,10 @@ export default function AdminProperties() {
 
     const currentMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
     if (currentMode === nextMode) return;
+    if (nextMode === 'custom' && !hasCompleteCustomContact(property)) {
+      openContactEditor(property);
+      return;
+    }
 
     setBusyId(`${propertyId}:contact`);
     setProperties((current) => current.map((item) => (

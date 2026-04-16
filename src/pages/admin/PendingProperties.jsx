@@ -26,9 +26,14 @@ export default function PendingProperties() {
   }, []);
 
   const updateStatus = async (propertyId, status) => {
+    let moderationMessage = '';
+    if (status === 'rejected') {
+      moderationMessage = window.prompt('Enter rejection reason for the user:')?.trim() || '';
+      if (!moderationMessage) return;
+    }
     setBusyId(propertyId + status);
     try {
-      await adminService.updatePropertyStatus(propertyId, status);
+      await adminService.updatePropertyStatus(propertyId, status, moderationMessage);
       await load();
     } finally {
       setBusyId('');

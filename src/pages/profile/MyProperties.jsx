@@ -131,6 +131,11 @@ export default function MyProperties() {
                     <span className="property-price">{price}</span>
                   </div>
                   <div className="property-location"><MapPin className="w-4 h-4" /><span>{location}</span></div>
+                  {item.moderationMessage ? (
+                    <p className="property-location" style={{ color: 'var(--orange)' }}>
+                      Review note: {item.moderationMessage}
+                    </p>
+                  ) : null}
                   <div className="property-actions">
                     <button
                       className="action-btn edit-btn"

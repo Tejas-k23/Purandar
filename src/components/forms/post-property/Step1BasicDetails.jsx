@@ -110,6 +110,7 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
                 <p className="ppf-input-hint">If left blank, we will auto-generate a title from type and location.</p>
             </div>
 
+            {isAdmin ? (
             <div className="ppf-admin-contact-card">
                 <div className="ppf-admin-contact-head">
                     <div>
@@ -193,7 +194,9 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
                     </div>
                 ) : null}
             </div>
+            ) : null}
 
+            {isAdmin ? (
             <div className="ppf-admin-contact-card" style={{ marginTop: 18 }}>
                 <div className="ppf-admin-contact-head">
                     <div>
@@ -288,6 +291,7 @@ export default function Step1BasicDetails({ formData, updateField, errors, isAdm
                     </>
                 ) : null}
             </div>
+            ) : null}
         </div>
     );
 }

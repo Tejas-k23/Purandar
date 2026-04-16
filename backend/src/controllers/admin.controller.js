@@ -94,6 +94,9 @@ export const updatePropertyStatus = asyncHandler(async (req, res) => {
   if (!['approved', 'rejected', 'pending', 'archived'].includes(status)) {
     throw new ApiError(400, 'Invalid moderation status');
   }
+  if (status === 'rejected' && !String(moderationMessage || '').trim()) {
+    throw new ApiError(400, 'Rejection reason is required');
+  }
 
   const property = await Property.findById(req.params.id);
   if (!property) {
@@ -160,6 +163,33 @@ export const updatePropertyStatus = asyncHandler(async (req, res) => {
         .map((token) => token.token);
       await removeInvalidTokens(invalid);
     }
+  }
+
+  if (status === 'rejected' && property.owner) {
+    const ownerTokens = await fetchTokens({
+      user: property.owner,
+      enabledTypes: { $in: ['property_approved', 'project_approved', 'enquiry', 'property_pending'] },
+    });
+    const title = 'Property rejected';
+    const body = moderationMessage || 'Your property was rejected. Please review the feedback and resubmit.';
+    const data = { type: 'property_rejected', propertyId: property._id.toString() };
+    const context = { city: property.city, intent: property.intent, propertyType: property.propertyType };
+
+    if (ownerTokens.length) {
+      const response = await sendNotificationToTokens({ tokens: ownerTokens, title, body, data, context });
+      const invalid = ownerTokens
+        .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
+        .map((token) => token.token);
+      await removeInvalidTokens(invalid);
+    }
+
+    await saveNotificationsForUsers({
+      users: [property.owner],
+      role: 'user',
+      title,
+      body,
+      data,
+    });
   }
 });
 
@@ -292,6 +322,9 @@ export const updateProjectStatus = asyncHandler(async (req, res) => {
   if (!['approved', 'rejected', 'pending', 'archived'].includes(status)) {
     throw new ApiError(400, 'Invalid moderation status');
   }
+  if (status === 'rejected' && !String(moderationMessage || '').trim()) {
+    throw new ApiError(400, 'Rejection reason is required');
+  }
 
   const project = await Project.findById(req.params.id);
   if (!project) {
@@ -358,6 +391,33 @@ export const updateProjectStatus = asyncHandler(async (req, res) => {
         .map((token) => token.token);
       await removeInvalidTokens(invalid);
     }
+  }
+
+  if (status === 'rejected' && project.owner) {
+    const ownerTokens = await fetchTokens({
+      user: project.owner,
+      enabledTypes: { $in: ['property_approved', 'project_approved', 'enquiry', 'project_pending'] },
+    });
+    const title = 'Project rejected';
+    const body = moderationMessage || 'Your project was rejected. Please review the feedback and resubmit.';
+    const data = { type: 'project_rejected', projectId: project._id.toString() };
+    const context = { city: project.city, propertyType: project.projectType };
+
+    if (ownerTokens.length) {
+      const response = await sendNotificationToTokens({ tokens: ownerTokens, title, body, data, context });
+      const invalid = ownerTokens
+        .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
+        .map((token) => token.token);
+      await removeInvalidTokens(invalid);
+    }
+
+    await saveNotificationsForUsers({
+      users: [project.owner],
+      role: 'user',
+      title,
+      body,
+      data,
+    });
   }
 });
 

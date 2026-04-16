@@ -9,6 +9,14 @@ import projectService from '../../services/projectService';
 import { formatCompactPrice } from '../../utils/formatPrice';
 import { hasCompanyContact } from '../../config/companyContact';
 
+const hasCompleteCustomContact = (project = {}) => (
+  Boolean(
+    project.customContactName?.trim()
+    && project.customContactPhone?.trim()
+    && project.customContactEmail?.trim(),
+  )
+);
+
 export default function AdminProjects() {
   const [projects, setProjects] = useState([]);
   const [busyId, setBusyId] = useState('');
@@ -57,8 +65,13 @@ export default function AdminProjects() {
   };
 
   const updateApprovalStatus = async (projectId, status) => {
+    let moderationMessage = '';
+    if (status === 'rejected') {
+      moderationMessage = window.prompt('Enter rejection reason for the user:')?.trim() || '';
+      if (!moderationMessage) return;
+    }
     setBusyId(`${projectId}:status:${status}`);
-    await projectService.updateStatus(projectId, status);
+    await projectService.updateStatus(projectId, status, moderationMessage);
     await load();
     setBusyId('');
   };
@@ -68,11 +81,17 @@ export default function AdminProjects() {
     if (!project) return;
 
     const currentMode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
+    const canSwitchToCustom = hasCompleteCustomContact(project);
     const nextMode = nextValue
       ? 'original'
       : currentMode !== 'original'
         ? currentMode
         : (hasCompanyContact ? 'company' : 'custom');
+
+    if (!nextValue && nextMode === 'custom' && !canSwitchToCustom) {
+      openContactEditor(project);
+      return;
+    }
 
     setBusyId(`${projectId}:contact`);
     setProjects((current) => current.map((item) => (
@@ -151,6 +170,10 @@ export default function AdminProjects() {
 
     const currentMode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
     if (currentMode === nextMode) return;
+    if (nextMode === 'custom' && !hasCompleteCustomContact(project)) {
+      openContactEditor(project);
+      return;
+    }
 
     setBusyId(`${projectId}:contact`);
     setProjects((current) => current.map((item) => (

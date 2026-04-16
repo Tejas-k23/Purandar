@@ -40,6 +40,8 @@ const PRICE_UNITS = ['Lakh', 'Crore'];
 const TAGS = ['Luxury', 'Affordable', 'Premium'];
 const MAX_PROJECT_IMAGES = 5;
 const MAX_PROJECT_MEDIA_SIZE = 50 * 1024 * 1024; // 50 MB total
+const PROJECT_DRAFT_KEY = 'purandar:project-form-draft';
+const PROJECT_STEP_KEY = 'purandar:project-form-step';
 
 const initialState = {
   projectName: '',
@@ -373,6 +375,35 @@ export default function AddProjectForm() {
   }, [editId]);
 
   useEffect(() => {
+    if (editId) return;
+    try {
+      const rawDraft = window.localStorage.getItem(PROJECT_DRAFT_KEY);
+      if (!rawDraft) return;
+      const parsed = JSON.parse(rawDraft);
+      setFormData((current) => ({
+        ...current,
+        ...parsed,
+        projectImages: (parsed.projectImages || []).map((image, index) => ({
+          id: `draft-${index}`,
+          name: `Draft image ${index + 1}`,
+          preview: image.preview || image,
+          existing: true,
+          isLocal: false,
+        })),
+        brochure: null,
+        videoFile: null,
+      }));
+    } catch {
+      window.localStorage.removeItem(PROJECT_DRAFT_KEY);
+    }
+
+    const savedStep = Number(window.localStorage.getItem(PROJECT_STEP_KEY) || 1);
+    if (savedStep >= 1 && savedStep <= SECTION_ITEMS.length) {
+      setCurrentStep(savedStep);
+    }
+  }, [editId]);
+
+  useEffect(() => {
     const target = document.querySelector('.apf-form-card');
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -380,6 +411,20 @@ export default function AddProjectForm() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentStep]);
+
+  useEffect(() => {
+    if (editId) return;
+    const { brochure, videoFile, ...serializableDraft } = formData;
+    window.localStorage.setItem(PROJECT_DRAFT_KEY, JSON.stringify({
+      ...serializableDraft,
+      projectImages: (formData.projectImages || []).filter((image) => !image?.isLocal).map((image) => image.preview || image),
+    }));
+  }, [editId, formData]);
+
+  useEffect(() => {
+    if (editId) return;
+    window.localStorage.setItem(PROJECT_STEP_KEY, String(currentStep));
+  }, [editId, currentStep]);
 
   const completionScore = useMemo(() => {
     const trackedFields = [
@@ -457,7 +502,7 @@ export default function AddProjectForm() {
   };
 
   const toggleArrayValue = (field, value) => {
-    const current = formData[field];
+    const current = Array.isArray(formData[field]) ? formData[field] : [];
     const next = current.includes(value) ? current.filter((item) => item !== value) : [...current, value];
     updateField(field, next);
   };
@@ -596,6 +641,8 @@ export default function AddProjectForm() {
       }
 
       if (!editId) {
+        window.localStorage.removeItem(PROJECT_DRAFT_KEY);
+        window.localStorage.removeItem(PROJECT_STEP_KEY);
         setSuccessDialog({
           title: 'Project submitted',
           message: 'Thanks! Our team will verify and approve your project. Once approved, it will appear in the project listings.',
@@ -961,6 +1008,7 @@ export default function AddProjectForm() {
               </Field>
             </div>
 
+            {isAdminPath ? (
             <div className="ppf-admin-contact-card">
               <div className="ppf-admin-contact-head">
                 <div>
@@ -1017,7 +1065,9 @@ export default function AddProjectForm() {
                 </div>
               ) : null}
             </div>
+            ) : null}
 
+            {isAdminPath ? (
             <div className="ppf-admin-contact-card" style={{ marginTop: 18 }}>
               <div className="ppf-admin-contact-head">
                 <div>
@@ -1092,6 +1142,7 @@ export default function AddProjectForm() {
                 </>
               ) : null}
             </div>
+            ) : null}
           </SectionCard>
         );
       default:

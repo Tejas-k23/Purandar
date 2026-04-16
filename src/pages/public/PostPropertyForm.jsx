@@ -39,6 +39,7 @@ const initialState = {
 };
 
 const PROPERTY_DRAFT_KEY = 'purandar:property-form-draft';
+const PROPERTY_STEP_KEY = 'purandar:property-form-step';
 
 const STEPS = [
   { label: 'Basic Details', subtitle: 'Step 1' },
@@ -145,6 +146,14 @@ export default function PostPropertyForm() {
   }, [editId]);
 
   useEffect(() => {
+    if (editId) return;
+    const savedStep = Number(window.localStorage.getItem(PROPERTY_STEP_KEY) || 1);
+    if (savedStep >= 1 && savedStep <= STEPS.length) {
+      setCurrentStep(savedStep);
+    }
+  }, [editId]);
+
+  useEffect(() => {
     const target = document.getElementById('post-property-form');
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -191,6 +200,11 @@ export default function PostPropertyForm() {
     }));
   }, [editId, formData]);
 
+  useEffect(() => {
+    if (editId) return;
+    window.localStorage.setItem(PROPERTY_STEP_KEY, String(currentStep));
+  }, [editId, currentStep]);
+
   const next = () => {
     const stepErrors = validateStep(currentStep, formData);
     if (Object.keys(stepErrors).length) {
@@ -234,6 +248,7 @@ export default function PostPropertyForm() {
 
       if (!editId) {
         window.localStorage.removeItem(PROPERTY_DRAFT_KEY);
+        window.localStorage.removeItem(PROPERTY_STEP_KEY);
         setSuccessDialog({
           title: 'Property submitted',
           message: 'Thanks! Our team will verify and approve your property. Once approved, it will appear in the listings.',
