@@ -6,7 +6,7 @@ This document lists the fields present in the Add Property and Add Project forms
 
 Source: `src/pages/public/PostPropertyForm.jsx` and step components under `src/components/forms/post-property/`.
 
-### Property Types
+### Property Types,,,,,,,,,,,,,,,,,
 
 Residential types:
 - Flat / Apartment
