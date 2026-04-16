@@ -3,8 +3,8 @@ import { BrowserRouter, useLocation } from 'react-router-dom';
 import Navbar from './components/common/Navbar';
 import AppRoutes from './routes/AppRoutes';
 import './App.css';
-import { listenToForegroundMessages, requestNotifications } from './lib/firebaseMessaging';
-import notificationService, { getOrCreateBrowserId } from './services/notificationService';
+import { listenToForegroundMessages } from './lib/firebaseMessaging';
+import { syncNotificationRegistration } from './services/notificationService';
 import useAuth from './hooks/useAuth';
 
 const NOTIFICATION_PROMPT_KEY = 'purandar:notification-prompted';
@@ -34,12 +34,9 @@ function AppShell() {
 
       sessionStorage.setItem(NOTIFICATION_PROMPT_KEY, 'true');
       try {
-        const token = await requestNotifications();
-        if (!token) return;
-        await notificationService.subscribe({
-          token,
+        await syncNotificationRegistration({
           role: isAuthenticated ? (user?.role || 'user') : 'guest',
-          browserId: getOrCreateBrowserId(),
+          requestPermission: true,
         });
       } catch {
         // Ignore notification prompt failures.
@@ -47,6 +44,23 @@ function AppShell() {
     };
 
     maybePromptNotifications();
+  }, [isAuthenticated, user?.role]);
+
+  useEffect(() => {
+    const syncExistingPermission = async () => {
+      if (typeof window === 'undefined' || !('Notification' in window)) return;
+      if (Notification.permission !== 'granted') return;
+
+      try {
+        await syncNotificationRegistration({
+          role: isAuthenticated ? (user?.role || 'user') : 'guest',
+        });
+      } catch {
+        // Ignore background sync failures.
+      }
+    };
+
+    syncExistingPermission();
   }, [isAuthenticated, user?.role]);
 
   return (

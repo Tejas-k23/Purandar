@@ -53,6 +53,18 @@ export const adminService = {
     return api.delete(`/admin/feedback/${feedbackId}`);
   },
 
+  getNotificationSettings() {
+    return api.get('/admin/notifications/settings');
+  },
+
+  updateNotificationSettings(notificationsEnabled) {
+    return api.patch('/admin/notifications/settings', { notificationsEnabled });
+  },
+
+  getNotificationDevices() {
+    return api.get('/admin/notifications/devices');
+  },
+
   sendNotification(payload) {
     return api.post('/admin/notifications/broadcast', payload);
   },

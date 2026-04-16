@@ -1,4 +1,5 @@
 import api from './api';
+import { initMessaging, requestNotifications } from '../lib/firebaseMessaging';
 
 const BROWSER_ID_KEY = 'browserId';
 
@@ -32,6 +33,58 @@ export const notificationService = {
   markRead(notificationId) {
     return api.patch(`/notifications/${notificationId}/read`);
   },
+};
+
+export const syncNotificationRegistration = async ({
+  role = 'guest',
+  requestPermission = false,
+} = {}) => {
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    // eslint-disable-next-line no-console
+    console.info('[Notify] Browser does not support notifications.');
+    return { ok: false, reason: 'unsupported', permission: 'unsupported', token: null };
+  }
+
+  const permissionBefore = Notification.permission;
+  // eslint-disable-next-line no-console
+  console.info('[Notify] Permission status before sync', permissionBefore);
+
+  let token = null;
+  if (requestPermission) {
+    token = await requestNotifications();
+  } else if (permissionBefore === 'granted') {
+    token = await initMessaging();
+  }
+
+  const permissionAfter = Notification.permission;
+  // eslint-disable-next-line no-console
+  console.info('[Notify] Permission status after sync', permissionAfter);
+
+  if (!token) {
+    // eslint-disable-next-line no-console
+    console.info('[Notify] No FCM token generated during sync.', {
+      role,
+      requestPermission,
+      permission: permissionAfter,
+    });
+    return { ok: false, reason: 'no_token', permission: permissionAfter, token: null };
+  }
+
+  await notificationService.subscribe({
+    token,
+    role,
+    browserId: getOrCreateBrowserId(),
+    platform: 'web-pwa',
+    permission: permissionAfter,
+  });
+
+  // eslint-disable-next-line no-console
+  console.info('[Notify] Device registration synced', {
+    role,
+    tokenPreview: `${token.slice(0, 12)}...`,
+  });
+
+  return { ok: true, reason: 'subscribed', permission: permissionAfter, token };
 };
 
 export default notificationService;

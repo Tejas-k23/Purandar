@@ -4,8 +4,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import CitySearch from './CitySearch';
 import useAuth from '../../hooks/useAuth';
-import { requestNotifications } from '../../lib/firebaseMessaging';
-import notificationService, { getOrCreateBrowserId } from '../../services/notificationService';
+import { syncNotificationRegistration } from '../../services/notificationService';
 
 const navItems = [
   { label: 'Home', to: '/', icon: Home },
@@ -46,16 +45,14 @@ export default function Navbar() {
   const enableNotifications = async () => {
     setNotifyStatus('');
     try {
-      const token = await requestNotifications();
-      if (!token) {
+      const result = await syncNotificationRegistration({
+        role: isAuthenticated ? (user?.role || 'user') : 'guest',
+        requestPermission: true,
+      });
+      if (!result.ok) {
         setNotifyStatus('Notifications not enabled.');
         return;
       }
-      await notificationService.subscribe({
-        token,
-        role: isAuthenticated ? (user?.role || 'user') : 'guest',
-        browserId: getOrCreateBrowserId(),
-      });
       setNotifyStatus('Notifications enabled.');
     } catch (_error) {
       setNotifyStatus('Unable to enable notifications.');

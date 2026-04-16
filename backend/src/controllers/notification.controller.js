@@ -20,7 +20,7 @@ const defaultEnabledTypes = (role) => {
 };
 
 export const subscribeNotifications = asyncHandler(async (req, res) => {
-  const { token, role, browserId, platform, enabledTypes, preferences } = req.body;
+  const { token, role, browserId, platform, enabledTypes, preferences, permission } = req.body;
   if (!token) {
     throw new ApiError(400, 'Token is required');
   }
@@ -44,6 +44,16 @@ export const subscribeNotifications = asyncHandler(async (req, res) => {
     { upsert: true, new: true },
   );
 
+  // eslint-disable-next-line no-console
+  console.info('[Notify] Device subscribed', {
+    tokenPreview: `${token.slice(0, 12)}...`,
+    role: resolvedRole,
+    userId: req.user?._id?.toString() || null,
+    browserId: browserId || '',
+    permission: permission || 'unknown',
+    platform: platform || 'web',
+  });
+
   res.json({ success: true, data: doc });
 });
 
@@ -53,6 +63,10 @@ export const unsubscribeNotifications = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Token is required');
   }
   await NotificationToken.deleteOne({ token });
+  // eslint-disable-next-line no-console
+  console.info('[Notify] Device unsubscribed', {
+    tokenPreview: `${token.slice(0, 12)}...`,
+  });
   res.json({ success: true, message: 'Unsubscribed' });
 });
 
