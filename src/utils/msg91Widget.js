@@ -4,6 +4,8 @@ const SCRIPT_URLS = [
 ];
 
 let scriptPromise = null;
+const SEND_OTP_DEDUP_MS = 4000;
+const activeOtpSends = new Map();
 
 export const loadMsg91Script = () => {
   if (scriptPromise) return scriptPromise;
@@ -123,7 +125,43 @@ export const sendOtpWithWidget = (identifier, onSuccess, onFailure) => {
   if (typeof window.sendOtp !== 'function') {
     throw new Error('MSG91 widget sendOtp is not available.');
   }
-  window.sendOtp(identifier, onSuccess, onFailure);
+
+  const normalizedIdentifier = buildIdentifier(identifier);
+  const currentTime = Date.now();
+  const existing = activeOtpSends.get(normalizedIdentifier);
+
+  if (existing && (currentTime - existing.startedAt) < SEND_OTP_DEDUP_MS) {
+    return existing.promise;
+  }
+
+  const rawPromise = new Promise((resolve, reject) => {
+    const release = () => {
+      window.setTimeout(() => {
+        const latest = activeOtpSends.get(normalizedIdentifier);
+        if (latest?.startedAt === currentTime) {
+          activeOtpSends.delete(normalizedIdentifier);
+        }
+      }, SEND_OTP_DEDUP_MS);
+    };
+
+    window.sendOtp(
+      normalizedIdentifier,
+      (data) => {
+        onSuccess?.(data);
+        release();
+        resolve(data);
+      },
+      (error) => {
+        onFailure?.(error);
+        release();
+        reject(error);
+      },
+    );
+  });
+
+  const promise = rawPromise.catch(() => undefined);
+  activeOtpSends.set(normalizedIdentifier, { startedAt: currentTime, promise });
+  return promise;
 };
 
 export const verifyOtpWithWidget = (otp, onSuccess, onFailure, reqId) => {

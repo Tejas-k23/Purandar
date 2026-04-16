@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { ChevronDown, Info, Lock, Phone, XCircle } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../../components/common/Modal';
@@ -41,19 +41,15 @@ export default function Signup() {
   const [termsError, setTermsError] = useState('');
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  const otpSendInFlightRef = useRef(false);
   const phone = normalizePhoneInput(searchParams.get('phone'));
   const hasLockedPhone = isValidPhone(phone);
   const backgroundLocation = location.state?.backgroundLocation;
   const closeTarget = useMemo(() => '/', []);
+
   const resolveBackgroundPath = () => {
-    if (!backgroundLocation) {
-      return closeTarget;
-    }
-
-    if (typeof backgroundLocation === 'string') {
-      return backgroundLocation;
-    }
-
+    if (!backgroundLocation) return closeTarget;
+    if (typeof backgroundLocation === 'string') return backgroundLocation;
     return `${backgroundLocation.pathname || ''}${backgroundLocation.search || ''}${backgroundLocation.hash || ''}` || '/';
   };
 
@@ -69,73 +65,73 @@ export default function Signup() {
     });
   };
 
-  const continueWithPhone = async () => {
-    setPhoneError('');
+  const ensureWidgetReady = async (normalizedPhone) => {
+    if (!env.msg91WidgetId || !env.msg91WidgetToken) {
+      throw new Error('OTP widget is not configured.');
+    }
+
+    await loadMsg91Script();
+    initWidget({
+      widgetId: env.msg91WidgetId,
+      tokenAuth: env.msg91WidgetToken,
+      authToken: env.msg91WidgetToken,
+      exposeMethods: true,
+      success: async (data) => {
+        const accessToken = extractAccessToken(data);
+        window.__msg91LastOtpResponse = data;
+        console.log('MSG91 OTP response:', data);
+        if (!accessToken) {
+          setFormError('OTP verified but token was missing.');
+          return;
+        }
+        if (!fullName.trim()) {
+          setFormError('Please enter your full name before verifying OTP.');
+          return;
+        }
+        try {
+          const res = await userService.verifyMsg91Token({
+            phone: normalizedPhone,
+            accessToken,
+            intent: 'signup',
+            name: fullName.trim(),
+            role: role === 'broker' ? 'agent' : 'user',
+          });
+          console.log('Signup response:', res?.data || res);
+          setIsVerified(true);
+          await refreshProfile();
+          clearReqId(normalizedPhone);
+          closeModal();
+        } catch (error) {
+          setFormError(error.message);
+        }
+      },
+      failure: (error) => {
+        const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'OTP verification failed.');
+        setFormError(msg);
+      },
+    });
+  };
+
+  const requestOtp = async ({ rawPhone, navigateOnSuccess = false }) => {
+    if (otpSendInFlightRef.current) return;
+    otpSendInFlightRef.current = true;
+    setLoading(true);
     setFormError('');
     setReqId('');
     setOtp('');
     setOtpSent(false);
 
-    if (!isValidPhone(phoneInput)) {
-      setPhoneError('Please enter a valid 10-digit phone number');
-      return;
-    }
-
-    setLoading(true);
     try {
-      const normalizedPhone = normalizePhone(phoneInput);
-      const phoneDigits = normalizePhoneInput(phoneInput);
+      const normalizedPhone = normalizePhone(rawPhone);
+      const phoneDigits = normalizePhoneInput(rawPhone);
       const response = await userService.checkPhone({ phone: normalizedPhone });
       const exists = response.data?.data?.exists;
 
-      if (!env.msg91WidgetId || !env.msg91WidgetToken) {
-        throw new Error('OTP widget is not configured.');
-      }
-
       await userService.validateForOtp({ phone: normalizedPhone, intent: 'signup' });
-      await loadMsg91Script();
-
-      initWidget({
-        widgetId: env.msg91WidgetId,
-        tokenAuth: env.msg91WidgetToken,
-        authToken: env.msg91WidgetToken,
-        identifier: buildIdentifier(normalizedPhone),
-        exposeMethods: true,
-        success: async (data) => {
-          const accessToken = extractAccessToken(data);
-          window.__msg91LastOtpResponse = data;
-          console.log('MSG91 OTP response:', data);
-          if (!accessToken) {
-            setFormError('OTP verified but token was missing.');
-            return;
-          }
-          if (!fullName.trim()) {
-            setFormError('Please enter your full name before verifying OTP.');
-            return;
-          }
-          try {
-            const res = await userService.verifyMsg91Token({
-              phone: normalizedPhone,
-              accessToken,
-              intent: 'signup',
-              name: fullName.trim(),
-              role: role === 'broker' ? 'agent' : 'user',
-            });
-            console.log('Signup response:', res?.data || res);
-            await refreshProfile();
-            closeModal();
-          } catch (error) {
-            setFormError(error.message);
-          }
-        },
-        failure: (error) => {
-          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'OTP verification failed.');
-          setFormError(msg);
-        },
-      });
+      await ensureWidgetReady(normalizedPhone);
 
       clearReqId(normalizedPhone);
-      sendOtpWithWidget(
+      await sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
           console.log('MSG91 sendOtp success:', data);
@@ -145,30 +141,50 @@ export default function Signup() {
           storeReqId(normalizedPhone, nextReqId);
           setOtpSent(true);
 
-          if (exists) {
-            navigate(`/login?phone=${phoneDigits}`, {
-              replace: true,
-              state: { backgroundLocation: backgroundLocation || closeTarget, otpSent: true },
-            });
-            return;
+          if (navigateOnSuccess) {
+            if (exists) {
+              navigate(`/login?phone=${phoneDigits}`, {
+                replace: true,
+                state: { backgroundLocation: backgroundLocation || closeTarget, otpSent: true },
+              });
+            } else {
+              navigate(`/signup?phone=${phoneDigits}`, {
+                replace: true,
+                state: { backgroundLocation: backgroundLocation || closeTarget, otpSent: true },
+              });
+            }
+          } else {
+            setFormError('OTP sent to your phone.');
           }
 
-          navigate(`/signup?phone=${phoneDigits}`, {
-            replace: true,
-            state: { backgroundLocation: backgroundLocation || closeTarget, otpSent: true },
-          });
+          setLoading(false);
+          otpSendInFlightRef.current = false;
         },
         (error) => {
           console.log('MSG91 sendOtp failure:', error);
           const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
           setFormError(msg);
+          setLoading(false);
+          otpSendInFlightRef.current = false;
         },
       );
     } catch (error) {
       setFormError(error.message);
-    } finally {
       setLoading(false);
+      otpSendInFlightRef.current = false;
     }
+  };
+
+  const continueWithPhone = async () => {
+    setPhoneError('');
+    setFormError('');
+
+    if (!isValidPhone(phoneInput)) {
+      setPhoneError('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    await requestOtp({ rawPhone: phoneInput, navigateOnSuccess: true });
   };
 
   const verifyOtp = async () => {
@@ -233,88 +249,11 @@ export default function Signup() {
       );
     } catch (error) {
       setFormError(error.message);
-    } finally {
-      // handled in callbacks
     }
   };
 
   const sendOtpForLockedPhone = async () => {
-    setFormError('');
-    setReqId('');
-    setOtp('');
-    setOtpSent(false);
-    setLoading(true);
-    try {
-      const normalizedPhone = normalizePhone(phone);
-      if (!env.msg91WidgetId || !env.msg91WidgetToken) {
-        throw new Error('OTP widget is not configured.');
-      }
-
-      await userService.validateForOtp({ phone: normalizedPhone, intent: 'signup' });
-      await loadMsg91Script();
-      initWidget({
-        widgetId: env.msg91WidgetId,
-        tokenAuth: env.msg91WidgetToken,
-        authToken: env.msg91WidgetToken,
-        identifier: buildIdentifier(normalizedPhone),
-        exposeMethods: true,
-        success: async (data) => {
-          const accessToken = extractAccessToken(data);
-          window.__msg91LastOtpResponse = data;
-          console.log('MSG91 OTP response:', data);
-          if (!accessToken) {
-            setFormError('OTP verified but token was missing.');
-            return;
-          }
-          if (!fullName.trim()) {
-            setFormError('Please enter your full name before verifying OTP.');
-            return;
-          }
-          try {
-            const res = await userService.verifyMsg91Token({
-              phone: normalizedPhone,
-              accessToken,
-              intent: 'signup',
-              name: fullName.trim(),
-              role: role === 'broker' ? 'agent' : 'user',
-            });
-            console.log('Signup response:', res?.data || res);
-            setIsVerified(true);
-            await refreshProfile();
-            closeModal();
-          } catch (error) {
-            setFormError(error.message);
-          }
-        },
-        failure: (error) => {
-          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'OTP verification failed.');
-          setFormError(msg);
-        },
-      });
-
-      clearReqId(normalizedPhone);
-      sendOtpWithWidget(
-        buildIdentifier(normalizedPhone),
-        (data) => {
-          console.log('MSG91 sendOtp success:', data);
-          window.__msg91LastSendOtpResponse = data;
-          const nextReqId = extractReqId(data);
-          setReqId(nextReqId);
-          storeReqId(normalizedPhone, nextReqId);
-          setOtpSent(true);
-          setFormError('OTP sent to your phone.');
-        },
-        (error) => {
-          console.log('MSG91 sendOtp failure:', error);
-          const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
-          setFormError(msg);
-        },
-      );
-    } catch (error) {
-      setFormError(error.message);
-    } finally {
-      setLoading(false);
-    }
+    await requestOtp({ rawPhone: phone, navigateOnSuccess: false });
   };
 
   const submit = async (event) => {
@@ -375,10 +314,10 @@ export default function Signup() {
                 className="auth-phone-input"
                 placeholder="Enter phone number"
                 value={phoneInput}
-                  onChange={(event) => setPhoneInput(normalizePhoneInput(event.target.value))}
-                />
+                onChange={(event) => setPhoneInput(normalizePhoneInput(event.target.value))}
+              />
             </div>
-            {phoneError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{phoneError}</span></div> : null}
+            {phoneError ? <div className="auth-error"><span className="auth-error-dot">?</span><span>{phoneError}</span></div> : null}
           </div>
 
           <button type="button" className="auth-primary-btn" onClick={continueWithPhone} disabled={loading}>
@@ -410,7 +349,7 @@ export default function Signup() {
                 onChange={(event) => setFullName(event.target.value)}
               />
             </div>
-            {nameError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{nameError}</span></div> : null}
+            {nameError ? <div className="auth-error"><span className="auth-error-dot">?</span><span>{nameError}</span></div> : null}
           </div>
 
           <div className="auth-input-group">
@@ -469,7 +408,7 @@ export default function Signup() {
             </div>
           ) : null}
 
-          {formError ? <div className="auth-error"><span className="auth-error-dot">●</span><span>{formError}</span></div> : null}
+          {formError ? <div className="auth-error"><span className="auth-error-dot">?</span><span>{formError}</span></div> : null}
 
           <button type="submit" className="auth-primary-btn" disabled={loading}>
             {loading ? 'Creating Account...' : 'Create Account'}
