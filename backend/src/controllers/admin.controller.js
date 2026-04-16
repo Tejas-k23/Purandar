@@ -2,9 +2,11 @@ import User from '../models/User.js';
 import Property from '../models/Property.js';
 import Project from '../models/Project.js';
 import Enquiry from '../models/Enquiry.js';
+import NotificationToken from '../models/NotificationToken.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { deleteManyFromR2 } from '../utils/r2.js';
+import { areAdminNotificationsEnabled, getNotificationSettings } from '../utils/notificationSettings.js';
 import {
   fetchTokens,
   removeInvalidTokens,
@@ -433,6 +435,24 @@ export const sendCustomNotification = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'title and body are required');
   }
 
+  const notificationsEnabled = await areAdminNotificationsEnabled();
+  if (!notificationsEnabled) {
+    // eslint-disable-next-line no-console
+    console.info('[Notify] Broadcast skipped because admin notifications are disabled.');
+    res.json({
+      success: true,
+      message: 'Notifications are disabled by admin',
+      data: {
+        successCount: 0,
+        failureCount: 0,
+        disabled: true,
+        totalDevices: 0,
+        filteredDevices: 0,
+      },
+    });
+    return;
+  }
+
   const roleFilter = (() => {
     if (audience === 'admins') return { role: 'admin' };
     if (audience === 'guests') return { role: 'guest' };
@@ -441,6 +461,12 @@ export const sendCustomNotification = asyncHandler(async (req, res) => {
   })();
 
   const tokens = await fetchTokens(roleFilter);
+  // eslint-disable-next-line no-console
+  console.info('[Notify] Broadcast candidate devices', {
+    audience,
+    deviceCount: tokens.length,
+    criteria,
+  });
   const context = {
     city: criteria.city || '',
     intent: criteria.intent || '',
@@ -455,7 +481,7 @@ export const sendCustomNotification = asyncHandler(async (req, res) => {
     context,
   });
 
-  const invalid = tokens
+  const invalid = (response.targetedTokens || [])
     .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
     .map((token) => token.token);
   await removeInvalidTokens(invalid);
@@ -476,7 +502,75 @@ export const sendCustomNotification = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'Notification queued',
-    data: { successCount: response.successCount, failureCount: response.failureCount },
+    data: {
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      disabled: false,
+      totalDevices: tokens.length,
+      filteredDevices: response.successCount + response.failureCount,
+    },
+  });
+});
+
+export const getNotificationAdminState = asyncHandler(async (_req, res) => {
+  const [settings, totalDevices, roleBreakdown] = await Promise.all([
+    getNotificationSettings(),
+    NotificationToken.countDocuments(),
+    NotificationToken.aggregate([
+      {
+        $group: {
+          _id: '$role',
+          count: { $sum: 1 },
+        },
+      },
+    ]),
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      notificationsEnabled: settings.notificationsEnabled !== false,
+      totalDevices,
+      byRole: roleBreakdown.reduce((acc, item) => {
+        acc[item._id] = item.count;
+        return acc;
+      }, {}),
+      updatedAt: settings.updatedAt,
+    },
+  });
+});
+
+export const updateNotificationAdminState = asyncHandler(async (req, res) => {
+  const settings = await getNotificationSettings();
+  settings.notificationsEnabled = req.body.notificationsEnabled !== false;
+  settings.updatedBy = req.user?._id || null;
+  await settings.save();
+
+  // eslint-disable-next-line no-console
+  console.info('[Notify] Admin notification toggle updated', {
+    notificationsEnabled: settings.notificationsEnabled,
+    updatedBy: req.user?._id?.toString() || null,
+  });
+
+  res.json({
+    success: true,
+    message: settings.notificationsEnabled ? 'Notifications enabled' : 'Notifications disabled',
+    data: {
+      notificationsEnabled: settings.notificationsEnabled,
+      updatedAt: settings.updatedAt,
+    },
+  });
+});
+
+export const getRegisteredDevices = asyncHandler(async (_req, res) => {
+  const devices = await NotificationToken.find()
+    .sort({ updatedAt: -1 })
+    .limit(500)
+    .select('role user browserId platform enabledTypes preferences userAgent lastSeenAt createdAt updatedAt');
+
+  res.json({
+    success: true,
+    data: devices,
   });
 });
 

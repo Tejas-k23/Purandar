@@ -8,6 +8,8 @@ import {
   getAdminProjects,
   getAdminPropertyById,
   getAdminBlogById,
+  getNotificationAdminState,
+  getRegisteredDevices,
   getDashboard,
   getEnquiries,
   getUsers,
@@ -15,6 +17,7 @@ import {
   sendCustomNotification,
   listAdminBlogs,
   togglePropertyFeatured,
+  updateNotificationAdminState,
   updateBlog,
   updateEnquiryStatus,
   updatePropertyStatus,
@@ -43,6 +46,9 @@ router.patch('/projects/:id/status', updateProjectStatus);
 router.delete('/projects/:id', deleteAdminProject);
 router.get('/users', getUsers);
 router.delete('/users/:id', deleteUser);
+router.get('/notifications/settings', getNotificationAdminState);
+router.patch('/notifications/settings', updateNotificationAdminState);
+router.get('/notifications/devices', getRegisteredDevices);
 router.post('/notifications/broadcast', sendCustomNotification);
 router.get('/enquiries', getEnquiries);
 router.patch('/enquiries/:id/status', updateEnquiryStatus);

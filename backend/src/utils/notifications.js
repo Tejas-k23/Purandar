@@ -53,12 +53,27 @@ export const sendNotificationToTokens = async ({
   data,
   context,
 }) => {
-  if (!tokens.length) return { successCount: 0, failureCount: 0 };
+  if (!tokens.length) {
+    // eslint-disable-next-line no-console
+    console.info('[Notify] No devices available for delivery.');
+    return { successCount: 0, failureCount: 0, targetedTokens: [] };
+  }
   const app = initFirebase();
-  if (!app) return { successCount: 0, failureCount: 0 };
+  if (!app) {
+    // eslint-disable-next-line no-console
+    console.warn('[Notify] Firebase admin app unavailable, skipping send.');
+    return { successCount: 0, failureCount: 0, targetedTokens: [] };
+  }
 
   const filtered = tokens.filter((token) => matchPreferences(token, context));
-  if (!filtered.length) return { successCount: 0, failureCount: 0 };
+  if (!filtered.length) {
+    // eslint-disable-next-line no-console
+    console.info('[Notify] No devices matched notification preferences.', {
+      totalTokens: tokens.length,
+      context,
+    });
+    return { successCount: 0, failureCount: 0, targetedTokens: [] };
+  }
 
   const payload = buildMessage({ title, body, data });
   const response = await admin.messaging().sendEachForMulticast({
@@ -77,7 +92,10 @@ export const sendNotificationToTokens = async ({
     });
   }
 
-  return response;
+  return {
+    ...response,
+    targetedTokens: filtered,
+  };
 };
 
 export const saveNotificationsForUsers = async ({ users = [], role, title, body, data }) => {
