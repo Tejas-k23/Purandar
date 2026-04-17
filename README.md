@@ -102,7 +102,7 @@ A modern, production-ready real estate platform featuring property listings, pro
 4. **Admin Panel**: Access admin features to manage listings, users, and content.
 5. **Contact Sellers**: Use WhatsApp integration to contact property owners.
 6. **Leave Feedback**: Rate and review projects.
-
+//ll
 ## 🔗 API Endpoints
 
 The API is prefixed with `/api/v1`. Here are some key endpoints:
