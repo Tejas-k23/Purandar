@@ -6,6 +6,7 @@ import './App.css';
 import { listenToForegroundMessages } from './lib/firebaseMessaging';
 import { syncNotificationRegistration } from './services/notificationService';
 import useAuth from './hooks/useAuth';
+import PwaInstallPopup from './components/common/PwaInstallPopup';
 
 const NOTIFICATION_PROMPT_KEY = 'purandar:notification-prompted';
 
@@ -70,6 +71,7 @@ function AppShell() {
         <div className="main-content">
           <AppRoutes />
         </div>
+        {!isAdminRoute ? <PwaInstallPopup /> : null}
       </div>
     </div>
   );

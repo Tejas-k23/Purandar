@@ -83,18 +83,18 @@ const SearchWidget = () => {
 
 const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
   const isPausedRef = useRef(false);
+  const resumeTimeoutRef = useRef(null);
 
   useEffect(() => {
     const row = rowRef.current;
     if (!row) return;
 
-    const shouldDisableAuto =
-      window.matchMedia
-      && (window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        || window.matchMedia('(pointer: coarse)').matches
-        || window.matchMedia('(max-width: 768px)').matches);
+    // More robust mobile detection
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches || 
+                     window.matchMedia('(pointer: coarse)').matches;
 
-    if (shouldDisableAuto) {
+    // Disable auto-scroll completely on mobile/touch devices to avoid conflicts with native swipe
+    if (isMobile) {
       return;
     }
 
@@ -103,9 +103,16 @@ const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
 
     const pause = () => {
       isPausedRef.current = true;
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
     };
+
     const resume = () => {
-      isPausedRef.current = false;
+      // Delay resume to ensure native momentum scroll has finished
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+      resumeTimeoutRef.current = setTimeout(() => {
+        isPausedRef.current = false;
+        lastTime = performance.now(); // Reset time to avoid jump
+      }, 1000);
     };
 
     if (pauseOnHover) {
@@ -113,8 +120,8 @@ const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
       row.addEventListener('mouseleave', resume);
     }
 
-    row.addEventListener('pointerdown', pause, { passive: true });
-    row.addEventListener('pointerup', resume, { passive: true });
+    row.addEventListener('mousedown', pause);
+    window.addEventListener('mouseup', resume);
     row.addEventListener('touchstart', pause, { passive: true });
     row.addEventListener('touchend', resume, { passive: true });
 
@@ -137,12 +144,13 @@ const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
 
     return () => {
       cancelAnimationFrame(rafId);
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
       if (pauseOnHover) {
         row.removeEventListener('mouseenter', pause);
         row.removeEventListener('mouseleave', resume);
       }
-      row.removeEventListener('pointerdown', pause);
-      row.removeEventListener('pointerup', resume);
+      row.removeEventListener('mousedown', pause);
+      window.removeEventListener('mouseup', resume);
       row.removeEventListener('touchstart', pause);
       row.removeEventListener('touchend', resume);
     };
