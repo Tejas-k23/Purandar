@@ -17,11 +17,8 @@ import './Home.css';
 const HeroBanner = () => (
   <section className="hero-banner">
     <div className="hero-content">
-      <div className="hero-left">
-        <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Apartments" />
-      </div>
-      <div className="hero-center">
-        <img src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="House" />
+      <div className="hero-left" style={{ flex: 2 }}>
+        <img src="/home.png" alt="Home" />
       </div>
       <div className="hero-right">
         <span className="hero-builder-logo">PURANDAR ESTATE</span>
