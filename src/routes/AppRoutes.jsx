@@ -15,6 +15,7 @@ import WhyInvestPurandar from '../pages/public/WhyInvestPurandar';
 import PropertyDetails from '../pages/public/PropertyDetails';
 import LocationListingsPage from '../pages/public/LocationListingsPage';
 import PrivacyPolicy from '../pages/public/PrivacyPolicy';
+import TermsConditions from '../pages/public/TermsConditions';
 import ProfileLayout from '../pages/profile/ProfileLayout';
 import MyProfile from '../pages/profile/MyProfile';
 import SavedProperties from '../pages/profile/SavedProperties';
@@ -61,6 +62,7 @@ export default function AppRoutes() {
         <Route path="/why-invest" element={<WhyInvestPurandar />} />
         <Route path="/post-property" element={<PostProperty />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsConditions />} />
         {!backgroundLocation ? <Route path="/login" element={<Login />} /> : null}
         {!backgroundLocation ? <Route path="/signup" element={<Signup />} /> : null}
         <Route path="/tk23" element={<AdminLogin />} />

@@ -1,0 +1,235 @@
+/* TermsConditions.css */
+.tc-page {
+  font-family: var(--font-primary);
+  color: var(--color-body);
+  background-color: var(--color-bg-page);
+  min-height: 100vh;
+}
+
+.tc-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  padding: 5rem 1.25rem;
+  text-align: center;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.tc-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle at 20% 30%, rgba(255, 107, 0, 0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  z-index: 1;
+}
+
+.tc-hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.tc-badge {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  background: rgba(255, 107, 0, 0.2);
+  color: #ff8c38;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 107, 0, 0.3);
+}
+
+.tc-title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(to right, #ffffff, #cbd5e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tc-subtitle {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin-bottom: 1.5rem;
+}
+
+.tc-intro {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+.tc-layout {
+  max-width: 1200px;
+  margin: -3rem auto 4rem;
+  padding: 0 1.25rem;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.tc-toc {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
+.tc-toc-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.tc-toc-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tc-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tc-toc-link {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  color: var(--color-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.tc-toc-link:hover {
+  background: var(--color-bg-section);
+  color: var(--color-primary);
+}
+
+.tc-content {
+  background: white;
+  border-radius: 24px;
+  border: 1px solid var(--color-border);
+  padding: 3rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+}
+
+.tc-section {
+  margin-bottom: 3.5rem;
+}
+
+.tc-section:last-child {
+  margin-bottom: 0;
+}
+
+.tc-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tc-section-body {
+  color: #475569;
+  line-height: 1.7;
+}
+
+.tc-section-body p {
+  margin-bottom: 1rem;
+}
+
+.tc-bold-line {
+  font-weight: 700;
+  color: var(--color-heading);
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.tc-bullet {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem !important;
+  padding-left: 0.5rem;
+}
+
+.tc-bullet-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  margin-top: 0.65rem;
+  flex-shrink: 0;
+}
+
+.tc-footer-note {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.tc-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tc-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1024px) {
+  .tc-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .tc-toc {
+    display: none;
+  }
+  
+  .tc-content {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .tc-hero {
+    padding: 4rem 1.25rem;
+  }
+  
+  .tc-title {
+    font-size: 2.25rem;
+  }
+  
+  .tc-content {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+}

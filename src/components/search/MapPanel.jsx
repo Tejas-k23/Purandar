@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Bath, BedDouble, MapPin, MoveUpRight, Ruler, X } from 'lucide-react';
 import Map, { FullscreenControl, Marker, NavigationControl, Popup } from 'react-map-gl/mapbox';
 import { useNavigate } from 'react-router-dom';
@@ -33,8 +33,15 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
     zoom: activeProperty ? 13.2 : 10.5,
   });
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
+  const [isPopupDismissed, setIsPopupDismissed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const resolvedSelectedPropertyId = selectedPropertyId || activePropertyId;
+
+  // Reset dismissal when the hovered property changes
+  useEffect(() => {
+    setIsPopupDismissed(false);
+  }, [activePropertyId]);
+
+  const resolvedSelectedPropertyId = selectedPropertyId || (isPopupDismissed ? '' : activePropertyId);
   const selectedProperty = items.find((property) => property._id === resolvedSelectedPropertyId);
 
   useEffect(() => {
@@ -131,8 +138,14 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
         ref={mapRef}
         {...viewState}
         onMove={(event) => setViewState(event.viewState)}
-        onDragStart={() => setSelectedPropertyId('')}
-        onClick={() => setSelectedPropertyId('')}
+        onDragStart={() => {
+          setSelectedPropertyId('');
+          setIsPopupDismissed(true);
+        }}
+        onClick={() => {
+          setSelectedPropertyId('');
+          setIsPopupDismissed(true);
+        }}
         mapStyle="mapbox://styles/mapbox/streets-v12"
         mapboxAccessToken={env.mapboxAccessToken}
         style={{ width: '100%', height: '100%' }}
@@ -147,6 +160,7 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
               onClick={(event) => {
                 event.stopPropagation();
                 setSelectedPropertyId(property._id);
+                setIsPopupDismissed(false);
                 const map = mapRef.current?.getMap?.();
                 if (map) {
                   flyToCoordinates(map, property, {
@@ -181,7 +195,10 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
             className="property-map-popup"
           >
             <div className="map-popup-card">
-              <button type="button" className="map-popup-close" onClick={() => setSelectedPropertyId('')} aria-label="Close property preview">
+              <button type="button" className="map-popup-close" onClick={() => {
+                setSelectedPropertyId('');
+                setIsPopupDismissed(true);
+              }} aria-label="Close property preview">
                 <X size={14} />
               </button>
               <img

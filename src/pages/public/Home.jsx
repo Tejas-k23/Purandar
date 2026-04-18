@@ -423,7 +423,7 @@ const Footer = () => (
         <ul>
           <li><Link to="/contact">About Us</Link></li>
           <li><a href="#">Careers</a></li>
-          <li><a href="#">Terms & Conditions</a></li>
+          <li><Link to="/terms">Terms & Conditions</Link></li>
           <li><Link to="/privacy-policy">Privacy Policy</Link></li>
         </ul>
       </div>
