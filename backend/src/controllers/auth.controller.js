@@ -42,7 +42,7 @@ const sendAuthResponse = async (user, res) => {
   });
   res.cookie('refreshToken', refreshToken, {
     ...cookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 14 * 24 * 60 * 60 * 1000,
   });
 
   res.json({
