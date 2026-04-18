@@ -550,7 +550,9 @@ export const unlockSellerDetails = asyncHandler(async (req, res) => {
   const isOwner = property.owner?._id?.toString() === req.user._id.toString();
   const isAdmin = req.user.role === 'admin';
 
-  if (!isOwner && !isAdmin) {
+  const contactDisplayMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
+
+  if (!isOwner && !isAdmin && contactDisplayMode === 'original') {
     await Enquiry.findOneAndUpdate(
       {
         property: property._id,
@@ -577,7 +579,6 @@ export const unlockSellerDetails = asyncHandler(async (req, res) => {
     );
   }
 
-  const contactDisplayMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
   const originalContact = {
     name: property.owner?.name || property.userName || 'Owner',
     phone: property.owner?.phone || '',
