@@ -57,9 +57,12 @@ export default function PropertyMap({ property = {} }) {
         )}
       </div>
       {googleMapsUrl ? (
-        <p className="pd-description-text" style={{ marginTop: 12 }}>
-          <a href={googleMapsUrl} target="_blank" rel="noreferrer">Open in Google Maps</a>
-        </p>
+        <div className="pd-map-actions">
+          <a href={googleMapsUrl} target="_blank" rel="noreferrer" className="pd-map-google-btn">
+            <img src="https://www.google.com/images/branding/product/2x/maps_96dp.png" alt="" width="20" height="20" />
+            <span>View on Google Maps</span>
+          </a>
+        </div>
       ) : null}
       <div className="pd-neighborhood-tags">
         {[property.locality, property.subLocality, property.landmark].filter(Boolean).map((tag) => (

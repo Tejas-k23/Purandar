@@ -1,11 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import { Bed, Bath, Ruler, CalendarDays } from 'lucide-react';
 
 export default function PropertyStatsBar({ property = {} }) {
   const stats = [
-    { icon: Bed, label: 'Bedrooms', value: property.bedrooms || 'NA' },
-    { icon: Bath, label: 'Bathrooms', value: property.bathrooms || 'NA' },
-    { icon: Ruler, label: 'Area', value: `${property.totalArea || property.plotArea || property.carpetArea || 'NA'} ${property.areaUnit || 'sq.ft'}` },
+    ...(property.bedrooms ? [{ icon: Bed, label: 'Bedrooms', value: property.bedrooms }] : []),
+    ...(property.bathrooms ? [{ icon: Bath, label: 'Bathrooms', value: property.bathrooms }] : []),
+    { icon: Ruler, label: 'Area', value: `${property.totalArea || property.plotArea || property.carpetArea || '-'} ${property.areaUnit || 'sq.ft'}` },
     { icon: CalendarDays, label: 'Availability', value: property.availability || property.propertyAge || 'Ready' },
   ];
 

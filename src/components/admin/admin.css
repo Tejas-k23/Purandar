@@ -37,6 +37,21 @@
     margin-bottom: 1.4rem;
 }
 
+.admin-sidebar-footer {
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-sidebar-link--home {
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.12), rgba(255, 107, 0, 0.08)) !important;
+    border-color: rgba(255, 107, 0, 0.2) !important;
+}
+
+.admin-sidebar-link--home:hover {
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.22), rgba(255, 107, 0, 0.18)) !important;
+}
+
 .admin-sidebar-badge {
     width: 46px;
     height: 46px;
@@ -61,6 +76,7 @@
 .admin-sidebar-nav {
     display: grid;
     gap: 0.65rem;
+    margin-bottom: 1.25rem;
 }
 
 .admin-sidebar-link {

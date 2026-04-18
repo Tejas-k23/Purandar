@@ -1,5 +1,6 @@
-﻿import React from 'react';
 import useAuth from '../../hooks/useAuth';
+import { Link } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 
 export default function AdminHeader({ title, subtitle = '', actions = null }) {
   const { user } = useAuth();
@@ -15,6 +16,9 @@ export default function AdminHeader({ title, subtitle = '', actions = null }) {
       </div>
 
       <div className="admin-header-right">
+        <Link to="/" className="admin-secondary-btn admin-secondary-btn-inline" style={{ background: 'white' }}>
+          <Eye size={16} /> Visit Site
+        </Link>
         {actions ? <div className="admin-header-actions">{actions}</div> : null}
         <div className="admin-profile-chip">
           <div className="admin-profile-avatar">{avatarInitial}</div>

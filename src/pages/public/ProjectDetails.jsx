@@ -192,30 +192,32 @@ function Gallery({ images = [], status }) {
 function InfoGrid({ project }) {
   const profile = getProjectTypeProfile(project.projectType);
   const launchDate = formatDate(project.launchDate);
+  const allConfigs = (project.configurationTypes || []).concat(project.extraConfigurations || []).filter(Boolean);
+  
   const cards = [
-    { icon: Blocks, label: 'Configurations', value: project.configurationTypes?.concat(project.extraConfigurations || []).filter(Boolean).join(', ') || 'NA' },
-    { icon: Bath, label: profile.labels.areaRange, value: project.areaRange || 'NA' },
+    ...(allConfigs.length > 0 ? [{ icon: Blocks, label: 'Configurations', value: allConfigs.join(', ') }] : []),
+    { icon: Bath, label: profile.labels.areaRange, value: project.areaRange || '-' },
     { icon: Building2, label: profile.labels.summaryLabel, value: profile.labels.summaryValue(project) },
-    { icon: CalendarDays, label: 'Launch Date', value: launchDate || 'NA' },
-    { icon: CalendarDays, label: profile.labels.possessionDate, value: project.possessionDate || 'NA' },
-    { icon: Building, label: profile.labels.developer, value: project.developerName || 'NA' },
-    { icon: ShieldCheck, label: profile.labels.rera, value: project.reraNumber || 'NA' },
-    { icon: ShieldCheck, label: profile.labels.openSpace, value: project.openSpace || project.openSpace === 0 ? `${project.openSpace}%` : 'NA' },
-    { icon: FileText, label: profile.labels.approvalAuthority, value: project.approvalAuthority || 'NA' },
+    ...(launchDate ? [{ icon: CalendarDays, label: 'Launch Date', value: launchDate }] : []),
+    { icon: CalendarDays, label: profile.labels.possessionDate, value: project.possessionDate || '-' },
+    { icon: Building, label: profile.labels.developer, value: project.developerName || '-' },
+    { icon: ShieldCheck, label: profile.labels.rera, value: project.reraNumber || '-' },
+    { icon: ShieldCheck, label: (project.openSpace || project.openSpace === 0) ? profile.labels.openSpace : 'Space', value: (project.openSpace || project.openSpace === 0) ? `${project.openSpace}%` : '-' },
+    { icon: FileText, label: profile.labels.approvalAuthority, value: project.approvalAuthority || '-' },
   ];
 
   if (project.projectType === 'Plots') {
     cards.splice(2, 0, {
       icon: Building2,
       label: 'Price Per Sq.ft',
-      value: project.pricePerSqFt ? `₹${project.pricePerSqFt} / ${project.plotUnit || 'sq.ft'}` : 'NA',
+      value: project.pricePerSqFt ? `₹${project.pricePerSqFt} / ${project.plotUnit || 'sq.ft'}` : '-',
     });
     cards.splice(3, 0, {
       icon: Bath,
       label: 'Plot Size Range',
       value: project.minPlotSize && project.maxPlotSize
         ? `${project.minPlotSize} - ${project.maxPlotSize} ${project.plotUnit || 'sq.ft'}`
-        : 'NA',
+        : '-',
     });
     if (project.totalPlots) {
       cards.splice(4, 0, {
@@ -293,9 +295,12 @@ function ProjectMap({ project }) {
         <iframe title="Project map" src={src} loading="lazy" referrerPolicy="no-referrer-when-downgrade" style={{ width: '100%', height: '100%', border: 0 }} />
       </div>
       {googleMapsUrl ? (
-        <p className="pd-description-text" style={{ marginTop: 12 }}>
-          <a href={googleMapsUrl} target="_blank" rel="noreferrer">Open in Google Maps</a>
-        </p>
+        <div className="pd-map-actions">
+          <a href={googleMapsUrl} target="_blank" rel="noreferrer" className="pd-map-google-btn">
+            <img src="https://www.google.com/images/branding/product/2x/maps_96dp.png" alt="" width="20" height="20" />
+            <span>View on Google Maps</span>
+          </a>
+        </div>
       ) : null}
       <div className="pd-neighborhood-tags">
         {[project.area, project.city, project.address].filter(Boolean).map((item) => <span key={item} className="pd-hood-tag">{item}</span>)}
@@ -338,15 +343,6 @@ export default function ProjectDetails() {
         setProject(projectResponse.data.data);
         setProjects(listResponse.data.data.items || []);
         setFeedbackItems(feedbackResponse.data.data || []);
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.log('[Project] Details media', {
-            projectImages: projectResponse.data.data?.projectImages,
-            images: projectResponse.data.data?.images,
-            videos: projectResponse.data.data?.videos,
-            videoUrl: projectResponse.data.data?.videoUrl,
-          });
-        }
       } finally {
         if (active) setLoading(false);
       }
@@ -417,8 +413,8 @@ export default function ProjectDetails() {
   if (loading) return <Loader label="Loading project details..." />;
   if (!project) return <div style={{ padding: '2rem' }}>Project not found.</div>;
 
-  const starting = (project.startingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000);
-  const ending = (project.endingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000);
+  const starting = (project.startingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 10000000); // Fixed multiplier logic
+  const ending = (project.endingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 10000000);
   const profile = getProjectTypeProfile(project.projectType);
   const visibleContact = resolveContact(project);
   const whatsappContact = resolveWhatsappContact(project);
@@ -498,7 +494,7 @@ export default function ProjectDetails() {
               <div>
                 <div className="pd-price-label">Price Range</div>
                 <div className="pd-price-amount">{formatCompactPrice(starting)} - {formatCompactPrice(ending)}</div>
-                <div className="pd-price-per-sqft">{project.projectType} � {project.areaRange}</div>
+                <div className="pd-price-per-sqft">{project.projectType} • {project.areaRange}</div>
               </div>
             </div>
             <div className="pd-trust">
@@ -561,98 +557,94 @@ export default function ProjectDetails() {
       ) : null}
 
       <section className="pd-feedback-section">
-  <div className="pd-feedback-header">
-    <h2 className="pd-similar-title">Project Feedback</h2>
-    <p className="pd-feedback-subtitle">Share a rating and a short note (max 200 characters).</p>
-  </div>
-
-  <div className="pd-feedback-grid">
-    {isAuthenticated ? (
-      <form className="pd-feedback-form" onSubmit={submitFeedback}>
-        <div className="pd-feedback-user-card">
-          <div className="pd-feedback-avatar" aria-hidden="true">
-            <UserCircle size={18} />
-          </div>
-          <div className="pd-feedback-user-meta">
-            <span className="pd-feedback-user-label">Signed in as</span>
-            <span className="pd-feedback-user-name">{feedbackUserName}</span>
-            {user?.email ? <span className="pd-feedback-user-sub">{user.email}</span> : null}
-          </div>
+        <div className="pd-feedback-header">
+          <h2 className="pd-similar-title">Project Feedback</h2>
+          <p className="pd-feedback-subtitle">Share a rating and a short note (max 200 characters).</p>
         </div>
 
-        <label className="pd-feedback-label">Rating</label>
-        <div className="pd-feedback-rating">
-          {[1, 2, 3, 4, 5].map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={`pd-rating-star-btn ${feedbackForm.rating >= value ? 'active' : ''}`}
-              onClick={() => setFeedbackForm((current) => ({ ...current, rating: value }))}
-              aria-label={`Rate ${value} star`}
-            >
-              {"\u2605"}
-            </button>
-          ))}
-        </div>
-
-        <label className="pd-feedback-label">Short Feedback</label>
-        <textarea
-          className="styled-textarea"
-          rows={4}
-          maxLength={200}
-          value={feedbackForm.feedback}
-          onChange={(event) => setFeedbackForm((current) => ({ ...current, feedback: event.target.value }))}
-          placeholder="Write a short feedback..."
-        />
-        <div className="pd-feedback-count">{feedbackForm.feedback.length} / 200</div>
-
-        <button type="submit" className="pd-contact-btn">Submit Feedback</button>
-        {feedbackStatus ? <p style={{ marginTop: 10 }}>{feedbackStatus}</p> : null}
-      </form>
-    ) : (
-      <div className="pd-feedback-form pd-feedback-form--locked">
-        <div className="pd-feedback-lock">
-          <div className="pd-feedback-lock-icon"><Lock size={18} /></div>
-          <div>
-            <div className="pd-feedback-lock-title">Login required</div>
-            <p className="pd-feedback-lock-text">Please log in to add your feedback.</p>
-          </div>
-        </div>
-        <button type="button" className="pd-contact-btn" onClick={() => navigate('/login', { state: authRouteState })}>
-          Login to add feedback
-        </button>
-      </div>
-    )}
-
-    <div className="pd-feedback-list">
-      {feedbackItems.length === 0 ? (
-        <div className="pd-feedback-empty">No feedback yet. Be the first to share.</div>
-      ) : (
-        feedbackItems.map((item) => (
-          <div key={item._id} className="pd-feedback-card">
-            <div className="pd-feedback-top">
-              <div className="pd-feedback-userline">
+        <div className="pd-feedback-grid">
+          {isAuthenticated ? (
+            <form className="pd-feedback-form" onSubmit={submitFeedback}>
+              <div className="pd-feedback-user-card">
                 <div className="pd-feedback-avatar" aria-hidden="true">
-                  <UserCircle size={16} />
+                  <UserCircle size={18} />
                 </div>
-                <div>
-                  <div className="pd-feedback-name">{item.name}</div>
-                  <div className="pd-feedback-date">{new Date(item.createdAt).toLocaleDateString('en-IN')}</div>
+                <div className="pd-feedback-user-meta">
+                  <span className="pd-feedback-user-label">Signed in as</span>
+                  <span className="pd-feedback-user-name">{feedbackUserName}</span>
+                  {user?.email ? <span className="pd-feedback-user-sub">{user.email}</span> : null}
                 </div>
               </div>
-              <div className="pd-feedback-stars">{"\u2605".repeat(item.rating || 0)}</div>
+
+              <label className="pd-feedback-label">Rating</label>
+              <div className="pd-feedback-rating">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`pd-rating-star-btn ${feedbackForm.rating >= value ? 'active' : ''}`}
+                    onClick={() => setFeedbackForm((current) => ({ ...current, rating: value }))}
+                    aria-label={`Rate ${value} star`}
+                  >
+                    {"\u2605"}
+                  </button>
+                ))}
+              </div>
+
+              <label className="pd-feedback-label">Short Feedback</label>
+              <textarea
+                className="styled-textarea"
+                rows={4}
+                maxLength={200}
+                value={feedbackForm.feedback}
+                onChange={(event) => setFeedbackForm((current) => ({ ...current, feedback: event.target.value }))}
+                placeholder="Write a short feedback..."
+              />
+              <div className="pd-feedback-count">{feedbackForm.feedback.length} / 200</div>
+
+              <button type="submit" className="pd-contact-btn">Submit Feedback</button>
+              {feedbackStatus ? <p style={{ marginTop: 10 }}>{feedbackStatus}</p> : null}
+            </form>
+          ) : (
+            <div className="pd-feedback-form pd-feedback-form--locked">
+              <div className="pd-feedback-lock">
+                <div className="pd-feedback-lock-icon"><Lock size={18} /></div>
+                <div>
+                  <div className="pd-feedback-lock-title">Login required</div>
+                  <p className="pd-feedback-lock-text">Please log in to add your feedback.</p>
+                </div>
+              </div>
+              <button type="button" className="pd-contact-btn" onClick={() => navigate('/login', { state: authRouteState })}>
+                Login to add feedback
+              </button>
             </div>
-            <p className="pd-feedback-text">{item.feedback}</p>
+          )}
+
+          <div className="pd-feedback-list">
+            {feedbackItems.length === 0 ? (
+              <div className="pd-feedback-empty">No feedback yet. Be the first to share.</div>
+            ) : (
+              feedbackItems.map((item) => (
+                <div key={item._id} className="pd-feedback-card">
+                  <div className="pd-feedback-top">
+                    <div className="pd-feedback-userline">
+                      <div className="pd-feedback-avatar" aria-hidden="true">
+                        <UserCircle size={16} />
+                      </div>
+                      <div>
+                        <div className="pd-feedback-name">{item.name}</div>
+                        <div className="pd-feedback-date">{new Date(item.createdAt).toLocaleDateString('en-IN')}</div>
+                      </div>
+                    </div>
+                    <div className="pd-feedback-stars">{"\u2605".repeat(item.rating || 0)}</div>
+                  </div>
+                  <p className="pd-feedback-text">{item.feedback}</p>
+                </div>
+              ))
+            )}
           </div>
-        ))
-      )}
-    </div>
-  </div>
-</section>
+        </div>
+      </section>
     </div>
   );
 }
-
-
-
-

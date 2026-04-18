@@ -39,6 +39,13 @@ export default function AdminSidebar() {
           </NavLink>
         ))}
       </div>
+
+      <div className="admin-sidebar-footer">
+        <NavLink to="/" className="admin-sidebar-link admin-sidebar-link--home">
+          <ShieldCheck className="w-5 h-5" />
+          <span>Go to Website</span>
+        </NavLink>
+      </div>
     </aside>
   );
 }
