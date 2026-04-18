@@ -16,17 +16,7 @@ import './Home.css';
 
 const HeroBanner = () => (
   <section className="hero-banner">
-    <div className="hero-content">
-      <div className="hero-left" style={{ flex: 2 }}>
-        <img src="/home.png" alt="Home" />
-      </div>
-      <div className="hero-right">
-        <span className="hero-builder-logo">PURANDAR ESTATE</span>
-        <h2 className="hero-headline"><span className="heading-accent heading-accent--dark">DISCOVER</span> VERIFIED PROPERTIES IN PURANDAR AND GREATER PUNE</h2>
-        <p className="hero-subtext">Live listings, favourites, enquiries, and posting flows powered by MongoDB.</p>
-        <Link to="/buy" className="hero-btn">Explore Now</Link>
-      </div>
-    </div>
+    <img src="/home.png" alt="Home" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
   </section>
 );
 
