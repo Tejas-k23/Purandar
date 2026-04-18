@@ -27,7 +27,7 @@ export const env = {
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
-  JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+  JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '14d',
   ADMIN_NAME: process.env.ADMIN_NAME || 'Purandar Admin',
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@purandar.local',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'ChangeMe123!',
