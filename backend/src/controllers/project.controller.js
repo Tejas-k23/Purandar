@@ -89,9 +89,12 @@ const validateProjectPayload = (payload = {}) => {
   ];
 
   for (const field of requiredFields) {
-    if (!String(payload[field] ?? '').trim()) {
+  if (!String(payload[field] ?? '').trim()) {
       errors.push(`${field} is required`);
     }
+  }
+  if (payload.latitude === null || payload.latitude === undefined || payload.longitude === null || payload.longitude === undefined) {
+    errors.push('Project map coordinates are required');
   }
 
   if (payload.startingPrice === null || payload.startingPrice === undefined) errors.push('startingPrice is required');

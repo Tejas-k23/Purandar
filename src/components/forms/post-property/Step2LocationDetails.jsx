@@ -1,104 +1,11 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MapPinned } from 'lucide-react';
 import MapPickerModal from '../../common/MapPickerModal';
-import MapboxSuggestInput from '../../common/MapboxSuggestInput';
+import VillageFirstCityInput from '../../common/VillageFirstCityInput';
 import env from '../../../config/env';
 import { getVisibleLocationFieldKeys } from '../../../utils/propertyFormConfig';
 
-const cityData = {
-    'Pune': [
-        'Hinjewadi', 'Baner', 'Wakad', 'Kothrud', 'Hadapsar', 'Viman Nagar',
-        'Koregaon Park', 'Aundh', 'Pimpri-Chinchwad', 'Kharadi', 'Wagholi',
-        'Undri', 'Kondhwa', 'Bavdhan', 'Pashan', 'Saswad', 'Jejuri', 'Purandar',
-        'Narayanpur', 'Baramati', 'Daund', 'Indapur',
-    ],
-    'Mumbai': [
-        'Andheri', 'Bandra', 'Powai', 'Thane', 'Goregaon', 'Malad',
-        'Borivali', 'Kandivali', 'Juhu', 'Worli', 'Lower Parel', 'BKC',
-        'Navi Mumbai', 'Panvel', 'Kharghar', 'Vashi',
-    ],
-    'Bangalore': [
-        'Whitefield', 'Electronic City', 'Koramangala', 'Indiranagar',
-        'HSR Layout', 'Marathahalli', 'Sarjapur Road', 'JP Nagar',
-        'Hebbal', 'Yelahanka', 'Devanahalli',
-    ],
-    'Hyderabad': [
-        'Gachibowli', 'HITEC City', 'Kondapur', 'Madhapur',
-        'Kukatpally', 'Miyapur', 'Secunderabad', 'Banjara Hills',
-    ],
-    'Delhi NCR': [
-        'Gurugram', 'Noida', 'Greater Noida', 'Faridabad', 'Ghaziabad',
-        'Dwarka', 'Rohini', 'Vasant Kunj', 'Saket',
-    ],
-    'Chennai': [
-        'OMR', 'Adyar', 'T. Nagar', 'Velachery', 'Anna Nagar',
-        'Tambaram', 'Porur', 'Sholinganallur',
-    ],
-};
-
-const cities = Object.keys(cityData);
-
-function SearchableDropdown({ label, required, value, options, onChange, placeholder, error }) {
-    const [query, setQuery] = useState('');
-    const [open, setOpen] = useState(false);
-    const ref = useRef(null);
-
-    const filtered = useMemo(() => {
-        if (!query) return options;
-        return options.filter(o => o.toLowerCase().includes(query.toLowerCase()));
-    }, [query, options]);
-
-    useEffect(() => {
-        const handler = (e) => {
-            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
-
-    return (
-        <div className="ppf-field ppf-search-dropdown" ref={ref}>
-            <label className="ppf-field-label">
-                {label}{required && <span className="required">*</span>}
-            </label>
-            <input
-                className={`ppf-input ${error ? 'error' : ''}`}
-                type="text"
-                placeholder={placeholder}
-                value={open ? query : value}
-                onChange={(e) => {
-                    setQuery(e.target.value);
-                    if (!open) setOpen(true);
-                }}
-                onFocus={() => {
-                    setOpen(true);
-                    setQuery('');
-                }}
-            />
-            {open && filtered.length > 0 && (
-                <div className="ppf-dropdown-list">
-                    {filtered.map((opt) => (
-                        <div
-                            key={opt}
-                            className={`ppf-dropdown-item ${opt === value ? 'highlighted' : ''}`}
-                            onClick={() => {
-                                onChange(opt);
-                                setOpen(false);
-                                setQuery('');
-                            }}
-                        >
-                            {opt}
-                        </div>
-                    ))}
-                </div>
-            )}
-            {error && <p className="ppf-input-error">{error}</p>}
-        </div>
-    );
-}
-
 export default function Step2LocationDetails({ formData, updateField, errors }) {
-    const localities = formData.city ? (cityData[formData.city] || []) : [];
     const visibleLocationFields = getVisibleLocationFieldKeys(formData.propertyType, formData.category);
     const showFlatNo = visibleLocationFields.has('flatNo');
     const showTotalFloors = visibleLocationFields.has('totalFloors');
@@ -106,20 +13,20 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
     const [mapOpen, setMapOpen] = useState(false);
     const hasCoords = formData.latitude && formData.longitude;
     const mapDisabled = !env.mapboxAccessToken;
-    const hasMapbox = !!env.mapboxAccessToken;
 
-    const applyFeatureLocation = (feature) => {
-        const place = feature?.context?.find((item) => item.id?.startsWith('place'));
-        const locality = feature?.context?.find((item) => item.id?.startsWith('locality') || item.id?.startsWith('neighborhood'));
-        const city = place?.text || (feature?.place_type?.includes('place') ? feature?.text : '');
-        const localityName = locality?.text || (!feature?.place_type?.includes('place') ? feature?.text : '');
+    const handleCitySelect = ({ source, feature, village }) => {
+        if (source === 'village' && village) {
+            updateField('city', village.name);
+            updateField('latitude', village.latitude);
+            updateField('longitude', village.longitude);
+            return;
+        }
+
+        const city = feature?.text || feature?.place_name || '';
         const [longitude, latitude] = feature?.center || [];
 
         if (city) {
             updateField('city', city);
-        }
-        if (localityName && !formData.locality) {
-            updateField('locality', localityName);
         }
         if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
             updateField('latitude', latitude);
@@ -132,112 +39,63 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
             <h2 className="ppf-heading"><span className="ppf-heading-icon"><MapPinned size={18} /></span>Where is your property located?</h2>
 
             <div className="ppf-form-row">
-                {hasMapbox ? (
-                    <>
-                        <div className="ppf-field">
-                            <label className="ppf-field-label">
-                                City<span className="required">*</span>
-                            </label>
-                            <MapboxSuggestInput
-                                name="city"
-                                value={formData.city}
-                                placeholder="Search city..."
-                                types="place"
-                                onChange={(val) => {
-                                    updateField('city', val);
-                                    updateField('locality', '');
-                                }}
-                                onSelect={(feature) => applyFeatureLocation(feature)}
-                                error={!!errors.city}
-                            />
-                            {errors.city && <p className="ppf-input-error">{errors.city}</p>}
-                        </div>
-                        <div className="ppf-field">
-                            <label className="ppf-field-label">
-                                Locality / Area<span className="required">*</span>
-                            </label>
-                            <MapboxSuggestInput
-                                name="locality"
-                                value={formData.locality}
-                                placeholder={formData.city ? 'Search locality...' : 'Search locality'}
-                                types="locality,neighborhood,address,place"
-                                queryContext={formData.city}
-                                onChange={(val) => updateField('locality', val)}
-                                onSelect={(feature) => applyFeatureLocation(feature)}
-                                error={!!errors.locality}
-                            />
-                            {errors.locality && <p className="ppf-input-error">{errors.locality}</p>}
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        <SearchableDropdown
-                            label="City"
-                            required
-                            value={formData.city}
-                            options={cities}
-                            onChange={(val) => {
-                                updateField('city', val);
-                                updateField('locality', '');
-                            }}
-                            placeholder="Search city..."
-                            error={errors.city}
-                        />
-                        <SearchableDropdown
-                            label="Locality / Area"
-                            required
-                            value={formData.locality}
-                            options={localities}
-                            onChange={(val) => updateField('locality', val)}
-                            placeholder={formData.city ? 'Search locality...' : 'Select city first'}
-                            error={errors.locality}
-                        />
-                    </>
-                )}
+                <div className="ppf-field">
+                    <label className="ppf-field-label">
+                        City<span className="required">*</span>
+                    </label>
+                    <VillageFirstCityInput
+                        name="city"
+                        value={formData.city}
+                        placeholder="Search village or city"
+                        onChange={(val) => {
+                            updateField('city', val);
+                            updateField('locality', '');
+                            updateField('latitude', '');
+                            updateField('longitude', '');
+                        }}
+                        onSelect={handleCitySelect}
+                        error={!!errors.city}
+                    />
+                    {errors.city && <p className="ppf-input-error">{errors.city}</p>}
+                </div>
+                <div className="ppf-field">
+                    <label className="ppf-field-label">
+                        Locality / Area<span className="required">*</span>
+                    </label>
+                    <input
+                        name="locality"
+                        className={`ppf-input ${errors.locality ? 'error' : ''}`}
+                        type="text"
+                        placeholder="Type locality or area"
+                        value={formData.locality}
+                        onChange={(e) => updateField('locality', e.target.value)}
+                    />
+                    {errors.locality && <p className="ppf-input-error">{errors.locality}</p>}
+                </div>
             </div>
 
             <div className="ppf-form-row">
                 <div className="ppf-field">
                     <label className="ppf-field-label">Sub-locality</label>
-                    {hasMapbox ? (
-                        <MapboxSuggestInput
-                            name="subLocality"
-                            value={formData.subLocality}
-                            placeholder="Enter sub-locality"
-                            types="neighborhood,locality,address"
-                            queryContext={formData.city}
-                            onChange={(val) => updateField('subLocality', val)}
-                        />
-                    ) : (
-                        <input
-                            className="ppf-input"
-                            type="text"
-                            placeholder="Enter sub-locality"
-                            value={formData.subLocality}
-                            onChange={(e) => updateField('subLocality', e.target.value)}
-                        />
-                    )}
+                    <input
+                        name="subLocality"
+                        className="ppf-input"
+                        type="text"
+                        placeholder="Enter sub-locality"
+                        value={formData.subLocality}
+                        onChange={(e) => updateField('subLocality', e.target.value)}
+                    />
                 </div>
                 <div className="ppf-field">
                     <label className="ppf-field-label">Landmark</label>
-                    {hasMapbox ? (
-                        <MapboxSuggestInput
-                            name="landmark"
-                            value={formData.landmark}
-                            placeholder="Nearby landmark"
-                            types="poi,neighborhood,address"
-                            queryContext={formData.city}
-                            onChange={(val) => updateField('landmark', val)}
-                        />
-                    ) : (
-                        <input
-                            className="ppf-input"
-                            type="text"
-                            placeholder="Nearby landmark"
-                            value={formData.landmark}
-                            onChange={(e) => updateField('landmark', e.target.value)}
-                        />
-                    )}
+                    <input
+                        name="landmark"
+                        className="ppf-input"
+                        type="text"
+                        placeholder="Nearby landmark"
+                        value={formData.landmark}
+                        onChange={(e) => updateField('landmark', e.target.value)}
+                    />
                 </div>
             </div>
 
@@ -309,6 +167,11 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                 {hasCoords ? (
                     <p className="ppf-field-hint" style={{ marginTop: 8 }}>
                         Selected: {Number(formData.latitude).toFixed(6)}, {Number(formData.longitude).toFixed(6)}
+                    </p>
+                ) : null}
+                {errors.latitude || errors.longitude ? (
+                    <p className="ppf-input-error" style={{ marginTop: 8 }}>
+                        {errors.latitude || errors.longitude}
                     </p>
                 ) : null}
                 {mapDisabled ? (

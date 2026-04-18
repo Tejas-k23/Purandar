@@ -210,6 +210,9 @@ export function validatePropertyPayload(payload = {}) {
   if (!String(payload.price ?? '').trim()) {
     errors.push('price is required');
   }
+  if (payload.latitude === null || payload.latitude === undefined || payload.longitude === null || payload.longitude === undefined) {
+    errors.push('Property map coordinates are required');
+  }
   if ((payload.intent === 'rent' || payload.intent === 'pg') && !String(payload.securityDeposit ?? '').trim() && payload.securityDeposit !== 0 && payload.securityDeposit !== '0') {
     // Optional, keep relaxed.
   }

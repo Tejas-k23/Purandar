@@ -8,6 +8,7 @@ import projectService from '../../services/projectService';
 import { getProjectTypeProfile } from '../../utils/projectTypeConfig';
 import { formatCompactPrice } from '../../utils/formatPrice';
 import useAuth from '../../hooks/useAuth';
+import { buildGoogleMapsEmbedUrl, buildGoogleMapsSearchUrl } from '../../utils/googleMaps';
 import './PropertyDetails.css';
 
 const getYoutubeEmbedUrl = (rawUrl = '') => {
@@ -268,9 +269,22 @@ function Description({ project }) {
 }
 
 function ProjectMap({ project }) {
-  const src = project.mapLink?.startsWith('http')
+  const searchQuery = project.mapLink || [project.address, project.area, project.city].filter(Boolean).join(', ');
+  const hasDirectMapLink = /^https?:\/\//i.test(project.mapLink || '');
+  const src = hasDirectMapLink
     ? project.mapLink
-    : `https://maps.google.com/maps?q=${encodeURIComponent(project.mapLink || `${project.area}, ${project.city}`)}&z=14&output=embed`;
+    : buildGoogleMapsEmbedUrl({
+      latitude: project.latitude,
+      longitude: project.longitude,
+      query: searchQuery,
+    });
+  const googleMapsUrl = hasDirectMapLink
+    ? project.mapLink
+    : buildGoogleMapsSearchUrl({
+      latitude: project.latitude,
+      longitude: project.longitude,
+      query: searchQuery,
+    });
 
   return (
     <div>
@@ -278,6 +292,11 @@ function ProjectMap({ project }) {
       <div className="pd-map-container">
         <iframe title="Project map" src={src} loading="lazy" referrerPolicy="no-referrer-when-downgrade" style={{ width: '100%', height: '100%', border: 0 }} />
       </div>
+      {googleMapsUrl ? (
+        <p className="pd-description-text" style={{ marginTop: 12 }}>
+          <a href={googleMapsUrl} target="_blank" rel="noreferrer">Open in Google Maps</a>
+        </p>
+      ) : null}
       <div className="pd-neighborhood-tags">
         {[project.area, project.city, project.address].filter(Boolean).map((item) => <span key={item} className="pd-hood-tag">{item}</span>)}
       </div>

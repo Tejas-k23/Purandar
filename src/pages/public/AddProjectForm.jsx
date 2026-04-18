@@ -6,6 +6,7 @@ import { getAmenityMeta } from '../../utils/amenityMeta';
 import { getProjectTypeProfile, PROJECT_TYPE_PROFILES } from '../../utils/projectTypeConfig';
 import MapPickerModal from '../../components/common/MapPickerModal';
 import MapboxSuggestInput from '../../components/common/MapboxSuggestInput';
+import VillageFirstCityInput from '../../components/common/VillageFirstCityInput';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useAuth from '../../hooks/useAuth';
 import env from '../../config/env';
@@ -25,7 +26,7 @@ const SECTION_ITEMS = [
 
 const STEP_FIELDS = {
   basic: ['projectName', 'projectType', 'developerName', 'projectStatus', 'launchDate', 'possessionDate'],
-  location: ['address', 'city', 'area', 'pincode', 'mapLink'],
+  location: ['address', 'city', 'area', 'pincode', 'mapLink', 'latitude', 'longitude'],
   pricing: ['startingPrice', 'endingPrice', 'priceUnit', 'configurationTypes', 'areaRange'],
   amenities: [],
   media: ['projectImages', 'videoUrl'],
@@ -133,6 +134,9 @@ function validateForm(data) {
     errors.pincode = 'Pincode is required';
   } else if (!/^\d{6}$/.test(String(data.pincode).trim())) {
     errors.pincode = 'Enter a valid 6 digit pincode';
+  }
+  if (!String(data.latitude ?? '').trim() || !String(data.longitude ?? '').trim()) {
+    errors.latitude = 'Please mark the project on the map';
   }
 
   if (data.mapLink.trim()) {
@@ -591,6 +595,26 @@ export default function AddProjectForm() {
     updateField('extraConfigurations', formData.extraConfigurations.filter((_, itemIndex) => itemIndex !== index));
   };
 
+  const applyProjectCitySelection = ({ source, feature, village }) => {
+    if (source === 'village' && village) {
+      updateField('city', village.name);
+      updateField('latitude', village.latitude);
+      updateField('longitude', village.longitude);
+      return;
+    }
+
+    const city = feature?.text || feature?.place_name || '';
+    const [longitude, latitude] = feature?.center || [];
+
+    if (city) {
+      updateField('city', city);
+    }
+    if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+      updateField('latitude', latitude);
+      updateField('longitude', longitude);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const nextErrors = validateForm(formData);
@@ -758,31 +782,28 @@ export default function AddProjectForm() {
             </Field>
 
             <div className="ppf-form-row">
-              <Field label="City" required error={errors.city} hint={!env.mapboxAccessToken ? 'Mapbox token missing, suggestions are disabled.' : ''}>
-                <MapboxSuggestInput
+              <Field label="City" required error={errors.city} hint={!env.mapboxAccessToken ? 'Village suggestions still work. Mapbox fallback is disabled until the token is added.' : ''}>
+                <VillageFirstCityInput
                   name="city"
                   value={formData.city}
-                  placeholder="Enter city"
-                  types="place"
-                  displayKey="place_name"
-                  valueKey="text"
+                  placeholder="Search village or city"
                   onChange={(val) => {
                     updateField('city', val);
                     if (formData.area) updateField('area', '');
+                    updateField('latitude', '');
+                    updateField('longitude', '');
                   }}
+                  onSelect={applyProjectCitySelection}
                   error={errors.city}
                 />
               </Field>
               <Field label="Area / Locality" required error={errors.area}>
-                <MapboxSuggestInput
+                <TextInput
                   name="area"
-                  value={formData.area}
+                  type="text"
                   placeholder="Enter area or locality"
-                  types="locality,neighborhood,address,place"
-                  displayKey="place_name"
-                  valueKey="text"
-                  queryContext={formData.city}
-                  onChange={(val) => updateField('area', val)}
+                  value={formData.area}
+                  onChange={(event) => updateField('area', event.target.value)}
                   error={errors.area}
                 />
               </Field>
@@ -812,6 +833,11 @@ export default function AddProjectForm() {
               {formData.latitude && formData.longitude ? (
                 <p className="ppf-field-hint" style={{ marginTop: 8 }}>
                   Selected: {Number(formData.latitude).toFixed(6)}, {Number(formData.longitude).toFixed(6)}
+                </p>
+              ) : null}
+              {errors.latitude ? (
+                <p className="ppf-input-error" style={{ marginTop: 8 }}>
+                  {errors.latitude}
                 </p>
               ) : null}
               {!env.mapboxAccessToken ? (

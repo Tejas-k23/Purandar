@@ -604,6 +604,9 @@ export function getPropertyValidationErrors(step, data) {
   if (step === 2) {
     if (!data.city?.trim()) errors.city = 'City is required';
     if (!data.locality?.trim()) errors.locality = 'Locality is required';
+    if (!String(data.latitude ?? '').trim() || !String(data.longitude ?? '').trim()) {
+      errors.latitude = 'Please mark the property on the map';
+    }
     if (visibleLocationFields.has('totalFloors') && !String(data.totalFloors || '').trim()) errors.totalFloors = 'Total floors is required';
     if (visibleLocationFields.has('floorNo') && !String(data.floorNo || '').trim()) errors.floorNo = 'Floor number is required';
   }
