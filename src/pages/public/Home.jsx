@@ -16,7 +16,7 @@ import './Home.css';
 
 const HeroBanner = () => (
   <section className="hero-banner">
-    <img src="/home.png" alt="Home" style={{ width: '100%', height: 'auto', display: 'block' }} />
+    <img src="/home.png" alt="Home" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
   </section>
 );
 
