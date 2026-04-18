@@ -147,14 +147,6 @@ export default function AdminProperties() {
     }));
   };
 
-  const setContactMode = (propertyId, mode) => {
-    setProperties((current) => current.map((item) => (
-      item._id === propertyId
-        ? { ...item, contactDisplayMode: mode, useOriginalSellerContact: mode === 'original' }
-        : item
-    )));
-  };
-
   const updateContactDraft = (propertyId, field, value) => {
     setContactDrafts((current) => ({
       ...current,
