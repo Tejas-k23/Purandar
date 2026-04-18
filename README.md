@@ -278,5 +278,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👤 Author
 
 **Purandar Estate Team**
-
-Built and maintained by the Purandar Estate development team.
+© 2026 Tejas kumbharkar. Unauthorized copying without attribution is not allowed.
