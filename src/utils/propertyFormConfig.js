@@ -479,7 +479,9 @@ export function getPropertyTypeConfig(propertyType) {
 }
 
 export function normalizePropertyType(propertyType) {
-  return PROPERTY_TYPE_ALIASES[propertyType] || propertyType;
+  if (!propertyType) return '';
+  const capitalized = propertyType.replace(/\b\w/g, l => l.toUpperCase());
+  return PROPERTY_TYPE_ALIASES[capitalized] || capitalized;
 }
 
 export function getIntentOptions(propertyType, fallbackCategory = 'residential') {
