@@ -81,7 +81,7 @@ export default function AdminProperties() {
 
     try {
       await adminService.togglePropertyFeatured(propertyId, !currentValue);
-    } catch (_error) {
+    } catch {
       setProperties((current) => current.map((property) => (
         property._id === propertyId
           ? { ...property, featuredOnHome: currentValue }
@@ -98,51 +98,26 @@ export default function AdminProperties() {
 
     const currentMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
     const canSwitchToCustom = hasCompleteCustomContact(property);
-    
-    // If toggling OFF (nextValue = false) and currently showing original seller details
-    if (!nextValue && currentMode === 'original') {
-      // Must switch to custom contact (company contact isn't an option for this toggle)
-      if (!canSwitchToCustom) {
-        openContactEditor(property);
-        return;
-      }
-      const nextMode = 'custom';
-      setBusyId(`${propertyId}:contact`);
-      setProperties((current) => current.map((item) => (
-        item._id === propertyId ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: false } : item
-      )));
+    const nextMode = nextValue
+      ? 'original'
+      : currentMode !== 'original'
+        ? currentMode
+        : (hasCompanyContact ? 'company' : 'custom');
 
-      try {
-        const response = await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
-        // Update with server response to ensure consistency
-        if (response.data?.data) {
-          setProperties((current) => current.map((item) =>
-            item._id === propertyId ? response.data.data : item
-          ));
-        }
-      } catch (_error) {
-        const errorMessage = _error.response?.data?.message || _error.message || 'Failed to update contact mode';
-        setProperties((current) => current.map((item) => (
-          item._id === propertyId ? { ...item, contactDisplayMode: currentMode, useOriginalSellerContact: true } : item
-        )));
-        console.error('Error toggling contact mode:', _error);
-        alert(`Error: ${errorMessage}`);
-      } finally {
-        setBusyId('');
-      }
+    if (!nextValue && nextMode === 'custom' && !canSwitchToCustom) {
+      openContactEditor(property);
       return;
     }
 
-    // Otherwise, toggle to show original seller details
-    const nextMode = 'original';
     setBusyId(`${propertyId}:contact`);
     setProperties((current) => current.map((item) => (
-      item._id === propertyId ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: true } : item
+      item._id === propertyId
+        ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: nextMode === 'original' }
+        : item
     )));
 
     try {
       const response = await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
-      // Update with server response to ensure consistency
       if (response.data?.data) {
         setProperties((current) => current.map((item) =>
           item._id === propertyId ? response.data.data : item
@@ -155,12 +130,6 @@ export default function AdminProperties() {
       )));
       console.error('Error toggling contact mode:', _error);
       alert(`Error: ${errorMessage}`);
-    try {
-      await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
-    } catch (_error) {
-      setProperties((current) => current.map((item) => (
-        item._id === propertyId ? { ...item, contactDisplayMode: currentMode, useOriginalSellerContact: currentMode === 'original' } : item
-      )));
     } finally {
       setBusyId('');
     }
@@ -176,14 +145,6 @@ export default function AdminProperties() {
         displaySellerEmail: property.displaySellerEmail || '',
       },
     }));
-  };
-
-  const setContactMode = (propertyId, mode) => {
-    setProperties((current) => current.map((item) => (
-      item._id === propertyId
-        ? { ...item, contactDisplayMode: mode, useOriginalSellerContact: mode === 'original' }
-        : item
-    )));
   };
 
   const updateContactDraft = (propertyId, field, value) => {
@@ -279,6 +240,49 @@ export default function AdminProperties() {
       // Extract detailed error message from response
       const errorMessage = _error.response?.data?.message || _error.message || 'Failed to save custom contact';
       console.error('Failed to save custom contact:', _error);
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setBusyId('');
+    }
+  };
+
+  const setContactMode = async (propertyId, nextMode) => {
+    const property = properties.find((item) => item._id === propertyId);
+    if (!property) return;
+
+    const currentMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
+    if (currentMode === nextMode) return;
+    if (nextMode === 'custom' && !hasCompleteCustomContact(property)) {
+      openContactEditor(property);
+      return;
+    }
+
+    setBusyId(`${propertyId}:contact`);
+    setProperties((current) => current.map((item) => (
+      item._id === propertyId
+        ? { ...item, contactDisplayMode: nextMode, useOriginalSellerContact: nextMode === 'original' }
+        : item
+    )));
+
+    try {
+      const response = await adminService.updateProperty(propertyId, {
+        contactDisplayMode: nextMode,
+        useOriginalSellerContact: nextMode === 'original',
+      });
+
+      if (response.data?.data) {
+        setProperties((current) => current.map((item) => (
+          item._id === propertyId ? response.data.data : item
+        )));
+      }
+    } catch (_error) {
+      setProperties((current) => current.map((item) => (
+        item._id === propertyId
+          ? { ...item, contactDisplayMode: currentMode, useOriginalSellerContact: currentMode === 'original' }
+          : item
+      )));
+      const errorMessage = _error.response?.data?.message || _error.message || 'Failed to update contact mode';
+      console.error('Error setting contact mode:', _error);
       alert(`Error: ${errorMessage}`);
     } finally {
       setBusyId('');
