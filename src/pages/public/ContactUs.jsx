@@ -134,11 +134,11 @@ export default function ContactUs() {
       <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
         <div style={{ padding: '2rem', borderRadius: 24, background: 'linear-gradient(135deg, var(--indigo-50), var(--warm-white))', border: '1px solid var(--gray-300)' }}>
           <p style={{ fontWeight: 700, color: 'var(--indigo-700)', marginBottom: 8 }}>Contact Us</p>
-          <h1 style={{ marginBottom: 12 }}>Talk to the <span className="heading-accent">Purandar</span> Estate team</h1>
+          <h1 style={{ marginBottom: 12 }}>Talk to the <span className="heading-accent">Purandar Prime Propertys</span> team</h1>
           <p style={{ color: 'var(--gray-600)', lineHeight: 1.7 }}>We help buyers, tenants, owners, and agents discover and manage verified property listings across Purandar and nearby Pune locations.</p>
           <div style={{ marginTop: '1.25rem', display: 'grid', gap: 10 }}>
             <div><strong>Phone:</strong> +91 98765 43210</div>
-            <div><strong>Email:</strong> support@purandarestate.com</div>
+            <div><strong>Email:</strong> support@purandarprimepropertys.com</div>
             <div><strong>Address:</strong> Saswad, Purandar, Pune, Maharashtra</div>
           </div>
         </div>

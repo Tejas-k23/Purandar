@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useReducer, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Step1BasicDetails from '../../components/forms/post-property/Step1BasicDetails';
 import Step2LocationDetails from '../../components/forms/post-property/Step2LocationDetails';
@@ -107,7 +107,16 @@ export default function PostPropertyForm() {
       if (!editId) return;
       setLoading(true);
       try {
-        const response = isAdminPath ? await adminService.getProperty(editId) : await propertyService.getById(editId);
+        let response;
+        if (isAdminPath) {
+          try {
+            response = await adminService.getProperty(editId);
+          } catch (e) {
+            response = await propertyService.getById(editId);
+          }
+        } else {
+          response = await propertyService.getById(editId);
+        }
         const property = response.data.data;
         const contactDisplayMode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
         const whatsappDisplayMode = property.whatsappDisplayMode || (property.useCustomWhatsappDetails ? 'custom' : 'original');
@@ -228,7 +237,7 @@ export default function PostPropertyForm() {
       const payload = buildPayload(formData);
       let propertyId = editId;
       if (editId) {
-        const response = await propertyService.update(editId, payload);
+        const response = isAdminPath ? await adminService.updateProperty(editId, payload) : await propertyService.update(editId, payload);
         propertyId = response?.data?.data?._id || editId;
         setStatusMessage('Property updated successfully.');
       } else {

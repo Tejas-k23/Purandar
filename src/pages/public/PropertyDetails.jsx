@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Heart, Phone, Share2, UserRound } from 'lucide-react';
 import propertyService from '../../services/propertyService';
@@ -133,6 +133,15 @@ export default function PropertyDetails() {
       return;
     }
 
+    const mode = property.contactDisplayMode || (property.useOriginalSellerContact === false ? 'custom' : 'original');
+    
+    // If it's custom or company, we already have the details via resolveContact
+    if (mode === 'custom' || mode === 'company') {
+      setSellerDetails(visibleContact);
+      setShowSellerDetails(true);
+      return;
+    }
+
     setSellerLoading(true);
     setSellerMessage('');
     try {
@@ -239,13 +248,13 @@ export default function PropertyDetails() {
   return (
     <div className="pd-page" style={{ paddingBottom: '3rem' }}>
       <SeoManager
-        title={`${titleBase} | Purandar Properties`}
+        title={`${titleBase} | Purandar Prime Propertys`}
         description={seoDescription}
         canonicalPath={`/property/${property._id}`}
         schema={schema}
         image={primaryImage}
         type="product"
-        siteName="Purandar Properties"
+        siteName="Purandar Prime Propertys"
       />
       <div className="pd-layout">
         <div className="pd-main">

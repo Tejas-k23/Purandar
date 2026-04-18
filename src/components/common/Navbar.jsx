@@ -75,7 +75,7 @@ export default function Navbar() {
             <img
               src="/apple-touch-icon.png"
               alt="Purandar Prime Propertys"
-              style={{ height: '44px', width: 'auto', objectFit: 'contain' }}
+              className="navbar-logo"
             />
           </div>
 

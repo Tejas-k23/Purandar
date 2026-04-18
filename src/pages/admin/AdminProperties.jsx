@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Eye, Home, Pencil, Power, Star, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import adminService from '../../services/adminService';
@@ -117,7 +117,10 @@ export default function AdminProperties() {
     )));
 
     try {
-      const response = await adminService.updateProperty(propertyId, { contactDisplayMode: nextMode });
+      const response = await adminService.updateProperty(propertyId, {
+        contactDisplayMode: nextMode,
+        useOriginalSellerContact: nextMode === 'original',
+      });
       if (response.data?.data) {
         setProperties((current) => current.map((item) =>
           item._id === propertyId ? response.data.data : item
@@ -211,6 +214,7 @@ export default function AdminProperties() {
     try {
       const response = await adminService.updateProperty(propertyId, {
         contactDisplayMode: 'custom',
+        useOriginalSellerContact: false,
         displaySellerName: draft.displaySellerName,
         displaySellerPhone: draft.displaySellerPhone,
         displaySellerEmail: draft.displaySellerEmail,

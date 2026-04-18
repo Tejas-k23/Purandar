@@ -1,5 +1,5 @@
 export const companyContact = {
-  name: import.meta.env.VITE_COMPANY_CONTACT_NAME || 'Purandar Properties',
+  name: import.meta.env.VITE_COMPANY_CONTACT_NAME || 'Purandar Prime Propertys',
   phone: import.meta.env.VITE_COMPANY_CONTACT_PHONE || '',
   email: import.meta.env.VITE_COMPANY_CONTACT_EMAIL || '',
   whatsapp: import.meta.env.VITE_COMPANY_WHATSAPP_NUMBER || '',

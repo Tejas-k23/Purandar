@@ -1,4 +1,4 @@
-﻿import api from './api';
+import api from './api';
 
 export const adminService = {
   getDashboard() {
@@ -14,7 +14,7 @@ export const adminService = {
   },
 
   updateProperty(propertyId, payload) {
-    return api.patch(`/properties/${propertyId}`, payload);
+    return api.patch(`/admin/properties/${propertyId}`, payload);
   },
 
   updatePropertyStatus(propertyId, status, moderationMessage = '') {
