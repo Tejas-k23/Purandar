@@ -71,7 +71,12 @@ export default function Navbar() {
     <>
       <nav className="navbar">
         <div className="navbar-container">
-          <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+          <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img
+              src="/apple-touch-icon.png"
+              alt="Purandar Prime Propertys Logo"
+              style={{ height: '36px', width: '36px', objectFit: 'contain', borderRadius: '8px' }}
+            />
             <span style={{ fontFamily: "'Caveat', cursive" }} className="logo-urban">Purandar Prime</span>
             <span className="logo-premier">Propertys</span>
           </div>

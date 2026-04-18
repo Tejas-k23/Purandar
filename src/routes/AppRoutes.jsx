@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Home from '../pages/public/Home';
 import BuyPage from '../pages/public/BuyPage';
@@ -14,6 +14,7 @@ import NewsInsightDetail from '../pages/public/NewsInsightDetail';
 import WhyInvestPurandar from '../pages/public/WhyInvestPurandar';
 import PropertyDetails from '../pages/public/PropertyDetails';
 import LocationListingsPage from '../pages/public/LocationListingsPage';
+import PrivacyPolicy from '../pages/public/PrivacyPolicy';
 import ProfileLayout from '../pages/profile/ProfileLayout';
 import MyProfile from '../pages/profile/MyProfile';
 import SavedProperties from '../pages/profile/SavedProperties';
@@ -59,6 +60,7 @@ export default function AppRoutes() {
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/why-invest" element={<WhyInvestPurandar />} />
         <Route path="/post-property" element={<PostProperty />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         {!backgroundLocation ? <Route path="/login" element={<Login />} /> : null}
         {!backgroundLocation ? <Route path="/signup" element={<Signup />} /> : null}
         <Route path="/tk23" element={<AdminLogin />} />

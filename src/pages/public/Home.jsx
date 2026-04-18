@@ -424,7 +424,7 @@ const Footer = () => (
           <li><Link to="/contact">About Us</Link></li>
           <li><a href="#">Careers</a></li>
           <li><a href="#">Terms & Conditions</a></li>
-          <li><a href="#">Privacy Policy</a></li>
+          <li><Link to="/privacy-policy">Privacy Policy</Link></li>
         </ul>
       </div>
       <div className="footer-col">
@@ -454,7 +454,7 @@ const Footer = () => (
     <div className="footer-bottom">
       <div>&copy; 2026 Purandar Prime Propertys. All rights reserved.</div>
       <div className="footer-bottom-links">
-        <a href="#">Privacy Policy</a>
+        <Link to="/privacy-policy">Privacy Policy</Link>
         <a href="#">Cookie Policy</a>
       </div>
     </div>
