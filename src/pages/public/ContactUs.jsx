@@ -158,7 +158,7 @@ export default function ContactUs() {
       <section style={{ padding: '2rem', borderRadius: 24, background: 'var(--white)', border: '1px solid var(--gray-300)' }}>
         <p style={{ fontWeight: 700, color: 'var(--indigo-700)', marginBottom: 8 }}>About Us</p>
         <h2 style={{ marginBottom: 12 }}>Built for <span className="heading-accent">practical</span> property search and management</h2>
-        <p style={{ color: 'var(--gray-600)', lineHeight: 1.8, marginBottom: 12 }}>Purandar Estate is a modern real estate platform focused on helping users browse verified listings, contact sellers, save favorites, and post new properties with a clean owner workflow.</p>
+        <p style={{ color: 'var(--gray-600)', lineHeight: 1.8, marginBottom: 12 }}>Purandar Prime Propertys is a modern real estate platform focused on helping users browse verified listings, contact sellers, save favorites, and post new properties with a clean owner workflow.</p>
         <p style={{ color: 'var(--gray-600)', lineHeight: 1.8 }}>Our goal is to make local discovery simpler while keeping the experience responsive, searchable, and useful for both property seekers and property owners.</p>
       </section>
 

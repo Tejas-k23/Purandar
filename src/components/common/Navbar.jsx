@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Bell, ChevronDown, Home, Building2, KeyRound, Phone, PlusCircle, User, Heart, List, LogOut, BarChart3, Shield } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import './Navbar.css';
@@ -21,7 +21,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const displayName = user?.name || 'Guest';
-  const displayEmail = user?.email || 'Welcome to Purandar Estate';
+  const displayEmail = user?.email || 'Welcome to Purandar Prime Propertys';
   const avatarInitial = (displayName || 'G').trim().charAt(0).toUpperCase();
   const authRouteState = { backgroundLocation: location };
   const [notifyStatus, setNotifyStatus] = useState('');
@@ -72,8 +72,8 @@ export default function Navbar() {
       <nav className="navbar">
         <div className="navbar-container">
           <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-            <span style={{ fontFamily: "'Caveat', cursive" }} className="logo-urban">Purandar</span>
-            <span className="logo-premier">Estate</span>
+            <span style={{ fontFamily: "'Caveat', cursive" }} className="logo-urban">Purandar Prime</span>
+            <span className="logo-premier">Propertys</span>
           </div>
 
           <CitySearch />

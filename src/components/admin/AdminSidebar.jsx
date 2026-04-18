@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { BarChart3, CheckSquare, FileText, Mail, PlusSquare, ShieldCheck, Building2, FolderKanban, Home, MessageSquare, Bell } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -22,7 +22,7 @@ export default function AdminSidebar() {
         <div className="admin-sidebar-badge"><ShieldCheck className="w-5 h-5" /></div>
         <div>
           <h2>Admin Panel</h2>
-          <p>Purandar Estate ops</p>
+          <p>Purandar Prime Propertys ops</p>
         </div>
       </div>
 

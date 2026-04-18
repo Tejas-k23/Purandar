@@ -9,7 +9,7 @@ export function registerServiceWorker() {
       }
     },
     onOfflineReady() {
-      console.info('Purandar Estate is ready to work offline.');
+      console.info('Purandar Prime Propertys is ready to work offline.');
     },
     onRegistered(registration) {
       if (!registration) return;

@@ -452,7 +452,7 @@ const Footer = () => (
       </div>
     </div>
     <div className="footer-bottom">
-      <div>&copy; 2026 Purandar Estate. All rights reserved.</div>
+      <div>&copy; 2026 Purandar Prime Propertys. All rights reserved.</div>
       <div className="footer-bottom-links">
         <a href="#">Privacy Policy</a>
         <a href="#">Cookie Policy</a>
