@@ -4,6 +4,7 @@ import Map, { FullscreenControl, Marker, NavigationControl, Popup } from 'react-
 import { useNavigate } from 'react-router-dom';
 import env from '../../config/env';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import { flyToCoordinates } from '../../utils/mapHelpers';
 import { getPropertyImageUrls } from '../../utils/propertyImages';
 import SearchBar from './SearchBar';
 import './MapPanel.css';
@@ -27,31 +28,39 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
 
   const activeProperty = items.find((property) => property._id === activePropertyId);
   const [viewState, setViewState] = useState({
-    longitude: items[0]?.longitude || (baseLongitude + 0.03),
-    latitude: items[0]?.latitude || (baseLatitude + 0.02),
-    zoom: 10.5,
+    longitude: activeProperty?.longitude || items[0]?.longitude || (baseLongitude + 0.03),
+    latitude: activeProperty?.latitude || items[0]?.latitude || (baseLatitude + 0.02),
+    zoom: activeProperty ? 13.2 : 10.5,
   });
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const selectedProperty = items.find((property) => property._id === selectedPropertyId);
+  const resolvedSelectedPropertyId = selectedPropertyId || activePropertyId;
+  const selectedProperty = items.find((property) => property._id === resolvedSelectedPropertyId);
 
   useEffect(() => {
+    const map = mapRef.current?.getMap?.();
+
     if (activeProperty) {
-      setViewState({ longitude: activeProperty.longitude, latitude: activeProperty.latitude, zoom: 12.6 });
-    } else if (!activePropertyId && items.length) {
-      setViewState((current) => ({
-        ...current,
-        longitude: items[0].longitude,
-        latitude: items[0].latitude,
-      }));
+      if (map) {
+        flyToCoordinates(map, activeProperty, {
+          zoom: 13.2,
+          speed: 1.05,
+          curve: 1.55,
+          duration: 1550,
+          essential: true,
+          pitch: 8,
+        });
+      }
+    } else if (!activePropertyId && items.length && map) {
+      flyToCoordinates(map, items[0], {
+        zoom: map.getZoom(),
+        speed: 0.9,
+        curve: 1.35,
+        duration: 1100,
+        essential: true,
+      });
     }
   }, [activeProperty, activePropertyId, items]);
-
-  useEffect(() => {
-    if (activePropertyId) {
-      setSelectedPropertyId(activePropertyId);
-    }
-  }, [activePropertyId]);
 
   useEffect(() => {
     if (!selectedProperty || !mapRef.current) return;
@@ -121,8 +130,8 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
       <Map
         ref={mapRef}
         {...viewState}
-        onMoveStart={() => setSelectedPropertyId('')}
         onMove={(event) => setViewState(event.viewState)}
+        onDragStart={() => setSelectedPropertyId('')}
         onClick={() => setSelectedPropertyId('')}
         mapStyle="mapbox://styles/mapbox/streets-v12"
         mapboxAccessToken={env.mapboxAccessToken}
@@ -134,12 +143,24 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
           <Marker key={property._id} longitude={property.longitude} latitude={property.latitude} anchor="bottom">
             <button
               type="button"
-              className={`marker-pin ${activePropertyId === property._id || selectedPropertyId === property._id ? 'active' : ''}`}
+              className={`marker-pin ${activePropertyId === property._id || selectedPropertyId === property._id ? 'active marker-pin-pulse' : ''}`}
               onClick={(event) => {
                 event.stopPropagation();
                 setSelectedPropertyId(property._id);
+                const map = mapRef.current?.getMap?.();
+                if (map) {
+                  flyToCoordinates(map, property, {
+                    zoom: 13.4,
+                    speed: 1,
+                    curve: 1.48,
+                    duration: 1350,
+                    essential: true,
+                    pitch: 6,
+                  });
+                }
               }}
             >
+              <span className="marker-pin-glow" aria-hidden="true" />
               <img
                 src={getPropertyImageUrls(property)[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=300&q=80'}
                 alt={property.title}
