@@ -72,7 +72,7 @@ export default function Login() {
       success: async (data) => {
         const accessToken = extractAccessToken(data);
         window.__msg91LastOtpResponse = data;
-        console.log('MSG91 OTP response:', data);
+        window.__msg91LastOtpResponse = data;
         if (!accessToken) {
           setFormMessage('OTP verified but token was missing.');
           return;
@@ -83,7 +83,7 @@ export default function Login() {
             accessToken,
             intent: 'login',
           });
-          console.log('Login response:', loginResponse?.data || loginResponse);
+          const responseData = loginResponse?.data || loginResponse;
           await refreshProfile();
           navigate(closeTarget, { replace: true });
         } catch (error) {
@@ -121,7 +121,7 @@ export default function Login() {
       await sendOtpWithWidget(
         buildIdentifier(formattedPhone),
         (data) => {
-          console.log('MSG91 sendOtp success:', data);
+          window.__msg91LastSendOtpResponse = data;
           window.__msg91LastSendOtpResponse = data;
           const nextReqId = extractReqId(data);
           setReqId(nextReqId);
@@ -132,7 +132,7 @@ export default function Login() {
           otpSendInFlightRef.current = false;
         },
         (error) => {
-          console.log('MSG91 sendOtp failure:', error);
+          const errorResponse = error;
           const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
           setFormMessage(msg);
           setLoading(false);
@@ -169,7 +169,7 @@ export default function Login() {
         async (data) => {
           const accessToken = extractAccessToken(data);
           window.__msg91LastOtpResponse = data;
-          console.log('MSG91 OTP response:', data);
+          window.__msg91LastOtpResponse = data;
           if (!accessToken) {
             setFormMessage('OTP verified but token was missing.');
             setLoading(false);
@@ -181,7 +181,7 @@ export default function Login() {
               accessToken,
               intent: 'login',
             });
-            console.log('Login response:', loginResponse?.data || loginResponse);
+            const responseData = loginResponse?.data || loginResponse;
             await refreshProfile();
             clearReqId(effectivePhone);
             navigate(closeTarget, { replace: true });

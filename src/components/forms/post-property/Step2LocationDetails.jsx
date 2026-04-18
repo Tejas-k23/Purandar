@@ -151,9 +151,12 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
             ) : null}
 
             <div className="ppf-field" style={{ marginTop: 'var(--space-4)' }}>
+                <label className="ppf-field-label">
+                    Pin on Map<span className="required">*</span>
+                </label>
                 <button
                     type="button"
-                    className="ppf-pill"
+                    className={`ppf-pill ${errors.latitude || errors.longitude ? 'error' : ''}`}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
                     onClick={() => setMapOpen(true)}
                     disabled={mapDisabled}

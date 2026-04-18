@@ -79,7 +79,7 @@ export default function Signup() {
       success: async (data) => {
         const accessToken = extractAccessToken(data);
         window.__msg91LastOtpResponse = data;
-        console.log('MSG91 OTP response:', data);
+        window.__msg91LastOtpResponse = data;
         if (!accessToken) {
           setFormError('OTP verified but token was missing.');
           return;
@@ -96,7 +96,7 @@ export default function Signup() {
             name: fullName.trim(),
             role: role === 'broker' ? 'agent' : 'user',
           });
-          console.log('Signup response:', res?.data || res);
+          const responseData = res?.data || res;
           setIsVerified(true);
           await refreshProfile();
           clearReqId(normalizedPhone);
@@ -134,7 +134,7 @@ export default function Signup() {
       await sendOtpWithWidget(
         buildIdentifier(normalizedPhone),
         (data) => {
-          console.log('MSG91 sendOtp success:', data);
+          window.__msg91LastSendOtpResponse = data;
           window.__msg91LastSendOtpResponse = data;
           const nextReqId = extractReqId(data);
           setReqId(nextReqId);
@@ -161,7 +161,7 @@ export default function Signup() {
           otpSendInFlightRef.current = false;
         },
         (error) => {
-          console.log('MSG91 sendOtp failure:', error);
+          const errorResponse = error;
           const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
           setFormError(msg);
           setLoading(false);
@@ -210,7 +210,7 @@ export default function Signup() {
         async (data) => {
           const accessToken = extractAccessToken(data);
           window.__msg91LastOtpResponse = data;
-          console.log('MSG91 OTP response:', data);
+          window.__msg91LastOtpResponse = data;
           if (!accessToken) {
             setFormError('OTP verified but token was missing.');
             setLoading(false);
@@ -229,7 +229,7 @@ export default function Signup() {
               name: fullName.trim(),
               role: role === 'broker' ? 'agent' : 'user',
             });
-            console.log('Signup response:', res?.data || res);
+            const responseData = res?.data || res;
             setIsVerified(true);
             await refreshProfile();
             clearReqId(normalizedPhone);

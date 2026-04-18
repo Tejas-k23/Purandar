@@ -342,15 +342,7 @@ export default function AddProjectForm() {
       try {
         const response = await projectService.getById(editId);
         const project = response.data.data;
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.log('[Project] Loaded project media', {
-            projectImages: project.projectImages,
-            images: project.images,
-            videos: project.videos,
-            videoUrl: project.videoUrl,
-          });
-        }
+
         const contactDisplayMode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
         const whatsappDisplayMode = project.whatsappDisplayMode || (project.useCustomWhatsappDetails ? 'custom' : 'original');
         setFormData({
@@ -656,11 +648,7 @@ export default function AddProjectForm() {
         if (newImages.length) mediaPayload.images = newImages.map((image) => image.file);
         if (formData.videoFile) mediaPayload.videos = [formData.videoFile];
         if (Object.keys(mediaPayload).length) {
-          const uploadResponse = await projectService.uploadMedia(projectId, mediaPayload);
-          if (import.meta.env.DEV) {
-            // eslint-disable-next-line no-console
-            console.log('[Project] Media upload response', uploadResponse?.data);
-          }
+          await projectService.uploadMedia(projectId, mediaPayload);
         }
       }
 
@@ -817,9 +805,12 @@ export default function AddProjectForm() {
             </Field>
 
             <div className="ppf-field">
+              <label className="ppf-field-label">
+                Pin on Map<span className="required">*</span>
+              </label>
               <button
                 type="button"
-                className="ppf-pill"
+                className={`ppf-pill ${errors.latitude ? 'error' : ''}`}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
                 onClick={() => setMapOpen(true)}
                 disabled={!env.mapboxAccessToken}

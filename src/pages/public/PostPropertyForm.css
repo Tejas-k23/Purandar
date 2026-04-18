@@ -380,6 +380,12 @@
     box-shadow: 0 0 0 1px var(--indigo-600);
 }
 
+.ppf-pill.error {
+    border-color: var(--red-500);
+    background: var(--red-50);
+    color: var(--red-600);
+}
+
 /* --- Radio Group --- */
 .ppf-radio-group {
     display: flex;

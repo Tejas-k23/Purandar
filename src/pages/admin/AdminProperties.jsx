@@ -131,7 +131,7 @@ export default function AdminProperties() {
       setProperties((current) => current.map((item) => (
         item._id === propertyId ? { ...item, contactDisplayMode: currentMode, useOriginalSellerContact: currentMode === 'original' } : item
       )));
-      console.error('Error toggling contact mode:', _error);
+
       alert(`Error: ${errorMessage}`);
     } finally {
       setBusyId('');
@@ -243,7 +243,7 @@ export default function AdminProperties() {
 
       // Extract detailed error message from response
       const errorMessage = _error.response?.data?.message || _error.message || 'Failed to save custom contact';
-      console.error('Failed to save custom contact:', _error);
+
       alert(`Error: ${errorMessage}`);
     } finally {
       setBusyId('');
@@ -286,7 +286,7 @@ export default function AdminProperties() {
           : item
       )));
       const errorMessage = _error.response?.data?.message || _error.message || 'Failed to update contact mode';
-      console.error('Error setting contact mode:', _error);
+
       alert(`Error: ${errorMessage}`);
     } finally {
       setBusyId('');

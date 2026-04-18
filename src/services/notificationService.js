@@ -40,14 +40,12 @@ export const syncNotificationRegistration = async ({
   requestPermission = false,
 } = {}) => {
   if (typeof window === 'undefined' || !('Notification' in window)) {
-    // eslint-disable-next-line no-console
-    console.info('[Notify] Browser does not support notifications.');
+
     return { ok: false, reason: 'unsupported', permission: 'unsupported', token: null };
   }
 
   const permissionBefore = Notification.permission;
-  // eslint-disable-next-line no-console
-  console.info('[Notify] Permission status before sync', permissionBefore);
+
 
   let token = null;
   if (requestPermission) {
@@ -57,16 +55,10 @@ export const syncNotificationRegistration = async ({
   }
 
   const permissionAfter = Notification.permission;
-  // eslint-disable-next-line no-console
-  console.info('[Notify] Permission status after sync', permissionAfter);
+
 
   if (!token) {
-    // eslint-disable-next-line no-console
-    console.info('[Notify] No FCM token generated during sync.', {
-      role,
-      requestPermission,
-      permission: permissionAfter,
-    });
+
     return { ok: false, reason: 'no_token', permission: permissionAfter, token: null };
   }
 
@@ -78,11 +70,7 @@ export const syncNotificationRegistration = async ({
     permission: permissionAfter,
   });
 
-  // eslint-disable-next-line no-console
-  console.info('[Notify] Device registration synced', {
-    role,
-    tokenPreview: `${token.slice(0, 12)}...`,
-  });
+
 
   return { ok: true, reason: 'subscribed', permission: permissionAfter, token };
 };
