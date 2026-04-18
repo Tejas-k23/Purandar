@@ -52,6 +52,7 @@
 }
 
 .marker-pin {
+    position: relative;
     display: flex;
     align-items: center;
     background-color: var(--white);
@@ -60,21 +61,36 @@
     border-radius: 12px;
     box-shadow: var(--shadow-md);
     cursor: pointer;
-    transition: all 0.3s;
+    transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
     user-select: none;
     border: 1px solid var(--gray-200);
 }
 
 .marker-pin:hover {
-    transform: scale(1.1);
+    transform: translateY(-2px) scale(1.08);
     z-index: 20;
 }
 
 .marker-pin.active {
     box-shadow: var(--shadow-xl);
     z-index: 21;
-    scale: 1.1;
+    transform: translateY(-2px) scale(1.08);
     border: 2px solid var(--indigo-600);
+}
+
+.marker-pin-glow {
+    position: absolute;
+    inset: -8px;
+    border-radius: 18px;
+    background: radial-gradient(circle, rgba(79, 70, 229, 0.22) 0%, rgba(79, 70, 229, 0) 72%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.marker-pin-pulse .marker-pin-glow {
+    opacity: 1;
+    animation: marker-pin-glow 1.6s ease-out infinite;
 }
 
 .marker-image {
@@ -95,6 +111,18 @@
 .marker-price-decimal {
     font-size: 10px;
     color: var(--gray-400);
+}
+
+@keyframes marker-pin-glow {
+    0% {
+        transform: scale(0.92);
+        opacity: 0.72;
+    }
+
+    100% {
+        transform: scale(1.28);
+        opacity: 0;
+    }
 }
 
 .property-map-popup.mapboxgl-popup {

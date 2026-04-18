@@ -39,8 +39,7 @@ export default function ListingsPanel({
 
   const handleListingsLeave = React.useCallback(() => {
     clearPendingHover();
-    onPropertyHover?.('');
-  }, [clearPendingHover, onPropertyHover]);
+  }, [clearPendingHover]);
 
   React.useEffect(() => () => clearPendingHover(), [clearPendingHover]);
 
@@ -90,7 +89,10 @@ export default function ListingsPanel({
           <div
             key={project._id}
             className="listing-project-card-wrap"
-            onMouseEnter={handleListingsLeave}
+            onMouseEnter={() => {
+              clearPendingHover();
+              onPropertyHover?.('');
+            }}
           >
             <ProjectCard project={project} />
           </div>
