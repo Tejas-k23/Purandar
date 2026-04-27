@@ -27,7 +27,7 @@ function AmenityChip({ label, selected, onClick }) {
     );
 }
 
-export default function Step5Amenities({ formData, updateField }) {
+export default function Step5Amenities({ formData, updateField, errors = {} }) {
     const amenitySections = getAmenitySections(formData.propertyType);
     const additionalOptions = getAdditionalDetailOptions();
     const propertyConfig = getPropertyTypeConfig(formData.propertyType);
@@ -148,18 +148,19 @@ export default function Step5Amenities({ formData, updateField }) {
 
             <div className="ppf-field">
                 <label className="ppf-field-label">
-                    Description <span style={{ fontWeight: 400, color: 'var(--gray-400)' }}>(optional)</span>
+                    Description <span className="required">*</span>
                 </label>
                 <p style={{ fontSize: '0.82rem', color: 'var(--gray-500)', marginBottom: 8 }}>
-                    Write something unique about your property to attract buyers
+                    Write something unique about your property to attract buyers. Minimum 100 characters.
                 </p>
                 <textarea
-                    className="ppf-textarea"
+                    className={`ppf-textarea ${errors.description ? 'error' : ''}`}
                     placeholder="Describe your property - location highlights, amenities, surroundings, transport links..."
                     maxLength={5000}
                     value={formData.description}
                     onChange={(event) => updateField('description', event.target.value)}
                 />
+                {errors.description ? <p className="ppf-input-error">{errors.description}</p> : null}
                 <p className="ppf-char-count">
                     {(formData.description || '').length} / 5,000
                 </p>

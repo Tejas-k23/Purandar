@@ -244,7 +244,7 @@ export const PROPERTY_TYPE_CONFIG = {
   Plot: {
     category: 'residential',
     label: 'Plot',
-    intentOptions: ['sell'],
+    intentOptions: ['sell', 'rent'],
     location: { showFlatNo: false, showTotalFloors: false, showFloorNo: false },
     profileFields: [
       { key: 'plotArea', type: 'area', label: 'Plot Area', required: true },
@@ -517,6 +517,12 @@ export function getVisiblePropertyFieldKeys(propertyType, intent) {
     visible.add('maintenance');
   }
 
+  for (const amenityGroup of config?.amenityGroups || []) {
+    visible.add(amenityGroup.key);
+  }
+
+  visible.add('description');
+
   return visible;
 }
 
@@ -631,6 +637,13 @@ export function getPropertyValidationErrors(step, data) {
     if ((data.photos || []).length > 5) errors.photos = 'You can upload up to 5 images';
     if (data.videoUrl?.trim() && !/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(data.videoUrl.trim())) {
       errors.videoUrl = 'Enter a valid YouTube URL';
+    }
+  }
+
+  if (step === 5) {
+    const descriptionLength = String(data.description || '').trim().length;
+    if (descriptionLength < 100) {
+      errors.description = 'Description must be at least 100 characters';
     }
   }
 

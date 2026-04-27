@@ -33,7 +33,7 @@ export default function PropertyMap({ property = {} }) {
             mapStyle="mapbox://styles/mapbox/streets-v12"
             mapboxAccessToken={env.mapboxAccessToken}
             scrollZoom={true}
-            cooperativeGestures={true}
+            cooperativeGestures={false}
             style={{ width: '100%', height: '100%' }}
           >
             <NavigationControl position="top-right" />

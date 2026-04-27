@@ -10,6 +10,7 @@ export default function Step4MediaUpload({ formData, updateField }) {
     const [dragOver, setDragOver] = useState(false);
     const [uploadError, setUploadError] = useState('');
     const fileInputRef = useRef(null);
+    const cameraInputRef = useRef(null);
 
     const photos = formData.photos || [];
 
@@ -63,6 +64,11 @@ export default function Step4MediaUpload({ formData, updateField }) {
         handleFiles(e.dataTransfer.files);
     };
 
+    const handlePickerChange = (e) => {
+        handleFiles(e.target.files);
+        e.target.value = '';
+    };
+
     const deletePhoto = (id) => {
         const updated = photos.filter(p => p.id !== id);
         // if deleted photo was cover, make first one cover
@@ -105,13 +111,43 @@ export default function Step4MediaUpload({ formData, updateField }) {
                 <p className="ppf-upload-hint">
                     JPG, PNG or WebP • Total 50 MB • Up to {MAX_PHOTOS} photos
                 </p>
+                <div className="ppf-upload-actions">
+                    <button
+                        type="button"
+                        className="ppf-upload-action-btn"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            fileInputRef.current?.click();
+                        }}
+                    >
+                        Browse Photos
+                    </button>
+                    <button
+                        type="button"
+                        className="ppf-upload-action-btn ppf-upload-action-btn--secondary"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            cameraInputRef.current?.click();
+                        }}
+                    >
+                        Use Camera
+                    </button>
+                </div>
                 <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     multiple
                     style={{ display: 'none' }}
-                    onChange={(e) => handleFiles(e.target.files)}
+                    onChange={handlePickerChange}
+                />
+                <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    onChange={handlePickerChange}
                 />
             </div>
 

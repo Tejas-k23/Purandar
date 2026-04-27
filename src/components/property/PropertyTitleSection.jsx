@@ -27,7 +27,7 @@ export default function PropertyTitleSection({ property = {} }) {
             <div className="pd-rating">
               <Star size={14} className="pd-rating-star" fill="var(--orange)" />
               <span className="pd-rating-value">4.8</span>
-              <span className="pd-rating-count">MongoDB listing</span>
+              <span className="pd-rating-count">Verified listing</span>
             </div>
           </div>
         </div>

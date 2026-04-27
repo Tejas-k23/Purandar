@@ -47,7 +47,7 @@ export default function MapPickerModal({
 
         {!hasToken ? (
           <div className="map-picker-empty">
-            <p>Mapbox access token is missing. Add `VITE_MAPBOX_ACCESS_TOKEN` to enable map selection.</p>
+            <p>Map selection is unavailable right now. Please try again later.</p>
             <button type="button" className="map-picker-btn" onClick={onClose}>Close</button>
           </div>
         ) : (

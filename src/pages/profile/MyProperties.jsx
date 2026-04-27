@@ -156,7 +156,7 @@ export default function MyProperties() {
           })}
         </div>
       ) : (
-        <EmptyState title="You haven't listed any properties yet." description="Add your first property to create a real MongoDB listing." />
+        <EmptyState title="You haven't listed any properties yet." description="Add your first property to start receiving buyer interest." />
       )}
     </div>
   );

@@ -81,14 +81,14 @@ export default function MyProfile() {
           <div style={{ marginBottom: 24 }}>
             <MobileVerificationCard
               title="Verify your seller mobile number"
-              description="Google Sign-In works without a phone number, but seller contact features require OTP-verified mobile details."
+              description="Verify your mobile number to continue."
               onVerified={async () => {
                 setMessage('Mobile number verified successfully.');
               }}
             />
             {verificationNext ? (
               <p className="profile-form-message" style={{ marginTop: 16 }}>
-                Complete mobile verification to continue to your seller workflow.
+                Verify your mobile number to continue.
               </p>
             ) : null}
           </div>

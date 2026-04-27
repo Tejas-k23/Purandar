@@ -96,7 +96,7 @@ To exercise any of these rights, please contact us at **privacy@purandarprimepro
 
 - HTTPS encryption for all data in transit
 - Secure password hashing using bcrypt
-- Firebase security rules to restrict database access
+- Strict access controls to protect stored information
 - Role-based access control for admin functions
 - Regular security reviews and monitoring
 

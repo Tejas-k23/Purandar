@@ -242,7 +242,7 @@ function PropertySection() {
 
         <div className="section-head">
           <h3 className="section-title"><span className="heading-accent">Recommended</span> Properties</h3>
-          <p className="section-subtitle">Your live listings from the database</p>
+          <p className="section-subtitle">Fresh listings selected for you</p>
         </div>
 
         {loading ? <Loader label="Loading recommended properties..." /> : null}

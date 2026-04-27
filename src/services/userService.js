@@ -70,6 +70,11 @@ export const userService = {
     return syncTokenFromResponse(response);
   },
 
+  async mergeMobileAccount(payload) {
+    const response = await api.post('/auth/merge-mobile-account', payload);
+    return syncTokenFromResponse(response);
+  },
+
   getCurrentUser() {
     return api.get('/auth/me');
   },

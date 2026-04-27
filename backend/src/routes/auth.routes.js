@@ -5,6 +5,7 @@ import {
   login,
   logout,
   me,
+  mergeMobileAccount,
   refresh,
   register,
   registerWithPhone,
@@ -28,6 +29,7 @@ router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.post('/validate-mobile', protect, validateMobileVerification);
 router.post('/verify-mobile', protect, verifyMobileForCurrentUser);
+router.post('/merge-mobile-account', protect, mergeMobileAccount);
 router.get('/me', protect, me);
 
 export default router;

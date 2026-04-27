@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Bath, Building2, CalendarDays, CarFront, Dumbbell, FileText, Mail, MapPin, MapPinned, Phone, ShieldCheck, Trees, Waves, Users, Building, Lock, Blocks, Sparkles, UserCircle } from 'lucide-react';
+import Map, { Marker, NavigationControl } from 'react-map-gl/mapbox';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
 import Loader from '../../components/common/Loader';
 import ProjectCard from '../../components/project/ProjectCard';
 import projectService from '../../services/projectService';
+import env from '../../config/env';
 import { getProjectTypeProfile } from '../../utils/projectTypeConfig';
 import { formatCompactPrice } from '../../utils/formatPrice';
 import useAuth from '../../hooks/useAuth';
@@ -271,6 +273,11 @@ function Description({ project }) {
 }
 
 function ProjectMap({ project }) {
+  const fallbackLongitude = 73.98;
+  const fallbackLatitude = 18.28;
+  const longitude = Number.isFinite(project.longitude) ? project.longitude : fallbackLongitude;
+  const latitude = Number.isFinite(project.latitude) ? project.latitude : fallbackLatitude;
+  const hasCoords = Number.isFinite(project.longitude) && Number.isFinite(project.latitude);
   const searchQuery = project.mapLink || [project.address, project.area, project.city].filter(Boolean).join(', ');
   const hasDirectMapLink = /^https?:\/\//i.test(project.mapLink || '');
   const src = hasDirectMapLink
@@ -287,12 +294,34 @@ function ProjectMap({ project }) {
       longitude: project.longitude,
       query: searchQuery,
     });
+  const hasMapbox = Boolean(env.mapboxAccessToken) && hasCoords && !hasDirectMapLink;
 
   return (
     <div>
       <h2 className="pd-section-title"><MapPinned size={18} />Map & Location</h2>
       <div className="pd-map-container">
-        <iframe title="Project map" src={src} loading="lazy" referrerPolicy="no-referrer-when-downgrade" style={{ width: '100%', height: '100%', border: 0 }} />
+        {hasMapbox ? (
+          <Map
+            initialViewState={{ longitude, latitude, zoom: 13.5 }}
+            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapboxAccessToken={env.mapboxAccessToken}
+            scrollZoom
+            cooperativeGestures={false}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <NavigationControl position="top-right" />
+            <Marker longitude={longitude} latitude={latitude} anchor="bottom">
+              <div className="pd-map-marker">
+                <div className="pd-marker-inner">
+                  <MapPin size={20} color="white" fill="var(--indigo-600)" />
+                </div>
+                <div className="pd-marker-pulse" />
+              </div>
+            </Marker>
+          </Map>
+        ) : (
+          <iframe title="Project map" src={src} loading="lazy" referrerPolicy="no-referrer-when-downgrade" style={{ width: '100%', height: '100%', border: 0 }} />
+        )}
       </div>
       {googleMapsUrl ? (
         <div className="pd-map-actions">

@@ -35,6 +35,7 @@ export default function MobileVerificationCard({
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
+  const [mergeConflict, setMergeConflict] = useState(null);
   const verifyInFlightRef = useRef(false);
 
   const normalizedPhone = useMemo(() => normalizePhone(phone), [phone]);
@@ -54,15 +55,66 @@ export default function MobileVerificationCard({
       setReqId('');
       setOtp('');
       setOtpSent(false);
+      setMergeConflict(null);
       setStatus({ type: 'success', message: 'Mobile number verified successfully.' });
       await onVerified?.();
     } catch (error) {
+      const mergeData = error.data?.data;
+      if (error.data?.code === 'MOBILE_ALREADY_IN_USE' && mergeData?.canMerge) {
+        setMergeConflict({
+          accessToken,
+          existingAccount: mergeData.existingAccount || null,
+        });
+        setStatus({ type: 'error', message: error.message || 'This mobile number is already linked to another account.' });
+        return;
+      }
       setStatus({ type: 'error', message: error.message || 'Unable to verify your mobile number.' });
     } finally {
       verifyInFlightRef.current = false;
       setLoading(false);
     }
   }, [normalizedPhone, onVerified, refreshProfile]);
+
+  const resetForNumberChange = useCallback(() => {
+    clearReqId(normalizedPhone);
+    setReqId('');
+    setOtp('');
+    setOtpSent(false);
+    setMergeConflict(null);
+    setStatus({
+      type: '',
+      message: '',
+    });
+  }, [normalizedPhone]);
+
+  const mergeAccounts = useCallback(async () => {
+    if (!mergeConflict?.accessToken) {
+      setStatus({ type: 'error', message: 'Please verify the OTP again before merging.' });
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ type: '', message: '' });
+
+    try {
+      await userService.mergeMobileAccount({
+        phone: normalizedPhone,
+        accessToken: mergeConflict.accessToken,
+      });
+      await refreshProfile();
+      clearReqId(normalizedPhone);
+      setReqId('');
+      setOtp('');
+      setOtpSent(false);
+      setMergeConflict(null);
+      setStatus({ type: 'success', message: 'Accounts merged and mobile number verified successfully.' });
+      await onVerified?.();
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message || 'Unable to merge the accounts right now.' });
+    } finally {
+      setLoading(false);
+    }
+  }, [mergeConflict, normalizedPhone, onVerified, refreshProfile]);
 
   const ensureWidgetReady = useCallback(async () => {
     if (!env.msg91WidgetId || !env.msg91WidgetToken) {
@@ -239,6 +291,31 @@ export default function MobileVerificationCard({
           We use OTP verification to protect seller contact details and prevent misuse.
         </p>
       </div>
+
+      {mergeConflict ? (
+        <div className="mobile-verify-card__modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mobile-merge-title">
+          <div className="mobile-verify-card__modal">
+            <h4 id="mobile-merge-title" className="mobile-verify-card__modal-title">Mobile number already exists</h4>
+            <p className="mobile-verify-card__modal-text">
+              This mobile number is already linked to another account. Since the OTP was verified successfully, you can merge that account into your current Google account or go back and use a different number.
+            </p>
+            {mergeConflict.existingAccount ? (
+              <div className="mobile-verify-card__merge-summary">
+                <strong>{mergeConflict.existingAccount.name || 'Existing account'}</strong>
+                <span>{mergeConflict.existingAccount.email || 'Email not available'}</span>
+              </div>
+            ) : null}
+            <div className="mobile-verify-card__modal-actions">
+              <button type="button" className="auth-primary-btn" onClick={mergeAccounts} disabled={loading}>
+                {loading ? 'Merging...' : 'Merge accounts'}
+              </button>
+              <button type="button" className="auth-secondary-btn" onClick={resetForNumberChange} disabled={loading}>
+                Change number
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

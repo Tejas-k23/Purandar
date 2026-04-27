@@ -62,8 +62,64 @@
   color: var(--gray-500);
 }
 
+.mobile-verify-card__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.mobile-verify-card__modal {
+  width: min(100%, 460px);
+  padding: 1.25rem;
+  border-radius: 24px;
+  background: var(--white);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+  display: grid;
+  gap: 0.9rem;
+}
+
+.mobile-verify-card__modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--gray-900);
+}
+
+.mobile-verify-card__modal-text {
+  margin: 0;
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+
+.mobile-verify-card__merge-summary {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 107, 0, 0.16);
+  background: var(--warm-white);
+  color: var(--gray-700);
+}
+
+.mobile-verify-card__merge-summary strong {
+  color: var(--gray-900);
+}
+
+.mobile-verify-card__modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 @media (max-width: 640px) {
   .mobile-verify-card__actions > button {
+    width: 100%;
+  }
+
+  .mobile-verify-card__modal-actions > button {
     width: 100%;
   }
 }

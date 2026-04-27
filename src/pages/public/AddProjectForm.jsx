@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Building2, CalendarDays, FileBadge2, IndianRupee, Mail, MapPin, Phone, ShieldCheck, UserRound } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import projectService from '../../services/projectService';
@@ -164,6 +164,9 @@ function validateForm(data) {
 
   if (!data.shortDescription.trim()) errors.shortDescription = 'Short description is required';
   if (!data.detailedDescription.trim()) errors.detailedDescription = 'Detailed description is required';
+  if (data.detailedDescription.trim() && data.detailedDescription.trim().length < 100) {
+    errors.detailedDescription = 'Detailed description must be at least 100 characters';
+  }
 
   ['totalTowers', 'totalUnits', 'totalFloors', 'openSpace'].forEach((field) => {
     const labelMap = {
@@ -320,6 +323,8 @@ export default function AddProjectForm() {
   const [loading, setLoading] = useState(false);
   const [successDialog, setSuccessDialog] = useState(null);
   const [customTagInput, setCustomTagInput] = useState('');
+  const projectImageInputRef = useRef(null);
+  const projectCameraInputRef = useRef(null);
   const editId = searchParams.get('edit');
   const isAdminPath = location.pathname.startsWith('/admin');
   const { user } = useAuth();
@@ -498,9 +503,19 @@ export default function AddProjectForm() {
   };
 
   const toggleArrayValue = (field, value) => {
-    const current = Array.isArray(formData[field]) ? formData[field] : [];
-    const next = current.includes(value) ? current.filter((item) => item !== value) : [...current, value];
-    updateField(field, next);
+    setFormData((current) => {
+      const currentValues = Array.isArray(current[field]) ? current[field] : [];
+      const nextValues = currentValues.includes(value)
+        ? currentValues.filter((item) => item !== value)
+        : [...currentValues, value];
+      return { ...current, [field]: nextValues };
+    });
+    setErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
   };
 
   const addCustomTag = () => {
@@ -556,6 +571,7 @@ export default function AddProjectForm() {
     }
 
     updateField('projectImages', [...formData.projectImages, ...mappedFiles]);
+    event.target.value = '';
   };
 
   const removeImage = (id) => {
@@ -807,6 +823,30 @@ export default function AddProjectForm() {
             <div className="ppf-field">
               <label className="ppf-field-label">
                 Pin on Map<span className="required">*</span>
+                <div className="ppf-upload-actions">
+                  <button
+                    type="button"
+                    className="ppf-upload-action-btn"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      projectImageInputRef.current?.click();
+                    }}
+                  >
+                    Browse Photos
+                  </button>
+                  <button
+                    type="button"
+                    className="ppf-upload-action-btn ppf-upload-action-btn--secondary"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      projectCameraInputRef.current?.click();
+                    }}
+                  >
+                    Use Camera
+                  </button>
+                </div>
               </label>
               <button
                 type="button"
@@ -833,7 +873,7 @@ export default function AddProjectForm() {
               ) : null}
               {!env.mapboxAccessToken ? (
                 <p className="ppf-input-error" style={{ marginTop: 8 }}>
-                  Mapbox token missing. Add `VITE_MAPBOX_ACCESS_TOKEN` to enable map selection.
+                  Map selection is unavailable right now. Please enter the location details and try again later.
                 </p>
               ) : null}
             </div>
@@ -928,7 +968,8 @@ export default function AddProjectForm() {
           <SectionCard id="media" title="5. Project Media" description="Upload images with preview, add brochure PDF, and attach project video.">
             <Field label="Upload Project Images" required error={errors.projectImages}>
               <label className="ppf-upload-zone apf-upload-zone">
-                <input name="projectImages" type="file" accept="image/*" multiple className="apf-hidden-input" onChange={handleImageUpload} />
+                <input ref={projectImageInputRef} name="projectImages" type="file" accept="image/*" multiple className="apf-hidden-input" onChange={handleImageUpload} />
+                <input ref={projectCameraInputRef} name="projectCamera" type="file" accept="image/*" capture="environment" className="apf-hidden-input" onChange={handleImageUpload} />
                 <svg className="ppf-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="17 8 12 3 7 8" />
@@ -982,6 +1023,7 @@ export default function AddProjectForm() {
             </Field>
             <Field label="Detailed Description" required error={errors.detailedDescription}>
               <TextAreaInput name="detailedDescription" rows="8" placeholder="Write a detailed description covering highlights, access, amenities, and value proposition" value={formData.detailedDescription} onChange={(event) => updateField('detailedDescription', event.target.value)} error={errors.detailedDescription} />
+              <p className="ppf-char-count">{(formData.detailedDescription || '').trim().length} / 100 minimum characters</p>
             </Field>
           </SectionCard>
         );
@@ -1222,7 +1264,7 @@ export default function AddProjectForm() {
                 <h1 className="ppf-heading">
                   Add a new <span>project</span> for Purandar Properties
                 </h1>
-                <p className="apf-hero-copy">Built to match the same admin form language as your existing property flow with clean sections, soft cards, and focused interactions.</p>
+                <p className="apf-hero-copy">Add your project details, images, amenities, and contact information in one simple flow.</p>
               </div>
             </div>
 

@@ -179,7 +179,7 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                 ) : null}
                 {mapDisabled ? (
                     <p className="ppf-input-error" style={{ marginTop: 8 }}>
-                        Mapbox token missing. Add `VITE_MAPBOX_ACCESS_TOKEN` to enable map selection.
+                        Map selection is unavailable right now. Please enter the location details and try again later.
                     </p>
                 ) : null}
             </div>

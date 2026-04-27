@@ -1,6 +1,13 @@
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
+import Enquiry from '../models/Enquiry.js';
+import Feedback from '../models/Feedback.js';
+import Notification from '../models/Notification.js';
+import NotificationSetting from '../models/NotificationSetting.js';
+import NotificationToken from '../models/NotificationToken.js';
+import Project from '../models/Project.js';
+import Property from '../models/Property.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { env } from '../config/env.js';
@@ -31,10 +38,41 @@ const normalizePhone = (phone = '') => {
 
 const normalizeEmail = (email = '') => String(email || '').trim().toLowerCase();
 const normalizeRole = (role) => (role === 'agent' ? 'agent' : 'user');
+const roleRank = { user: 1, agent: 2, admin: 3 };
 
 const buildPhonePlaceholderEmail = (phone) => `phone.${phone}@purandar.local`;
 const buildPhonePlaceholderPassword = (phone) => `PhoneAuth@${phone}`;
 const buildGooglePlaceholderPassword = () => `GoogleAuth@${crypto.randomUUID()}Aa1`;
+const isGoogleLinkedUser = (user) => Boolean(user?.googleId) || user?.authProvider === 'google';
+const pickHigherRole = (left = 'user', right = 'user') =>
+  (roleRank[left] || roleRank.user) >= (roleRank[right] || roleRank.user) ? left : right;
+const maskEmail = (email = '') => {
+  const normalized = normalizeEmail(email);
+  const [localPart, domain] = normalized.split('@');
+
+  if (!localPart || !domain) return '';
+  if (localPart.length <= 2) return `${localPart.charAt(0) || '*'}*@${domain}`;
+
+  return `${localPart.slice(0, 2)}***@${domain}`;
+};
+const buildMergePreview = (user) => ({
+  id: user._id,
+  name: user.name || 'Existing user',
+  email: maskEmail(user.email),
+  phone: user.phone || '',
+  role: user.role || 'user',
+  authProvider: user.authProvider || (String(user.email || '').endsWith('@purandar.local') ? 'phone' : 'local'),
+});
+const sendMergeRequiredResponse = (res, existingUser) =>
+  res.status(409).json({
+    success: false,
+    code: 'MOBILE_ALREADY_IN_USE',
+    message: 'This mobile number is already linked to another account. Merge it with your Google account or use a different number.',
+    data: {
+      canMerge: true,
+      existingAccount: buildMergePreview(existingUser),
+    },
+  });
 
 const verifyGoogleCredential = async (credential) => {
   if (!env.GOOGLE_CLIENT_ID || !googleClient) {
@@ -95,6 +133,45 @@ const sendAuthResponse = async (user, res) => {
       refreshToken,
     },
   });
+};
+
+const mergeUserIntoCurrentAccount = async ({ currentUser, existingUser, phone }) => {
+  if (!currentUser || !existingUser) {
+    throw new ApiError(400, 'Both accounts are required for merge');
+  }
+
+  const mergedSavedProperties = Array.from(new Set([
+    ...(currentUser.savedProperties || []).map((item) => item.toString()),
+    ...(existingUser.savedProperties || []).map((item) => item.toString()),
+  ]));
+
+  currentUser.role = pickHigherRole(currentUser.role, existingUser.role);
+  currentUser.name = currentUser.name || existingUser.name;
+  currentUser.location = currentUser.location || existingUser.location || '';
+  currentUser.bio = currentUser.bio || existingUser.bio || '';
+  currentUser.avatar = currentUser.avatar || existingUser.avatar || '';
+  currentUser.phone = phone;
+  currentUser.isMobileVerified = true;
+  currentUser.savedProperties = mergedSavedProperties;
+  currentUser.authProvider = isGoogleLinkedUser(currentUser) ? 'google' : (currentUser.authProvider || existingUser.authProvider || 'local');
+  currentUser.googleId = currentUser.googleId || existingUser.googleId || '';
+  currentUser.refreshTokenHash = null;
+  currentUser.tokenVersion = Math.max(currentUser.tokenVersion || 0, existingUser.tokenVersion || 0) + 1;
+
+  await currentUser.save({ validateBeforeSave: false });
+
+  await Promise.all([
+    Property.updateMany({ owner: existingUser._id }, { owner: currentUser._id, userName: currentUser.name }),
+    Project.updateMany({ owner: existingUser._id }, { owner: currentUser._id }),
+    Enquiry.updateMany({ user: existingUser._id }, { user: currentUser._id }),
+    Enquiry.updateMany({ propertyOwner: existingUser._id }, { propertyOwner: currentUser._id }),
+    Notification.updateMany({ user: existingUser._id }, { user: currentUser._id }),
+    NotificationToken.updateMany({ user: existingUser._id }, { user: currentUser._id, role: currentUser.role }),
+    NotificationSetting.updateMany({ updatedBy: existingUser._id }, { updatedBy: currentUser._id }),
+    Feedback.updateMany({ user: existingUser._id }, { user: currentUser._id }),
+  ]);
+
+  await User.findByIdAndDelete(existingUser._id);
 };
 
 export const checkPhone = asyncHandler(async (req, res) => {
@@ -337,9 +414,20 @@ export const validateMobileVerification = asyncHandler(async (req, res) => {
   const existingUser = await User.findOne({
     phone,
     _id: { $ne: req.user._id },
-  }).select('_id');
+  }).select('_id name email phone role authProvider googleId');
 
   if (existingUser) {
+    if (isGoogleLinkedUser(req.user)) {
+      return res.json({
+        success: true,
+        message: 'Mobile number can be verified',
+        data: {
+          conflict: true,
+          canMerge: true,
+          existingAccount: buildMergePreview(existingUser),
+        },
+      });
+    }
     throw new ApiError(409, 'An account with this phone number already exists');
   }
 
@@ -363,9 +451,21 @@ export const verifyMobileForCurrentUser = asyncHandler(async (req, res) => {
   const existingUser = await User.findOne({
     phone,
     _id: { $ne: req.user._id },
-  }).select('_id');
+  }).select('_id name email phone role authProvider googleId isActive');
 
   if (existingUser) {
+    if (isGoogleLinkedUser(req.user)) {
+      if (existingUser.role === 'admin') {
+        throw new ApiError(409, 'This mobile number belongs to an admin account and cannot be merged.');
+      }
+
+      if (existingUser.isActive === false) {
+        throw new ApiError(409, 'This mobile number belongs to a disabled account. Please contact support.');
+      }
+
+      return sendMergeRequiredResponse(res, existingUser);
+    }
+
     throw new ApiError(409, 'An account with this phone number already exists');
   }
 
@@ -380,6 +480,61 @@ export const verifyMobileForCurrentUser = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   await sendAuthResponse(user, res);
+});
+
+export const mergeMobileAccount = asyncHandler(async (req, res) => {
+  const phone = normalizePhone(req.body.phone);
+  const accessToken = req.body.accessToken;
+
+  if (!phone) {
+    throw new ApiError(400, 'Phone number is required');
+  }
+
+  if (!accessToken) {
+    throw new ApiError(400, 'accessToken is required for verification');
+  }
+
+  await verifyMsg91AccessToken(accessToken);
+
+  const currentUser = await User.findById(req.user._id).select('+refreshTokenHash');
+
+  if (!currentUser) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  if (!isGoogleLinkedUser(currentUser)) {
+    throw new ApiError(403, 'Only Google-linked accounts can merge during mobile verification');
+  }
+
+  const existingUser = await User.findOne({
+    phone,
+    _id: { $ne: currentUser._id },
+  }).select('+refreshTokenHash');
+
+  if (!existingUser) {
+    currentUser.phone = phone;
+    currentUser.isMobileVerified = true;
+    await currentUser.save({ validateBeforeSave: false });
+    await sendAuthResponse(currentUser, res);
+    return;
+  }
+
+  if (existingUser.role === 'admin') {
+    throw new ApiError(409, 'This mobile number belongs to an admin account and cannot be merged.');
+  }
+
+  if (existingUser.isActive === false) {
+    throw new ApiError(409, 'This mobile number belongs to a disabled account. Please contact support.');
+  }
+
+  await mergeUserIntoCurrentAccount({
+    currentUser,
+    existingUser,
+    phone,
+  });
+
+  const mergedUser = await User.findById(currentUser._id).select('+refreshTokenHash');
+  await sendAuthResponse(mergedUser, res);
 });
 
 export const refresh = asyncHandler(async (req, res) => {

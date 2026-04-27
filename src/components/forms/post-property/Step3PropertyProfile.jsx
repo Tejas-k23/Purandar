@@ -173,6 +173,7 @@ export default function Step3PropertyProfile({ formData, updateField, errors }) 
     const isSell = formData.intent === 'sell';
     const isRent = formData.intent === 'rent';
     const isPG = formData.intent === 'pg';
+    const isPlot = formData.propertyType === 'Plot';
     const autoBaseArea = formData.totalArea || formData.carpetArea || formData.plotArea || formData.floorArea;
     const autoPerSqFt = (formData.price && autoBaseArea)
         ? Math.round(Number(formData.price) / Number(autoBaseArea))
@@ -230,31 +231,35 @@ export default function Step3PropertyProfile({ formData, updateField, errors }) 
             <div className={isSell ? '' : 'ppf-form-row'}>
                 <div className="ppf-field">
                     <label className="ppf-field-label">
-                        {isSell ? 'Total Price (Rs.)' : 'Monthly Rent (Rs.)'}
+                        {isSell ? 'Total Price (Rs.)' : isPlot ? 'Monthly Lease Rent (Rs.)' : 'Monthly Rent (Rs.)'}
                         <span className="required">*</span>
                     </label>
                     <input
                         className={`ppf-input ${errors.price ? 'error' : ''}`}
                         type="number"
-                        placeholder={isSell ? 'e.g. 5000000' : 'e.g. 25000'}
+                        placeholder={isSell ? 'e.g. 5000000' : isPlot ? 'e.g. 15000' : 'e.g. 25000'}
                         value={formData.price}
                         onChange={(event) => updateField('price', event.target.value)}
                     />
-                    {autoPerSqFt ? <p className="ppf-auto-calc">Approx. Rs.{autoPerSqFt.toLocaleString('en-IN')} per {formData.areaUnit}</p> : null}
+                    {autoPerSqFt ? (
+                        <p className="ppf-auto-calc">
+                            Approx. Rs.{autoPerSqFt.toLocaleString('en-IN')} per {formData.areaUnit}{isRent ? ' / month' : ''}
+                        </p>
+                    ) : null}
                     {errors.price ? <p className="ppf-input-error">{errors.price}</p> : null}
                 </div>
 
                 {isRent || isPG ? (
                     <div className="ppf-field">
-                        <label className="ppf-field-label">Security Deposit (Rs.)</label>
-                        <input className="ppf-input" type="number" placeholder="e.g. 50000" value={formData.securityDeposit} onChange={(event) => updateField('securityDeposit', event.target.value)} />
+                        <label className="ppf-field-label">{isPlot ? 'Refundable Security Deposit (Rs.)' : 'Security Deposit (Rs.)'}</label>
+                        <input className="ppf-input" type="number" placeholder={isPlot ? 'e.g. 30000' : 'e.g. 50000'} value={formData.securityDeposit} onChange={(event) => updateField('securityDeposit', event.target.value)} />
                     </div>
                 ) : null}
 
                 {isRent ? (
                     <div className="ppf-field">
-                        <label className="ppf-field-label">Maintenance (Rs./month)</label>
-                        <input className="ppf-input" type="number" placeholder="e.g. 3000" value={formData.maintenance} onChange={(event) => updateField('maintenance', event.target.value)} />
+                        <label className="ppf-field-label">{isPlot ? 'Site Maintenance / Upkeep (Rs./month)' : 'Maintenance (Rs./month)'}</label>
+                        <input className="ppf-input" type="number" placeholder={isPlot ? 'e.g. 1000' : 'e.g. 3000'} value={formData.maintenance} onChange={(event) => updateField('maintenance', event.target.value)} />
                     </div>
                 ) : null}
             </div>
@@ -263,7 +268,7 @@ export default function Step3PropertyProfile({ formData, updateField, errors }) 
                 <Toggle label="Meals Included" value={formData.mealsIncluded} onChange={(value) => updateField('mealsIncluded', value)} />
             ) : null}
 
-            <Toggle label="Price Negotiable" value={formData.priceNegotiable} onChange={(value) => updateField('priceNegotiable', value)} />
+            <Toggle label={isRent ? 'Rent Negotiable' : 'Price Negotiable'} value={formData.priceNegotiable} onChange={(value) => updateField('priceNegotiable', value)} />
         </div>
     );
 }

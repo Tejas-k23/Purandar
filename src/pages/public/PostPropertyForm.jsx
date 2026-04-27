@@ -338,7 +338,7 @@ export default function PostPropertyForm() {
               <div className="ppf-mobile-verify-banner">
                 <MobileVerificationCard
                   title="Verify your mobile before publishing"
-                  description="You can keep filling the form now, but we will ask for OTP verification before your seller details go live."
+                  description="Verify your mobile number before you publish."
                   showSkip
                   onSkip={() => setShowMobileVerificationPrompt(false)}
                 />

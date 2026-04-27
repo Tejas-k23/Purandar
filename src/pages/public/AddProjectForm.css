@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+  min-width: 0;
 }
 
 .apf-hero {
@@ -23,6 +24,7 @@
   font-size: 0.95rem;
   line-height: 1.7;
   color: var(--gray-500);
+  overflow-wrap: anywhere;
 }
 
 
@@ -33,6 +35,7 @@
   background: linear-gradient(180deg, var(--white) 0%, var(--warm-white) 100%);
   box-shadow: var(--shadow-sm);
   animation: ppfFadeIn 0.35s ease-out;
+  min-width: 0;
 }
 
 .apf-section-card:hover {
@@ -124,6 +127,7 @@
   gap: var(--space-3);
   margin-top: var(--space-4);
   align-items: center;
+  min-width: 0;
 }
 
 .apf-tag-list {
@@ -224,9 +228,23 @@
   .apf-hero {
     flex-direction: column;
   }
+
+  .apf-form-card {
+    overflow-x: hidden;
+  }
 }
 
 @media (max-width: 640px) {
+  .apf-hero {
+    gap: var(--space-3);
+    padding-bottom: var(--space-2);
+  }
+
+  .apf-hero-copy {
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
   .apf-section-card {
     padding: var(--space-4);
   }
@@ -239,6 +257,17 @@
   .apf-mini-btn,
   .apf-inline-btn {
     width: 100%;
+  }
+
+  .apf-tag-row {
+    grid-template-columns: 1fr;
+  }
+
+  .apf-tag-pill,
+  .apf-file-badge,
+  .apf-status-message,
+  .apf-section-description {
+    overflow-wrap: anywhere;
   }
 }
 
