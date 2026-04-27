@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import FAQSection from '../../components/common/FAQSection';
+import contactService from '../../services/contactService';
+import './ContactUs.css';
+
+const SUPPORT_EMAIL = 'info@purandarprimepropertys.live';
+const SUCCESS_MESSAGE = 'Your message has been sent successfully. Our team will contact you shortly.';
+const FAILURE_MESSAGE = 'Something went wrong. Please try again or contact support.';
+
+const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
 
 export default function ContactUs() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
-  const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const faqs = [
     {
       question: 'Is Purandar a good place to buy plots?',
@@ -123,43 +133,162 @@ export default function ContactUs() {
     },
   ];
 
-  const handleSubmit = (event) => {
+  const supportMailto = useMemo(() => `mailto:${SUPPORT_EMAIL}`, []);
+
+  const validateForm = () => {
+    const nextErrors = {};
+
+    if (!form.name.trim()) {
+      nextErrors.name = 'Please enter your name';
+    }
+
+    if (!form.email.trim()) {
+      nextErrors.email = 'Please enter your email';
+    } else if (!validateEmail(form.email)) {
+      nextErrors.email = 'Enter a valid email address';
+    }
+
+    if (!form.message.trim()) {
+      nextErrors.message = 'Message cannot be empty';
+    }
+
+    return nextErrors;
+  };
+
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setSubmitted(true);
-    setForm({ name: '', email: '', message: '' });
+
+    const nextErrors = validateForm();
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
+      setStatus({ type: '', message: '' });
+      return;
+    }
+
+    setErrors({});
+    setStatus({ type: '', message: '' });
+    setIsSubmitting(true);
+
+    try {
+      const response = await contactService.submit({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        message: form.message.trim(),
+      });
+
+      if (response.data?.success) {
+        setForm({ name: '', email: '', message: '' });
+        setStatus({ type: 'success', message: SUCCESS_MESSAGE });
+        return;
+      }
+
+      setStatus({ type: 'error', message: FAILURE_MESSAGE });
+    } catch (error) {
+      const serverErrors = error.data?.errors;
+      if (serverErrors && typeof serverErrors === 'object') {
+        setErrors(serverErrors);
+      }
+      setStatus({
+        type: 'error',
+        message: error.data?.message || FAILURE_MESSAGE,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '2rem 1.25rem 4rem' }}>
-      <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-        <div style={{ padding: '2rem', borderRadius: 24, background: 'linear-gradient(135deg, var(--indigo-50), var(--warm-white))', border: '1px solid var(--gray-300)' }}>
+    <div className="contact-page">
+      <section className="contact-hero">
+        <div className="contact-card contact-card--hero">
           <p style={{ fontWeight: 700, color: 'var(--indigo-700)', marginBottom: 8 }}>Contact Us</p>
           <h1 style={{ marginBottom: 12 }}>Talk to the <span className="heading-accent">Purandar Prime Propertys</span> team</h1>
-          <p style={{ color: 'var(--gray-600)', lineHeight: 1.7 }}>We help buyers, tenants, owners, and agents discover and manage verified property listings across Purandar and nearby Pune locations.</p>
-          <div style={{ marginTop: '1.25rem', display: 'grid', gap: 10 }}>
+          <p className="contact-lead">We help buyers, tenants, owners, and agents discover and manage verified property listings across Purandar and nearby Pune locations.</p>
+          <div className="contact-meta">
             <div><strong>Phone:</strong> +91 98765 43210</div>
-            <div><strong>Email:</strong> support@purandarprimepropertys.com</div>
+            <div>
+              <strong>Email:</strong>{' '}
+              <a href={supportMailto} className="contact-support-link">{SUPPORT_EMAIL}</a>
+            </div>
             <div><strong>Address:</strong> Saswad, Purandar, Pune, Maharashtra</div>
           </div>
+          <p className="contact-fallback">
+            If the form is not working, contact us directly at{' '}
+            <a href={supportMailto} className="contact-support-link">{SUPPORT_EMAIL}</a>
+          </p>
         </div>
 
-        <div style={{ padding: '2rem', borderRadius: 24, background: 'var(--white)', border: '1px solid var(--gray-300)' }}>
+        <div className="contact-card contact-card--form">
           <h2 style={{ marginBottom: 12 }}>Send us a <span className="heading-accent">message</span></h2>
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-            <input className="styled-input" placeholder="Your name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-            <input className="styled-input" placeholder="Your email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-            <textarea className="styled-textarea" rows={6} placeholder="How can we help you?" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required />
-            <button type="submit" className="btn btn-primary">Send Message</button>
+          <form onSubmit={handleSubmit} className="contact-form" noValidate>
+            <div className="contact-field">
+              <label className="contact-label" htmlFor="contact-name">Name</label>
+              <input
+                id="contact-name"
+                className={`styled-input ${errors.name ? 'contact-input-error' : ''}`}
+                placeholder="Your name"
+                value={form.name}
+                onChange={(event) => updateField('name', event.target.value)}
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? 'contact-name-error' : undefined}
+              />
+              {errors.name ? <p id="contact-name-error" className="contact-error-text">{errors.name}</p> : null}
+            </div>
+            <div className="contact-field">
+              <label className="contact-label" htmlFor="contact-email">Email</label>
+              <input
+                id="contact-email"
+                className={`styled-input ${errors.email ? 'contact-input-error' : ''}`}
+                placeholder="Your email"
+                type="email"
+                value={form.email}
+                onChange={(event) => updateField('email', event.target.value)}
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? 'contact-email-error' : undefined}
+              />
+              {errors.email ? <p id="contact-email-error" className="contact-error-text">{errors.email}</p> : null}
+            </div>
+            <div className="contact-field">
+              <label className="contact-label" htmlFor="contact-message">Message</label>
+              <textarea
+                id="contact-message"
+                className={`styled-textarea ${errors.message ? 'contact-input-error' : ''}`}
+                rows={6}
+                placeholder="How can we help you?"
+                value={form.message}
+                onChange={(event) => updateField('message', event.target.value)}
+                aria-invalid={Boolean(errors.message)}
+                aria-describedby={errors.message ? 'contact-message-error' : undefined}
+              />
+              {errors.message ? <p id="contact-message-error" className="contact-error-text">{errors.message}</p> : null}
+            </div>
+            <button type="submit" className="btn btn-primary contact-submit-btn" disabled={isSubmitting}>
+              {isSubmitting ? 'Sending...' : 'Send Message'}
+            </button>
           </form>
-          {submitted ? <p style={{ marginTop: 12, color: 'var(--navy-blue)' }}>Message sent. We will get back to you soon.</p> : null}
+          {status.message ? (
+            <p className={`contact-status ${status.type === 'success' ? 'contact-status--success' : 'contact-status--error'}`}>
+              {status.message}
+            </p>
+          ) : null}
         </div>
       </section>
 
-      <section style={{ padding: '2rem', borderRadius: 24, background: 'var(--white)', border: '1px solid var(--gray-300)' }}>
+      <section className="contact-card contact-card--about">
         <p style={{ fontWeight: 700, color: 'var(--indigo-700)', marginBottom: 8 }}>About Us</p>
         <h2 style={{ marginBottom: 12 }}>Built for <span className="heading-accent">practical</span> property search and management</h2>
-        <p style={{ color: 'var(--gray-600)', lineHeight: 1.8, marginBottom: 12 }}>Purandar Prime Propertys is a modern real estate platform focused on helping users browse verified listings, contact sellers, save favorites, and post new properties with a clean owner workflow.</p>
-        <p style={{ color: 'var(--gray-600)', lineHeight: 1.8 }}>Our goal is to make local discovery simpler while keeping the experience responsive, searchable, and useful for both property seekers and property owners.</p>
+        <p className="contact-about-copy">Purandar Prime Propertys is a modern real estate platform focused on helping users browse verified listings, contact sellers, save favorites, and post new properties with a clean owner workflow.</p>
+        <p className="contact-about-copy" style={{ marginBottom: 0 }}>Our goal is to make local discovery simpler while keeping the experience responsive, searchable, and useful for both property seekers and property owners.</p>
       </section>
 
       <FAQSection

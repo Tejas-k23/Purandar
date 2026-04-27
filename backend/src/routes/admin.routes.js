@@ -23,6 +23,7 @@ import {
   updatePropertyStatus,
   updateProjectStatus,
 } from '../controllers/admin.controller.js';
+import { updateProperty } from '../controllers/property.controller.js';
 import { deleteFeedback, listAllFeedback } from '../controllers/feedback.controller.js';
 import { authorize, protect } from '../middlewares/auth.middleware.js';
 
@@ -38,6 +39,7 @@ router.patch('/blogs/:id', updateBlog);
 router.delete('/blogs/:id', deleteBlog);
 router.get('/properties', getAdminProperties);
 router.get('/properties/:id', getAdminPropertyById);
+router.patch('/properties/:id', updateProperty);
 router.patch('/properties/:id/status', updatePropertyStatus);
 router.patch('/properties/:id/featured', togglePropertyFeatured);
 router.delete('/properties/:id', deleteAdminProperty);
