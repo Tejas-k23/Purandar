@@ -15,7 +15,7 @@ Residential types:
 - Plot / Land
 - 1 RK / Studio Apartment
 - Serviced Apartment
-- PG / Hostel
+- PG / Hostelj
 - Farmhouse
 - Other
 
