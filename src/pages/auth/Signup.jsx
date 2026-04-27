@@ -87,6 +87,10 @@ export default function Signup() {
         }
         if (!fullName.trim()) {
           setFormError('Please enter your full name before verifying OTP.');
+          clearReqId(normalizedPhone);
+          setReqId('');
+          setOtp('');
+          setOtpSent(false);
           return;
         }
         try {
@@ -192,6 +196,10 @@ export default function Signup() {
     setFormError('');
     if (!otp.trim()) {
       setFormError('Please enter the OTP.');
+      return;
+    }
+    if (!fullName.trim()) {
+      setFormError('Please enter your full name before verifying OTP.');
       return;
     }
     const normalizedPhone = normalizePhone(phone);
