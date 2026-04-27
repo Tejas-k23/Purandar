@@ -50,6 +50,20 @@ const numericFields = [
   'score',
 ];
 
+const CONTACT_ONLY_FIELDS = new Set([
+  'contactDisplayMode',
+  'useOriginalSellerContact',
+  'displaySellerName',
+  'displaySellerPhone',
+  'displaySellerEmail',
+  'showWhatsappButton',
+  'whatsappDisplayMode',
+  'useCustomWhatsappDetails',
+  'customWhatsappNumber',
+  'whatsappNumber',
+  'responseTime',
+]);
+
 const toNumberOrNull = (value) => {
   if (value === '' || value === undefined || value === null) {
     return null;
@@ -57,6 +71,41 @@ const toNumberOrNull = (value) => {
 
   const num = Number(value);
   return Number.isNaN(num) ? null : num;
+};
+
+const isContactOnlyUpdate = (payload = {}) => {
+  const keys = Object.keys(payload || {}).filter((key) => key !== '_id' && key !== '__v');
+  return keys.length > 0 && keys.every((key) => CONTACT_ONLY_FIELDS.has(key));
+};
+
+const validateContactOnlyPayload = (payload = {}) => {
+  const errors = [];
+
+  if (payload.contactDisplayMode === 'custom') {
+    if (!payload.displaySellerName?.trim()) errors.push('displaySellerName is required');
+    if (!payload.displaySellerPhone?.trim()) errors.push('displaySellerPhone is required');
+    if (!payload.displaySellerEmail?.trim()) errors.push('displaySellerEmail is required');
+
+    if (payload.displaySellerEmail?.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(payload.displaySellerEmail.trim())) {
+        errors.push('displaySellerEmail must be a valid email address');
+      }
+    }
+
+    if (payload.displaySellerPhone?.trim()) {
+      const phoneDigits = String(payload.displaySellerPhone).replace(/\D/g, '');
+      if (phoneDigits.length < 10) {
+        errors.push('displaySellerPhone must contain at least 10 digits');
+      }
+    }
+  }
+
+  if (payload.showWhatsappButton && payload.whatsappDisplayMode === 'custom' && !payload.customWhatsappNumber?.trim()) {
+    errors.push('customWhatsappNumber is required');
+  }
+
+  return errors;
 };
 
 const normalizePayload = (payload) => {
@@ -362,6 +411,31 @@ export const updateProperty = asyncHandler(async (req, res) => {
   }
   if (req.user.role !== 'admin' && payload.whatsappDisplayMode === 'company') {
     payload.whatsappDisplayMode = payload.useCustomWhatsappDetails ? 'custom' : 'original';
+  }
+
+  if (isContactOnlyUpdate(req.body)) {
+    const contactValidationErrors = validateContactOnlyPayload(payload);
+    if (contactValidationErrors.length) {
+      throw new ApiError(400, contactValidationErrors[0]);
+    }
+
+    Object.assign(property, payload);
+
+    if (req.user.role !== 'admin') {
+      property.status = 'pending';
+      property.moderationMessage = '';
+      property.approvedAt = null;
+      property.rejectedAt = null;
+    }
+
+    await property.save();
+
+    res.json({
+      success: true,
+      message: 'Property updated successfully',
+      data: property,
+    });
+    return;
   }
 
   const mergedPayload = normalizePayload({
