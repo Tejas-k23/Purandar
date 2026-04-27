@@ -149,6 +149,10 @@ export function getPropertyTypeConfig(propertyType) {
 
 export function prunePropertyPayload(payload = {}) {
   const next = { ...payload };
+  if (!('propertyType' in next)) {
+    return next;
+  }
+
   const capitalized = (next.propertyType || '').replace(/\b\w/g, l => l.toUpperCase());
   next.propertyType = PROPERTY_TYPE_ALIASES[capitalized] || capitalized;
   const config = getPropertyTypeConfig(next.propertyType);

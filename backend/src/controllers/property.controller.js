@@ -150,7 +150,7 @@ const normalizePayload = (payload) => {
   data.flatAmenities = Array.isArray(data.flatAmenities) ? data.flatAmenities : [];
   data.overlooking = Array.isArray(data.overlooking) ? data.overlooking : [];
 
-  if (!data.title) {
+  if ('title' in payload && !data.title) {
     data.title = [data.propertyType, data.locality, data.city].filter(Boolean).join(' in ');
   }
 
