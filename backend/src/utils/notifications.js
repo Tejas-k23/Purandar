@@ -12,19 +12,23 @@ const initFirebase = () => {
   if (admin.apps.length) return admin.app();
   const { projectId, clientEmail, privateKey } = getFirebaseConfig();
   if (!projectId || !clientEmail || !privateKey) {
-    if (process.env.NOTIFICATIONS_DEBUG === 'true') {
-      // eslint-disable-next-line no-console
-      console.warn('[Notify] Firebase admin config missing.', {
-        projectId: Boolean(projectId),
-        clientEmail: Boolean(clientEmail),
-        privateKey: Boolean(privateKey),
-      });
-    }
+    console.warn('[Notify] Firebase admin config missing - notifications will not work', {
+      projectId: Boolean(projectId),
+      clientEmail: Boolean(clientEmail),
+      privateKey: Boolean(privateKey),
+    });
     return null;
   }
-  return admin.initializeApp({
-    credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
-  });
+  try {
+    const app = admin.initializeApp({
+      credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+    });
+    console.info('[Notify] Firebase admin initialized successfully');
+    return app;
+  } catch (error) {
+    console.error('[Notify] Firebase admin initialization failed:', error.message);
+    return null;
+  }
 };
 
 const buildMessage = ({ title, body, data = {} }) => ({
@@ -54,13 +58,11 @@ export const sendNotificationToTokens = async ({
   context,
 }) => {
   if (!tokens.length) {
-    // eslint-disable-next-line no-console
     console.info('[Notify] No devices available for delivery.');
     return { successCount: 0, failureCount: 0, targetedTokens: [] };
   }
   const app = initFirebase();
   if (!app) {
-    // eslint-disable-next-line no-console
     console.warn('[Notify] Firebase admin app unavailable, skipping send.');
     return { successCount: 0, failureCount: 0, targetedTokens: [] };
   }

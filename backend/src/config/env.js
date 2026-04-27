@@ -55,5 +55,8 @@ export const env = {
   R2_ENDPOINT: process.env.R2_ENDPOINT || `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   MEDIA_IMAGE_MAX_MB: Number(process.env.MEDIA_IMAGE_MAX_MB || 5),
   MEDIA_VIDEO_MAX_MB: Number(process.env.MEDIA_VIDEO_MAX_MB || 50),
+  FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || '',
+  FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL || '',
+  FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY || '',
 };
 

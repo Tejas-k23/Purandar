@@ -622,4 +622,93 @@ export const updateEnquiryStatus = asyncHandler(async (req, res) => {
   });
 });
 
+export const sendCustomNotification = asyncHandler(async (req, res) => {
+  const {
+    title,
+    body,
+    audience = 'users',
+    criteria = {},
+  } = req.body;
+
+  if (!title || !body) {
+    throw new ApiError(400, 'title and body are required');
+  }
+
+  const notificationsEnabled = await areAdminNotificationsEnabled();
+  if (!notificationsEnabled) {
+    // eslint-disable-next-line no-console
+    console.info('[Notify] Broadcast skipped because admin notifications are disabled.');
+    res.json({
+      success: true,
+      message: 'Notifications are disabled by admin',
+      data: {
+        successCount: 0,
+        failureCount: 0,
+        disabled: true,
+        totalDevices: 0,
+        filteredDevices: 0,
+      },
+    });
+    return;
+  }
+
+  const roleFilter = (() => {
+    if (audience === 'admins') return { role: 'admin' };
+    if (audience === 'guests') return { role: 'guest' };
+    if (audience === 'all') return { role: { $in: ['admin', 'user', 'agent', 'guest'] } };
+    return { role: { $in: ['user', 'agent'] } };
+  })();
+
+  const tokens = await fetchTokens(roleFilter);
+  // eslint-disable-next-line no-console
+  console.info('[Notify] Broadcast candidate devices', {
+    audience,
+    deviceCount: tokens.length,
+    criteria,
+  });
+  const context = {
+    city: criteria.city || '',
+    intent: criteria.intent || '',
+    propertyType: criteria.propertyType || '',
+  };
+
+  const response = await sendNotificationToTokens({
+    tokens,
+    title,
+    body,
+    data: { type: 'custom' },
+    context,
+  });
+
+  const invalid = (response.targetedTokens || [])
+    .filter((_, index) => response.responses?.[index] && !response.responses[index].success)
+    .map((token) => token.token);
+  await removeInvalidTokens(invalid);
+
+  if (audience !== 'guests') {
+    const userIds = [...new Set(tokens.map((token) => token.user).filter(Boolean))];
+    if (userIds.length) {
+      await saveNotificationsForUsers({
+        users: userIds,
+        role: audience === 'admins' ? 'admin' : 'user',
+        title,
+        body,
+        data: { type: 'custom' },
+      });
+    }
+  }
+
+  res.json({
+    success: true,
+    message: 'Notification queued',
+    data: {
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      disabled: false,
+      totalDevices: tokens.length,
+      filteredDevices: response.successCount + response.failureCount,
+    },
+  });
+});
+
 

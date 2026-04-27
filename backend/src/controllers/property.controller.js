@@ -365,6 +365,28 @@ export const createProperty = asyncHandler(async (req, res) => {
   if (!isAdmin && payload.whatsappDisplayMode === 'company') {
     payload.whatsappDisplayMode = payload.useCustomWhatsappDetails ? 'custom' : 'original';
   }
+
+  // Check for duplicate properties by the same owner
+  const existingProperty = await Property.findOne({
+    owner: req.user._id,
+    propertyType: payload.propertyType,
+    locality: payload.locality,
+    city: payload.city,
+    price: {
+      $gte: payload.price * 0.95, // Allow 5% price variation
+      $lte: payload.price * 1.05,
+    },
+    status: { $in: ['pending', 'approved'] }, // Check both pending and approved properties
+    createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Only check last 24 hours
+  });
+
+  if (existingProperty) {
+    const statusMessage = existingProperty.status === 'pending'
+      ? 'You already have a similar property under review. Please wait for approval or contact support.'
+      : 'A similar property already exists in your listings.';
+    throw new ApiError(409, statusMessage);
+  }
+
   const property = await Property.create({
     ...payload,
     owner: req.user._id,
