@@ -159,7 +159,7 @@ const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
 
 function PropertySection() {
   const location = useLocation();
-  const { properties, loading } = useProperties({
+  const { properties, loading: propertiesLoading } = useProperties({
     limit: 8,
     sort: 'newest',
     featuredOnHome: true,
@@ -186,10 +186,19 @@ function PropertySection() {
       'useOriginalSellerContact',
     ].join(','),
   });
+  const { projects, loading: projectsLoading } = useProjects({ featuredOnHome: true });
   const { savedProperties, savedPropertyIds, toggleSavedProperty, isAuthenticated, user } = useAuth();
-  const [activity, setActivity] = useState({ properties: 0, leads: 0, loading: false });
-  const featured = useMemo(() => properties.slice(0, 4), [properties]);
+  
+  const featured = useMemo(() => {
+    const propertyCards = properties.slice(0, 4).map((p) => ({ ...p, type: 'property' }));
+    const projectCards = projects.slice(0, 2).map((p) => ({ ...p, type: 'project' }));
+    return [...propertyCards, ...projectCards];
+  }, [properties, projects]);
+  
   const propertiesRowRef = useRef(null);
+
+  const [activity, setActivity] = useState({ properties: 0, leads: 0, loading: false });
+  const loading = propertiesLoading || projectsLoading;
 
   useAutoScrollRow(propertiesRowRef, { speed: 26 });
 
@@ -241,22 +250,29 @@ function PropertySection() {
         </div>
 
         <div className="section-head">
-          <h3 className="section-title"><span className="heading-accent">Recommended</span> Properties</h3>
-          <p className="section-subtitle">Fresh listings selected for you</p>
+          <h3 className="section-title"><span className="heading-accent">Recommended</span> for You</h3>
+          <p className="section-subtitle">Featured properties and new launches</p>
         </div>
 
         {loading ? <Loader label="Loading recommended properties..." /> : null}
         {!loading && featured.length === 0 ? <EmptyState title="No properties available yet" /> : null}
 
         <div className="properties-scroll-row home-live-grid" ref={propertiesRowRef}>
-          {featured.map((property) => (
-            <PropertyCard
-              key={property._id}
-              property={property}
-              isSaved={savedPropertyIds.has(property._id)}
-              onToggleSave={isAuthenticated ? toggleSavedProperty : undefined}
-              variant="compact"
-            />
+          {featured.map((item) => (
+            item.type === 'property' ? (
+              <PropertyCard
+                key={item._id}
+                property={item}
+                isSaved={savedPropertyIds.has(item._id)}
+                onToggleSave={isAuthenticated ? toggleSavedProperty : undefined}
+                variant="compact"
+              />
+            ) : (
+              <ProjectCard
+                key={item._id}
+                project={item}
+              />
+            )
           ))}
         </div>
       </div>
