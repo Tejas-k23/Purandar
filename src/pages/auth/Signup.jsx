@@ -29,7 +29,7 @@ export default function Signup() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [role, setRole] = useState('owner');
+  const role = 'owner';
   const [fullName, setFullName] = useState('');
   const [phoneInput, setPhoneInput] = useState(normalizePhoneInput(searchParams.get('phone')));
   const [otp, setOtp] = useState('');
@@ -308,18 +308,9 @@ export default function Signup() {
 
       {!hasLockedPhone ? (
         <div className="auth-modal-stack">
-          <div className="auth-role-toggle" role="tablist" aria-label="Select account type">
-            <button type="button" className={`auth-role-option ${role === 'owner' ? 'active' : ''}`} onClick={() => setRole('owner')}>
-              Owner
-            </button>
-            <button type="button" className={`auth-role-option ${role === 'broker' ? 'active' : ''}`} onClick={() => setRole('broker')}>
-              Broker
-            </button>
-          </div>
-
           <GoogleAuthButton
             mode="signup"
-            role={role === 'broker' ? 'agent' : 'user'}
+            role="user"
             onSuccess={() => closeModal()}
             onError={(message) => setFormError(message)}
           />
@@ -355,15 +346,6 @@ export default function Signup() {
         </div>
       ) : (
         <form className="auth-modal-stack" onSubmit={submit}>
-          <div className="auth-role-toggle" role="tablist" aria-label="Select account type">
-            <button type="button" className={`auth-role-option ${role === 'owner' ? 'active' : ''}`} onClick={() => setRole('owner')}>
-              Owner
-            </button>
-            <button type="button" className={`auth-role-option ${role === 'broker' ? 'active' : ''}`} onClick={() => setRole('broker')}>
-              Broker
-            </button>
-          </div>
-
           <div className="auth-input-group">
             <label className="auth-label" htmlFor="signup-name">Full Name</label>
             <div className="auth-input-row">
