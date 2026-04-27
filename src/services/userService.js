@@ -39,6 +39,11 @@ export const userService = {
     return syncTokenFromResponse(response);
   },
 
+  async loginWithGoogle(payload) {
+    const response = await api.post('/auth/google', payload);
+    return syncTokenFromResponse(response);
+  },
+
   async loginWithPhone(payload) {
     const response = await api.post('/auth/login-phone', payload);
     return syncTokenFromResponse(response);
@@ -54,6 +59,15 @@ export const userService = {
 
   refresh() {
     return api.post('/auth/refresh');
+  },
+
+  validateMobileVerification(payload) {
+    return api.post('/auth/validate-mobile', payload);
+  },
+
+  async verifyMobileWithMsg91Token(payload) {
+    const response = await api.post('/auth/verify-mobile', payload);
+    return syncTokenFromResponse(response);
   },
 
   getCurrentUser() {

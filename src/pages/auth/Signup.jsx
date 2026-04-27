@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { ChevronDown, Info, Lock, Phone, XCircle } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../../components/common/Modal';
+import GoogleAuthButton from '../../components/auth/GoogleAuthButton';
 import useAuth from '../../hooks/useAuth';
 import userService from '../../services/userService';
 import env from '../../config/env';
@@ -299,6 +300,24 @@ export default function Signup() {
 
       {!hasLockedPhone ? (
         <div className="auth-modal-stack">
+          <div className="auth-role-toggle" role="tablist" aria-label="Select account type">
+            <button type="button" className={`auth-role-option ${role === 'owner' ? 'active' : ''}`} onClick={() => setRole('owner')}>
+              Owner
+            </button>
+            <button type="button" className={`auth-role-option ${role === 'broker' ? 'active' : ''}`} onClick={() => setRole('broker')}>
+              Broker
+            </button>
+          </div>
+
+          <GoogleAuthButton
+            mode="signup"
+            role={role === 'broker' ? 'agent' : 'user'}
+            onSuccess={() => closeModal()}
+            onError={(message) => setFormError(message)}
+          />
+
+          <div className="auth-divider">or continue with phone</div>
+
           <div className="auth-input-group">
             <label className="auth-label" htmlFor="signup-phone-entry">Phone Number</label>
             <div className="auth-phone-row">

@@ -768,6 +768,10 @@
     line-height: 1.6;
     color: var(--gray-500);
 }
+
+.ppf-mobile-verify-banner {
+    margin-bottom: var(--space-6);
+}
 /* --- Divider --- */
 .ppf-divider {
     border: none;

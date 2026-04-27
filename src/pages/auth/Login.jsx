@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { ChevronDown, Phone } from 'lucide-react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../../components/common/Modal';
+import GoogleAuthButton from '../../components/auth/GoogleAuthButton';
 import useAuth from '../../hooks/useAuth';
 import userService from '../../services/userService';
 import env from '../../config/env';
@@ -209,6 +210,14 @@ export default function Login() {
       <p className="auth-modal-subtitle">Please enter your Phone Number</p>
 
       <div className="auth-modal-stack">
+        <GoogleAuthButton
+          mode="signin"
+          onSuccess={() => navigate(closeTarget, { replace: true })}
+          onError={(message) => setFormMessage(message)}
+        />
+
+        <div className="auth-divider">or continue with phone</div>
+
         {step === 'phone' ? (
           <>
             <div className="auth-input-group">

@@ -15,6 +15,12 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    googleId: {
+      type: String,
+      trim: true,
+      default: '',
+      index: true,
+    },
     password: {
       type: String,
       required: true,
@@ -30,6 +36,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+    },
+    isMobileVerified: {
+      type: Boolean,
+      default: true,
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'phone', 'google'],
+      default: 'local',
     },
     location: {
       type: String,

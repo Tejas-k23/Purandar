@@ -9,6 +9,7 @@ import propertyService from '../../services/propertyService';
 import adminService from '../../services/adminService';
 import Loader from '../../components/common/Loader';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import MobileVerificationCard from '../../components/auth/MobileVerificationCard';
 import useAuth from '../../hooks/useAuth';
 import { getIntentOptions, getPropertyValidationErrors, normalizePropertyType, prunePropertyFormData } from '../../utils/propertyFormConfig';
 import './PostPropertyForm.css';
@@ -98,6 +99,7 @@ export default function PostPropertyForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const [showMobileVerificationPrompt, setShowMobileVerificationPrompt] = useState(true);
   const editId = searchParams.get('edit');
   const isAdminPath = location.pathname.startsWith('/admin');
   const isAdmin = user?.role === 'admin';
@@ -231,6 +233,17 @@ export default function PostPropertyForm() {
       return;
     }
 
+    if (!isAdminPath && user && !user.isMobileVerified) {
+      setStatusMessage('Please verify your mobile number before submitting seller details.');
+      navigate('/profile', {
+        state: {
+          verifyMobile: true,
+          next: editId ? `/post-property/form?edit=${editId}` : '/post-property/form',
+        },
+      });
+      return;
+    }
+
     setSubmitting(true);
     setStatusMessage('');
     try {
@@ -321,6 +334,16 @@ export default function PostPropertyForm() {
         </aside>
         <main className="ppf-main">
           <div className="ppf-form-card">
+            {!isAdminPath && user && !user.isMobileVerified && showMobileVerificationPrompt ? (
+              <div className="ppf-mobile-verify-banner">
+                <MobileVerificationCard
+                  title="Verify your mobile before publishing"
+                  description="You can keep filling the form now, but we will ask for OTP verification before your seller details go live."
+                  showSkip
+                  onSkip={() => setShowMobileVerificationPrompt(false)}
+                />
+              </div>
+            ) : null}
             {renderStep()}
             {statusMessage ? <p style={{ marginTop: 12 }}>{statusMessage}</p> : null}
             <div className="ppf-nav-buttons">

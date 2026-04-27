@@ -35,4 +35,6 @@ export const buildAuthPayload = (user) => ({
   role: user.role,
   phone: user.phone,
   avatar: user.avatar,
+  isMobileVerified: user.isMobileVerified !== false,
+  authProvider: user.authProvider || (String(user.email || '').endsWith('@purandar.local') ? 'phone' : 'local'),
 });

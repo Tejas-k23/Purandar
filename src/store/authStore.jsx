@@ -51,6 +51,11 @@ export function AuthProvider({ children }) {
     return syncProfile();
   };
 
+  const loginWithGoogle = async (payload) => {
+    await userService.loginWithGoogle(payload);
+    return syncProfile();
+  };
+
   const register = async (payload) => {
     await userService.register(payload);
     return syncProfile();
@@ -88,6 +93,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(user),
     loading,
     login,
+    loginWithGoogle,
     register,
     logout,
     refreshProfile: syncProfile,

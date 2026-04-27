@@ -3,6 +3,7 @@ export const env = {
   mapboxAccessToken: import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '',
   msg91WidgetId: import.meta.env.VITE_MSG91_WIDGET_ID || '',
   msg91WidgetToken: import.meta.env.VITE_MSG91_AUTH_KEY || '',
+  googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
 };
 
 export default env;

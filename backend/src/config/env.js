@@ -43,6 +43,8 @@ export const env = {
   SMTP_FROM_NAME: process.env.SMTP_FROM_NAME || 'Purandar Prime Propertys',
   SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL || '',
   CONTACT_AUTO_RESPONSE_ENABLED: process.env.CONTACT_AUTO_RESPONSE_ENABLED === 'true',
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
   MSG91_AUTHKEY: process.env.MSG91_AUTHKEY || process.env.MSG91_AUTH_KEY || '',
   MSG91_TEMPLATE_ID: process.env.MSG91_TEMPLATE_ID || '',
   R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,

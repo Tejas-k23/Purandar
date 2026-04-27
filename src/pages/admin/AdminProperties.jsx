@@ -102,9 +102,9 @@ export default function AdminProperties() {
       ? 'original'
       : currentMode !== 'original'
         ? currentMode
-        : (hasCompanyContact ? 'company' : 'custom');
+        : 'custom';
 
-    if (!nextValue && nextMode === 'custom' && !canSwitchToCustom) {
+    if (!nextValue && !canSwitchToCustom) {
       openContactEditor(property);
       return;
     }
@@ -465,18 +465,35 @@ export default function AdminProperties() {
                       label="Toggle real seller details"
                       disabled={busyId === `${row._id}:contact`}
                     />
+                    {!checked ? (
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="admin-secondary-btn admin-secondary-btn-inline admin-contact-cta"
+                          disabled={busyId === `${row._id}:contact` || mode === 'custom'}
+                          onClick={() => {
+                            setContactMode(row._id, 'custom');
+                            if (!hasCompleteCustomContact(row)) {
+                              openContactEditor(row);
+                            }
+                          }}
+                        >
+                          Use custom contact
+                        </button>
+                        {hasCompanyContact ? (
+                          <button
+                            type="button"
+                            className="admin-secondary-btn admin-secondary-btn-inline admin-contact-cta"
+                            disabled={busyId === `${row._id}:contact` || mode === 'company'}
+                            onClick={() => setContactMode(row._id, 'company')}
+                          >
+                            Use company contact
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
                     {mode === 'company' ? (
-                      <button
-                        type="button"
-                        className="admin-secondary-btn admin-secondary-btn-inline admin-contact-cta"
-                        disabled={busyId === `${row._id}:contact`}
-                        onClick={() => {
-                          setContactMode(row._id, 'custom');
-                          openContactEditor(row);
-                        }}
-                      >
-                        Use custom contact
-                      </button>
+                      <span className="admin-cell-subtitle">Website is currently showing the company contact for this property.</span>
                     ) : null}
                     {mode === 'custom' ? (
                       <button
