@@ -35,7 +35,6 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
   const [isPopupDismissed, setIsPopupDismissed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-<<<<<<< Updated upstream
 
   // Reset dismissal when the hovered property changes
   useEffect(() => {
@@ -44,9 +43,6 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
 
   const resolvedSelectedPropertyId = selectedPropertyId || (isPopupDismissed ? '' : activePropertyId);
   const selectedProperty = items.find((property) => property._id === resolvedSelectedPropertyId);
-=======
-  const selectedProperty = items.find((property) => property._id === selectedPropertyId);
->>>>>>> Stashed changes
 
   useEffect(() => {
     const map = mapRef.current?.getMap?.();
@@ -198,16 +194,11 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
             closeOnClick={true}
             className="property-map-popup"
           >
-<<<<<<< Updated upstream
-            <div className="map-popup-card">
+            <div className="map-popup-card" onClick={(e) => e.stopPropagation()}>
               <button type="button" className="map-popup-close" onClick={() => {
                 setSelectedPropertyId('');
                 setIsPopupDismissed(true);
               }} aria-label="Close property preview">
-=======
-            <div className="map-popup-card" onClick={(e) => e.stopPropagation()}>
-              <button type="button" className="map-popup-close" onClick={() => setSelectedPropertyId('')} aria-label="Close property preview">
->>>>>>> Stashed changes
                 <X size={14} />
               </button>
               <img
