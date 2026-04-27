@@ -442,8 +442,8 @@ export default function ProjectDetails() {
   if (loading) return <Loader label="Loading project details..." />;
   if (!project) return <div style={{ padding: '2rem' }}>Project not found.</div>;
 
-  const starting = (project.startingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 10000000); // Fixed multiplier logic
-  const ending = (project.endingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 10000000);
+  const starting = (project.startingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000);
+  const ending = (project.endingPrice || 0) * (project.priceUnit === 'Crore' ? 10000000 : 100000);
   const profile = getProjectTypeProfile(project.projectType);
   const visibleContact = resolveContact(project);
   const whatsappContact = resolveWhatsappContact(project);
