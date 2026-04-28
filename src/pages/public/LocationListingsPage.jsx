@@ -26,10 +26,60 @@ const intentFilters = [
 
 const buildLocationParagraph = ({ label, intentLabel, kind }) => {
   if (kind === 'landmark') {
-    return `Looking for ${intentLabel.toLowerCase()} properties near ${label}? Explore verified listings around ${label} with easy access to key conveniences, transport, and community hotspots. Use the filters above to narrow your search and compare the best options quickly.`;
+    return `Looking for ${intentLabel.toLowerCase()} properties near ${label}? Explore verified listings around ${label} with easy access to transport, Pune connectivity, and local conveniences. Use the filters above to narrow your search and compare the best options quickly.`;
   }
 
-  return `Explore ${intentLabel.toLowerCase()} properties in ${label} with verified listings, pricing insights, and neighborhood details. Filter by property type and intent to find the right home or investment match in ${label} today.`;
+  const lowerLabel = label.toLowerCase();
+  if (lowerLabel.includes('purandar')) {
+    return `Explore ${intentLabel.toLowerCase()} properties in ${label} near the upcoming Purandar airport, with scenic Sahyadri views and strong Pune connectivity. Filter by type and intent to find the best residential match.`;
+  }
+  if (lowerLabel.includes('saswad')) {
+    return `Explore ${intentLabel.toLowerCase()} properties in ${label} with strong Pune access, investment-ready neighborhood growth, and easy connections to the greater Purandar corridor.`;
+  }
+
+  return `Explore ${intentLabel.toLowerCase()} properties in ${label} with verified listings, clear pricing insights, and neighborhood details. Filter by property type and intent to find the right home or investment match.`;
+};
+
+const buildSeoTitle = ({ label, kind, intentLabel, typeLabel }) => {
+  const lowerLabel = label.toLowerCase();
+  const baseType = typeLabel.trim() || 'Property';
+
+  if (lowerLabel.includes('saswad')) {
+    if (baseType.toLowerCase().includes('land')) {
+      return `Plots in Saswad with Pune access | Purandar Properties`;
+    }
+    return `${baseType}s in Saswad with strong Pune connectivity | Purandar Properties`;
+  }
+
+  if (lowerLabel.includes('purandar')) {
+    if (baseType.toLowerCase().includes('apartment')) {
+      return `Flats near Purandar airport | Purandar Properties`;
+    }
+    return `Property near Purandar airport in Purandar | Purandar Properties`;
+  }
+
+  if (lowerLabel.includes('dive ghat')) {
+    return `Property near Purandar airport in Dive Ghat | Purandar Properties`;
+  }
+
+  return `${intentLabel} ${baseType}s ${kind === 'landmark' ? 'near' : 'in'} ${label} | Purandar Properties`;
+};
+
+const buildSeoDescription = ({ label, kind, intentLabel, typeLabel }) => {
+  const lowerLabel = label.toLowerCase();
+  const propertyPhrase = typeLabel ? `${typeLabel.toLowerCase()} ` : '';
+
+  if (lowerLabel.includes('saswad')) {
+    return `Browse verified ${propertyPhrase}listings in Saswad with strong Pune connectivity, upcoming airport advantages, and dependable local amenities.`;
+  }
+  if (lowerLabel.includes('purandar')) {
+    return `Find verified ${propertyPhrase}listings in Purandar near the upcoming airport, with great Pune access, scenic Sahyadri views, and smart long-term potential.`;
+  }
+  if (lowerLabel.includes('dive ghat')) {
+    return `Explore verified ${propertyPhrase}listings in Dive Ghat near Purandar airport, offering scenic hill views and strong Pune connections.`;
+  }
+
+  return `Browse verified ${propertyPhrase}listings ${kind === 'landmark' ? `near ${label}` : `in ${label}`}. Compare prices, photos, and neighborhood details to find the right match fast.`;
 };
 
 const buildSchema = ({ properties, label, kind, origin }) => ({
@@ -90,8 +140,8 @@ export default function LocationListingsPage({ mode = 'location' }) {
   const intentLabel = intentKey === 'rent' ? 'Rental' : intentKey === 'sell' ? 'Sell' : 'Buy';
   const typeLabel = typePreset.label ? `${typePreset.label} ` : '';
   const headingLabel = mode === 'landmark' ? `Properties near ${locationLabel}` : `Properties in ${locationLabel}`;
-  const seoTitle = `${intentLabel} ${typeLabel}Properties ${mode === 'landmark' ? 'near' : 'in'} ${locationLabel} | Purandar Properties`;
-  const seoDescription = `Browse ${intentLabel.toLowerCase()} ${typeLabel.toLowerCase()}properties ${mode === 'landmark' ? 'near' : 'in'} ${locationLabel}. Compare prices, photos, and verified listings to find the right fit faster.`;
+  const seoTitle = buildSeoTitle({ label: locationLabel, kind: mode, intentLabel, typeLabel });
+  const seoDescription = buildSeoDescription({ label: locationLabel, kind: mode, intentLabel, typeLabel });
   const canonicalPath = mode === 'landmark' ? `/property-near-${slug}` : `/property-in-${slug}`;
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const schema = React.useMemo(() => buildSchema({ properties, label: locationLabel, kind: mode, origin }), [properties, locationLabel, mode, origin]);
