@@ -13,7 +13,9 @@ export default function ListingsPanel({
   projects = [],
   loading = false,
   savedPropertyIds = new Set(),
+  savedProjectIds = new Set(),
   onToggleSave,
+  onToggleProjectSave,
   onPropertyHover,
   activePropertyId,
   sortValue = 'newest',
@@ -94,7 +96,11 @@ export default function ListingsPanel({
               onPropertyHover?.('');
             }}
           >
-            <ProjectCard project={project} />
+            <ProjectCard
+              project={project}
+              isSaved={savedProjectIds.has(project._id)}
+              onToggleSave={onToggleProjectSave}
+            />
           </div>
         ))}
       </div>

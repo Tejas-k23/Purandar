@@ -7,6 +7,7 @@ import {
   listProjects,
   toggleProjectFeatured,
   toggleProjectVisibility,
+  unlockProjectSellerDetails,
   updateProject,
   uploadProjectMedia,
 } from '../controllers/project.controller.js';
@@ -27,8 +28,9 @@ const upload = createUpload({
 
 router.get('/', optionalProtect, listProjects);
 router.get('/:id', optionalProtect, getProjectById);
+router.post('/:id/seller-details', protect, authorize('user', 'agent', 'admin'), unlockProjectSellerDetails);
 router.post('/', protect, authorize('user', 'agent', 'admin'), createProject);
-router.patch('/:id', protect, authorize('admin'), updateProject);
+router.patch('/:id', protect, authorize('user', 'agent', 'admin'), updateProject);
 router.patch('/:id/visibility', protect, authorize('admin'), toggleProjectVisibility);
 router.patch('/:id/featured', protect, authorize('admin'), toggleProjectFeatured);
 router.post('/:id/enquiries', createProjectEnquiry);
@@ -44,6 +46,7 @@ router.post(
   upload.fields([
     { name: 'images', maxCount: 12 },
     { name: 'videos', maxCount: 2 },
+    { name: 'brochure', maxCount: 1 },
   ]),
   uploadProjectMedia,
 );

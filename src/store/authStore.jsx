@@ -7,23 +7,27 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [savedProperties, setSavedProperties] = useState([]);
+  const [savedProjects, setSavedProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const syncProfile = async () => {
-    const [{ data: meData }, { data: profileData }, { data: savedData }] = await Promise.all([
+    const [{ data: meData }, { data: profileData }, { data: savedPropertiesData }, { data: savedProjectsData }] = await Promise.all([
       userService.getCurrentUser(),
       userService.getMyProfile(),
       userService.getSavedProperties(),
+      userService.getSavedProjects(),
     ]);
 
     setUser(meData.data.user);
     setProfile(profileData.data);
-    setSavedProperties(savedData.data || []);
+    setSavedProperties(savedPropertiesData.data || []);
+    setSavedProjects(savedProjectsData.data || []);
 
     return {
       user: meData.data.user,
       profile: profileData.data,
-      savedProperties: savedData.data || [],
+      savedProperties: savedPropertiesData.data || [],
+      savedProjects: savedProjectsData.data || [],
     };
   };
 
@@ -38,6 +42,7 @@ export function AuthProvider({ children }) {
         setUser(null);
         setProfile(null);
         setSavedProperties([]);
+        setSavedProjects([]);
       } finally {
         setLoading(false);
       }
@@ -66,6 +71,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     setProfile(null);
     setSavedProperties([]);
+    setSavedProjects([]);
   };
 
   const updateProfile = async (payload) => {
@@ -85,11 +91,23 @@ export function AuthProvider({ children }) {
     return !isSaved;
   };
 
+  const toggleSavedProject = async (projectId) => {
+    const isSaved = savedProjects.some((project) => project._id === projectId || project.id === projectId);
+    const response = isSaved
+      ? await userService.unsaveProject(projectId)
+      : await userService.saveProject(projectId);
+
+    setSavedProjects(response.data.data || []);
+    return !isSaved;
+  };
+
   const value = useMemo(() => ({
     user,
     profile,
     savedProperties,
+    savedProjects,
     savedPropertyIds: new Set((savedProperties || []).map((property) => property._id || property.id)),
+    savedProjectIds: new Set((savedProjects || []).map((project) => project._id || project.id)),
     isAuthenticated: Boolean(user),
     loading,
     login,
@@ -99,7 +117,8 @@ export function AuthProvider({ children }) {
     refreshProfile: syncProfile,
     updateProfile,
     toggleSavedProperty,
-  }), [user, profile, savedProperties, loading]);
+    toggleSavedProject,
+  }), [user, profile, savedProperties, savedProjects, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

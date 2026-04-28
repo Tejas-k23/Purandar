@@ -4,6 +4,7 @@ import MapPickerModal from '../../common/MapPickerModal';
 import VillageFirstCityInput from '../../common/VillageFirstCityInput';
 import env from '../../../config/env';
 import { getVisibleLocationFieldKeys } from '../../../utils/propertyFormConfig';
+import { extractGoogleMapsData } from '../../../utils/googleMaps';
 
 export default function Step2LocationDetails({ formData, updateField, errors }) {
     const visibleLocationFields = getVisibleLocationFieldKeys(formData.propertyType, formData.category);
@@ -13,6 +14,15 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
     const [mapOpen, setMapOpen] = useState(false);
     const hasCoords = formData.latitude && formData.longitude;
     const mapDisabled = !env.mapboxAccessToken;
+
+    const applyMapLink = (value) => {
+        updateField('mapLink', value);
+        const extracted = extractGoogleMapsData(value);
+        if (extracted.latitude !== null && extracted.longitude !== null) {
+            updateField('latitude', extracted.latitude);
+            updateField('longitude', extracted.longitude);
+        }
+    };
 
     const handleCitySelect = ({ source, feature, village }) => {
         if (source === 'village' && village) {
@@ -97,6 +107,20 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                         onChange={(e) => updateField('landmark', e.target.value)}
                     />
                 </div>
+            </div>
+
+            <div className="ppf-field">
+                <label className="ppf-field-label">Google Map Link / Coordinates</label>
+                <input
+                    name="mapLink"
+                    className={`ppf-input ${errors.mapLink ? 'error' : ''}`}
+                    type="text"
+                    placeholder="Paste a Google Maps URL or coordinates"
+                    value={formData.mapLink}
+                    onChange={(e) => applyMapLink(e.target.value)}
+                    onBlur={(e) => applyMapLink(e.target.value)}
+                />
+                {errors.mapLink ? <p className="ppf-input-error">{errors.mapLink}</p> : null}
             </div>
 
             {showFlatNo ? (
@@ -192,6 +216,7 @@ export default function Step2LocationDetails({ formData, updateField, errors }) 
                 onSelect={({ latitude, longitude }) => {
                     updateField('latitude', latitude);
                     updateField('longitude', longitude);
+                    updateField('mapLink', `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
                     setMapOpen(false);
                 }}
             />

@@ -4,6 +4,7 @@ import Map, { FullscreenControl, Marker, NavigationControl, Popup } from 'react-
 import { useNavigate } from 'react-router-dom';
 import env from '../../config/env';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import { extractGoogleMapsData } from '../../utils/googleMaps';
 import { flyToCoordinates } from '../../utils/mapHelpers';
 import { getPropertyImageUrls } from '../../utils/propertyImages';
 import SearchBar from './SearchBar';
@@ -17,14 +18,17 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
   const navigate = useNavigate();
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  const items = useMemo(() => properties.slice(0, 12).map((property, index) => {
-    const hasCoords = isValidCoord(property.longitude) && isValidCoord(property.latitude);
+  const items = useMemo(() => properties.slice(0, 12).map((property) => {
+    const extracted = extractGoogleMapsData(property.mapLink || '');
+    const longitude = isValidCoord(property.longitude) ? Number(property.longitude) : extracted.longitude;
+    const latitude = isValidCoord(property.latitude) ? Number(property.latitude) : extracted.latitude;
     return {
       ...property,
-      longitude: hasCoords ? Number(property.longitude) : baseLongitude + (index % 4) * 0.02,
-      latitude: hasCoords ? Number(property.latitude) : baseLatitude + Math.floor(index / 4) * 0.018,
+      longitude,
+      latitude,
+      hasCoords: isValidCoord(longitude) && isValidCoord(latitude),
     };
-  }), [properties]);
+  }).filter((property) => property.hasCoords), [properties]);
 
   const activeProperty = items.find((property) => property._id === activePropertyId);
   const [viewState, setViewState] = useState({

@@ -187,7 +187,7 @@ function PropertySection() {
     ].join(','),
   });
   const { projects, loading: projectsLoading } = useProjects({ featuredOnHome: true });
-  const { savedProperties, savedPropertyIds, toggleSavedProperty, isAuthenticated, user } = useAuth();
+  const { savedProperties, savedPropertyIds, savedProjectIds, toggleSavedProperty, toggleSavedProject, isAuthenticated, user } = useAuth();
   
   const featured = useMemo(() => {
     const propertyCards = properties.slice(0, 4).map((p) => ({ ...p, type: 'property' }));
@@ -271,6 +271,8 @@ function PropertySection() {
               <ProjectCard
                 key={item._id}
                 project={item}
+                isSaved={savedProjectIds.has(item._id)}
+                onToggleSave={isAuthenticated ? toggleSavedProject : undefined}
               />
             )
           ))}
@@ -373,6 +375,7 @@ const PopularLocalities = () => {
 
 const NewLaunchProjects = () => {
   const { projects, loading } = useProjects({ featuredOnHome: true });
+  const { savedProjectIds, toggleSavedProject, isAuthenticated } = useAuth();
   const featured = projects.slice(0, 3);
   return (
     <section className="section-container" style={{ paddingTop: '3rem' }}>
@@ -386,7 +389,12 @@ const NewLaunchProjects = () => {
       <div className="project-grid">
         {loading ? <Loader label="Loading featured projects..." /> : null}
         {!loading && featured.map((project) => (
-          <ProjectCard key={project._id} project={project} />
+          <ProjectCard
+            key={project._id}
+            project={project}
+            isSaved={savedProjectIds.has(project._id)}
+            onToggleSave={isAuthenticated ? toggleSavedProject : undefined}
+          />
         ))}
       </div>
     </section>

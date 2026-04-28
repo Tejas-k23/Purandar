@@ -95,12 +95,24 @@ export const userService = {
     return api.get('/users/me/saved-properties');
   },
 
+  getSavedProjects() {
+    return api.get('/users/me/saved-projects');
+  },
+
   saveProperty(propertyId) {
     return api.post(`/users/me/saved-properties/${propertyId}`);
   },
 
   unsaveProperty(propertyId) {
     return api.delete(`/users/me/saved-properties/${propertyId}`);
+  },
+
+  saveProject(projectId) {
+    return api.post(`/users/me/saved-projects/${projectId}`);
+  },
+
+  unsaveProject(projectId) {
+    return api.delete(`/users/me/saved-projects/${projectId}`);
   },
 
   getMyEnquiries() {

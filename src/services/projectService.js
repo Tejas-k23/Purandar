@@ -37,13 +37,20 @@ const projectService = {
     return api.patch(`/admin/projects/${projectId}/status`, { status, moderationMessage });
   },
 
-  uploadMedia(projectId, { images = [], videos = [] }) {
+  uploadMedia(projectId, { images = [], videos = [], brochure = null }) {
     const formData = new FormData();
     images.forEach((file) => formData.append('images', file));
     videos.forEach((file) => formData.append('videos', file));
+    if (brochure) {
+      formData.append('brochure', brochure);
+    }
     return api.post(`/projects/${projectId}/upload-media`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+  },
+
+  requestSellerDetails(projectId) {
+    return api.post(`/projects/${projectId}/seller-details`);
   },
 
   createEnquiry(projectId, payload) {

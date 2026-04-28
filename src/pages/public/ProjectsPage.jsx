@@ -2,12 +2,14 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useProjects from '../../hooks/useProjects';
+import useAuth from '../../hooks/useAuth';
 import ProjectCard from '../../components/project/ProjectCard';
 import SkeletonBlock from '../../components/common/SkeletonBlock';
 import './Home.css';
 
 export default function ProjectsPage() {
   const { projects, loading } = useProjects();
+  const { savedProjectIds, toggleSavedProject, isAuthenticated } = useAuth();
 
   return (
     <section className="section-container" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
@@ -38,7 +40,12 @@ export default function ProjectsPage() {
       ) : (
         <div className="project-grid">
           {projects.map((project) => (
-            <ProjectCard key={project._id} project={project} />
+            <ProjectCard
+              key={project._id}
+              project={project}
+              isSaved={savedProjectIds.has(project._id)}
+              onToggleSave={isAuthenticated ? toggleSavedProject : undefined}
+            />
           ))}
         </div>
       )}

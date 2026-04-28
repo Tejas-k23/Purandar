@@ -10,6 +10,7 @@ import VillageFirstCityInput from '../../components/common/VillageFirstCityInput
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useAuth from '../../hooks/useAuth';
 import env from '../../config/env';
+import { extractGoogleMapsData } from '../../utils/googleMaps';
 import './PostPropertyForm.css';
 import './AddProjectForm.css';
 
@@ -73,6 +74,7 @@ const initialState = {
   totalPlots: '',
   amenities: [],
   projectImages: [],
+  coverImage: '',
   brochure: null,
   videoFile: null,
   videoUrl: '',
@@ -158,8 +160,15 @@ function validateForm(data) {
   if (!data.areaRange.trim()) errors.areaRange = 'Area range is required';
 
   if (data.projectImages.length === 0) errors.projectImages = 'Upload at least one project image';
-  if (data.videoUrl.trim() && !/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(data.videoUrl.trim())) {
-    errors.videoUrl = 'Enter a valid YouTube URL';
+  if (data.videoUrl.trim()) {
+    try {
+      const candidate = new URL(data.videoUrl.trim());
+      if (!/^https?:$/i.test(candidate.protocol)) {
+        errors.videoUrl = 'Enter a valid video URL';
+      }
+    } catch (_error) {
+      errors.videoUrl = 'Enter a valid video URL';
+    }
   }
 
   if (!data.shortDescription.trim()) errors.shortDescription = 'Short description is required';
@@ -363,6 +372,7 @@ export default function AddProjectForm() {
             preview: image,
             existing: true,
             isLocal: false,
+            isCover: (project.coverImage || project.projectImages?.[0] || '') === image,
           })),
         });
       } catch (error) {
@@ -390,6 +400,7 @@ export default function AddProjectForm() {
           preview: image.preview || image,
           existing: true,
           isLocal: false,
+          isCover: index === 0,
         })),
         brochure: null,
         videoFile: null,
@@ -560,6 +571,7 @@ export default function AddProjectForm() {
       name: file.name,
       preview: URL.createObjectURL(file),
       isLocal: true,
+      isCover: formData.projectImages.length === 0 && toAdd[0] === file,
     }));
 
     if (rejectedCount > 0) {
@@ -577,7 +589,15 @@ export default function AddProjectForm() {
   const removeImage = (id) => {
     const image = formData.projectImages.find((item) => item.id === id);
     if (image?.preview && !image.existing) URL.revokeObjectURL(image.preview);
-    updateField('projectImages', formData.projectImages.filter((item) => item.id !== id));
+    const remaining = formData.projectImages.filter((item) => item.id !== id);
+    if (remaining.length && !remaining.some((item) => item.isCover)) {
+      remaining[0] = { ...remaining[0], isCover: true };
+    }
+    updateField('projectImages', remaining);
+  };
+
+  const setCoverImage = (id) => {
+    updateField('projectImages', formData.projectImages.map((item) => ({ ...item, isCover: item.id === id })));
   };
 
   const handleBrochureUpload = (event) => {
@@ -585,6 +605,15 @@ export default function AddProjectForm() {
     if (!file) return;
     if (formData.brochure?.preview) URL.revokeObjectURL(formData.brochure.preview);
     updateField('brochure', { file, name: file.name, preview: URL.createObjectURL(file) });
+  };
+
+  const handleMapLinkChange = (value) => {
+    updateField('mapLink', value);
+    const extracted = extractGoogleMapsData(value);
+    if (extracted.latitude !== null && extracted.longitude !== null) {
+      updateField('latitude', extracted.latitude);
+      updateField('longitude', extracted.longitude);
+    }
   };
 
   const addConfigurationRow = () => updateField('extraConfigurations', [...formData.extraConfigurations, '']);
@@ -640,11 +669,14 @@ export default function AddProjectForm() {
     setStatusMessage('');
     try {
       const { videoFile, ...rest } = formData;
+      const selectedCover = formData.projectImages.find((image) => image.isCover) || formData.projectImages[0];
+      const existingImages = formData.projectImages.filter((image) => image?.existing).map((image) => image.preview);
       const payload = {
         ...rest,
-        projectImages: formData.projectImages
-          .filter((image) => image?.existing)
-          .map((image) => image.preview),
+        projectImages: selectedCover?.existing
+          ? [selectedCover.preview, ...existingImages.filter((image) => image !== selectedCover.preview)]
+          : existingImages,
+        coverImage: selectedCover?.existing ? selectedCover.preview : '',
       };
 
       let projectId = editId;
@@ -663,8 +695,22 @@ export default function AddProjectForm() {
         const mediaPayload = {};
         if (newImages.length) mediaPayload.images = newImages.map((image) => image.file);
         if (formData.videoFile) mediaPayload.videos = [formData.videoFile];
+        if (formData.brochure?.file) mediaPayload.brochure = formData.brochure.file;
         if (Object.keys(mediaPayload).length) {
-          await projectService.uploadMedia(projectId, mediaPayload);
+          const mediaResponse = await projectService.uploadMedia(projectId, mediaPayload);
+          const uploadedImages = mediaResponse?.data?.data?.images || [];
+          if (selectedCover?.isLocal) {
+            const coverIndex = newImages.findIndex((image) => image.id === selectedCover.id);
+            const uploadedCover = uploadedImages[uploadedImages.length - newImages.length + coverIndex];
+            if (uploadedCover?.url) {
+              const reordered = [uploadedCover.url, ...existingImages, ...uploadedImages.map((image) => image.url).filter((url) => url !== uploadedCover.url)];
+              await projectService.update(projectId, {
+                coverImage: uploadedCover.url,
+                coverImageKey: uploadedCover.key || '',
+                projectImages: reordered,
+              });
+            }
+          }
         }
       }
 
@@ -817,7 +863,7 @@ export default function AddProjectForm() {
             </div>
 
             <Field label="Google Map Link / Coordinates" error={errors.mapLink} hint="Optional. Paste a Google Maps URL or coordinates like `18.4529, 73.9777`." icon={MapPin}>
-              <TextInput name="mapLink" type="text" placeholder="https://maps.google.com/... or 18.4529, 73.9777" value={formData.mapLink} onChange={(event) => updateField('mapLink', event.target.value)} error={errors.mapLink} />
+              <TextInput name="mapLink" type="text" placeholder="https://maps.google.com/... or 18.4529, 73.9777" value={formData.mapLink} onChange={(event) => handleMapLinkChange(event.target.value)} onBlur={(event) => handleMapLinkChange(event.target.value)} error={errors.mapLink} />
             </Field>
 
             <div className="ppf-field">
@@ -984,9 +1030,15 @@ export default function AddProjectForm() {
             {formData.projectImages.length > 0 ? (
               <div className="ppf-photo-grid">
                 {formData.projectImages.map((image) => (
-                  <div key={image.id} className="ppf-photo-thumb cover">
+                  <div key={image.id} className={`ppf-photo-thumb ${image.isCover ? 'cover' : ''}`}>
                     <img src={image.preview} alt={image.name} />
+                    {image.isCover ? <span className="ppf-cover-badge">Cover</span> : null}
                     <div className="ppf-photo-overlay apf-always-visible">
+                      {!image.isCover ? (
+                        <button type="button" className="ppf-photo-action" onClick={() => setCoverImage(image.id)}>
+                          Set Cover
+                        </button>
+                      ) : null}
                       <button type="button" className="ppf-photo-delete" onClick={() => removeImage(image.id)}>
                         Remove
                       </button>
@@ -1010,7 +1062,7 @@ export default function AddProjectForm() {
                 />
               </Field>
               <Field label="Project Video URL" error={errors.videoUrl}>
-                <TextInput name="videoUrl" type="url" placeholder="https://youtube.com/watch?v=..." value={formData.videoUrl} onChange={(event) => updateField('videoUrl', event.target.value)} error={errors.videoUrl} />
+                <TextInput name="videoUrl" type="url" placeholder="https://example.com/video.mp4 or YouTube/Vimeo link" value={formData.videoUrl} onChange={(event) => updateField('videoUrl', event.target.value)} error={errors.videoUrl} />
               </Field>
             </div>
           </SectionCard>

@@ -28,7 +28,7 @@ const initialState = {
   useOriginalSellerContact: true,
   contactDisplayMode: 'original',
   title: '',
-  intent: 'sell', category: 'residential', propertyType: '', city: '', locality: '', subLocality: '', landmark: '', flatNo: '', totalFloors: '', floorNo: '',
+  intent: 'sell', category: 'residential', propertyType: '', city: '', locality: '', subLocality: '', landmark: '', mapLink: '', flatNo: '', totalFloors: '', floorNo: '',
   bedrooms: '', bathrooms: '', balconies: '', totalArea: '', areaUnit: 'sq.ft', carpetArea: '', furnishing: '', availability: '', possessionMonth: '', possessionYear: '', propertyAge: '', ownership: '', price: '', priceNegotiable: false,
   securityDeposit: '', maintenance: '', mealsIncluded: false, plotArea: '', plotLength: '', plotWidth: '', boundaryWall: '', openSides: '', constructionDone: '', superBuiltUpArea: '', washroom: '', personalWashroom: '', pantry: '', coveredParking: '', openParking: '', warehouseHeight: '', loadingUnloading: '', floorsInProperty: '', floorArea: '',
   bedCount: '', cabinCount: '',
