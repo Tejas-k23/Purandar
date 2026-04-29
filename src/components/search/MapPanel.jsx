@@ -13,18 +13,22 @@ const baseLongitude = 73.98;
 const baseLatitude = 18.28;
 const isValidCoord = (value) => Number.isFinite(Number(value));
 
-export default function MapPanel({ properties = [], activePropertyId = '', intent = 'sell' }) {
+export default function MapPanel({ properties = [], projects = [], activePropertyId = '', intent = 'sell' }) {
   const navigate = useNavigate();
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  const items = useMemo(() => properties.slice(0, 12).map((property, index) => {
-    const hasCoords = isValidCoord(property.longitude) && isValidCoord(property.latitude);
-    return {
-      ...property,
-      longitude: hasCoords ? Number(property.longitude) : baseLongitude + (index % 4) * 0.02,
-      latitude: hasCoords ? Number(property.latitude) : baseLatitude + Math.floor(index / 4) * 0.018,
-    };
-  }), [properties]);
+  const items = useMemo(() => {
+    const allItems = [...properties, ...projects].slice(0, 12).map((item, index) => {
+      const hasCoords = isValidCoord(item.longitude) && isValidCoord(item.latitude);
+      return {
+        ...item,
+        longitude: hasCoords ? Number(item.longitude) : baseLongitude + (index % 4) * 0.02,
+        latitude: hasCoords ? Number(item.latitude) : baseLatitude + Math.floor(index / 4) * 0.018,
+        isProject: item.projectName !== undefined, // Distinguish projects from properties
+      };
+    });
+    return allItems;
+  }, [properties, projects]);
 
   const activeProperty = items.find((property) => property._id === activePropertyId);
   const [viewState, setViewState] = useState({
@@ -51,11 +55,12 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
       if (map) {
         flyToCoordinates(map, activeProperty, {
           zoom: 13.2,
-          speed: 1.05,
-          curve: 1.55,
-          duration: 1550,
+          speed: 1.2,
+          curve: 1.8,
+          duration: 1800,
           essential: true,
-          pitch: 8,
+          pitch: 12,
+          easing: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t, // easeInOutQuad
         });
       }
     } else if (!activePropertyId && items.length && map) {
@@ -152,18 +157,18 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
       >
         <NavigationControl position="top-right" />
         <FullscreenControl position="top-right" />
-        {items.map((property) => (
-          <Marker key={property._id} longitude={property.longitude} latitude={property.latitude} anchor="bottom">
+        {items.map((item) => (
+          <Marker key={item._id} longitude={item.longitude} latitude={item.latitude} anchor="bottom">
             <button
               type="button"
-              className={`marker-pin ${activePropertyId === property._id || selectedPropertyId === property._id ? 'active marker-pin-pulse' : ''}`}
+              className={`marker-pin ${activePropertyId === item._id || selectedPropertyId === item._id ? 'active marker-pin-pulse' : ''} ${item.isProject ? 'marker-pin-project' : ''}`}
               onClick={(event) => {
                 event.stopPropagation();
-                setSelectedPropertyId(property._id);
+                setSelectedPropertyId(item._id);
                 setIsPopupDismissed(false);
                 const map = mapRef.current?.getMap?.();
                 if (map) {
-                  flyToCoordinates(map, property, {
+                  flyToCoordinates(map, item, {
                     zoom: 13.4,
                     speed: 1,
                     curve: 1.48,
@@ -176,11 +181,16 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
             >
               <span className="marker-pin-glow" aria-hidden="true" />
               <img
-                src={getPropertyImageUrls(property)[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=300&q=80'}
-                alt={property.title}
+                src={item.isProject ? (item.projectImages?.[0] || 'https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=300&q=80') : (getPropertyImageUrls(item)[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=300&q=80')}
+                alt={item.title || item.projectName}
                 className="marker-image"
               />
-              <span className="marker-price">INR {Math.round((property.price || 0) / 100000)}L</span>
+              <span className="marker-price">
+                {item.isProject
+                  ? `${formatCompactPrice((item.startingPrice || 0) * (item.priceUnit === 'Crore' ? 10000000 : 100000))} - ${formatCompactPrice((item.endingPrice || 0) * (item.priceUnit === 'Crore' ? 10000000 : 100000))}`
+                  : `INR ${Math.round((item.price || 0) / 100000)}L`
+                }
+              </span>
             </button>
           </Marker>
         ))}
@@ -198,30 +208,52 @@ export default function MapPanel({ properties = [], activePropertyId = '', inten
               <button type="button" className="map-popup-close" onClick={() => {
                 setSelectedPropertyId('');
                 setIsPopupDismissed(true);
-              }} aria-label="Close property preview">
+              }} aria-label="Close preview">
                 <X size={14} />
               </button>
               <img
-                src={getPropertyImageUrls(selectedProperty)[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80'}
-                alt={selectedProperty.title}
+                src={selectedProperty.isProject ? (selectedProperty.projectImages?.[0] || 'https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=600&q=80') : (getPropertyImageUrls(selectedProperty)[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80')}
+                alt={selectedProperty.title || selectedProperty.projectName}
                 className="map-popup-image"
               />
               <div className="map-popup-body">
                 <div className="map-popup-topline">
-                  <span className="map-popup-price">{formatCompactPrice(selectedProperty.price)}</span>
-                  <span className="map-popup-type">{selectedProperty.propertyType}</span>
+                  <span className="map-popup-price">
+                    {selectedProperty.isProject
+                      ? `${formatCompactPrice((selectedProperty.startingPrice || 0) * (selectedProperty.priceUnit === 'Crore' ? 10000000 : 100000))} - ${formatCompactPrice((selectedProperty.endingPrice || 0) * (selectedProperty.priceUnit === 'Crore' ? 10000000 : 100000))}`
+                      : formatCompactPrice(selectedProperty.price)
+                    }
+                  </span>
+                  <span className="map-popup-type">{selectedProperty.propertyType || selectedProperty.projectType}</span>
                 </div>
-                <h4 className="map-popup-title">{selectedProperty.title || `${selectedProperty.propertyType} in ${selectedProperty.locality || selectedProperty.city}`}</h4>
+                <h4 className="map-popup-title">
+                  {selectedProperty.isProject
+                    ? selectedProperty.projectName
+                    : (selectedProperty.title || `${selectedProperty.propertyType} in ${selectedProperty.locality || selectedProperty.city}`)
+                  }
+                </h4>
                 <div className="map-popup-location">
                   <MapPin size={14} />
-                  <span>{[selectedProperty.subLocality, selectedProperty.locality, selectedProperty.city].filter(Boolean).join(', ')}</span>
+                  <span>
+                    {selectedProperty.isProject
+                      ? [selectedProperty.area, selectedProperty.city].filter(Boolean).join(', ')
+                      : [selectedProperty.subLocality, selectedProperty.locality, selectedProperty.city].filter(Boolean).join(', ')
+                    }
+                  </span>
                 </div>
-                <div className="map-popup-features">
-                  {selectedProperty.bedrooms ? <span><BedDouble size={14} /> {selectedProperty.bedrooms} BHK</span> : null}
-                  {selectedProperty.bathrooms ? <span><Bath size={14} /> {selectedProperty.bathrooms} Bath</span> : null}
-                  <span><Ruler size={14} /> {selectedProperty.totalArea || selectedProperty.plotArea || selectedProperty.carpetArea || '-'} {selectedProperty.areaUnit || 'sq.ft'}</span>
-                </div>
-                <button type="button" className="map-popup-action" onClick={() => navigate(`/property/${selectedProperty._id}`)}>
+                {selectedProperty.isProject ? (
+                  <div className="map-popup-features">
+                    <span><Building2 size={14} /> {selectedProperty.projectStatus}</span>
+                    <span>Developer: {selectedProperty.developerName}</span>
+                  </div>
+                ) : (
+                  <div className="map-popup-features">
+                    {selectedProperty.bedrooms ? <span><BedDouble size={14} /> {selectedProperty.bedrooms} BHK</span> : null}
+                    {selectedProperty.bathrooms ? <span><Bath size={14} /> {selectedProperty.bathrooms} Bath</span> : null}
+                    <span><Ruler size={14} /> {selectedProperty.totalArea || selectedProperty.plotArea || selectedProperty.carpetArea || '-'} {selectedProperty.areaUnit || 'sq.ft'}</span>
+                  </div>
+                )}
+                <button type="button" className="map-popup-action" onClick={() => navigate(selectedProperty.isProject ? `/projects/${selectedProperty.slug || selectedProperty._id}` : `/property/${selectedProperty._id}`)}>
                   <span>View Details</span>
                   <MoveUpRight size={14} />
                 </button>

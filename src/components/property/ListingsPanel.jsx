@@ -89,10 +89,7 @@ export default function ListingsPanel({
           <div
             key={project._id}
             className="listing-project-card-wrap"
-            onMouseEnter={() => {
-              clearPendingHover();
-              onPropertyHover?.('');
-            }}
+            onMouseEnter={() => handleCardHover(project._id)}
           >
             <ProjectCard project={project} />
           </div>

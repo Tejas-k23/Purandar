@@ -71,11 +71,13 @@
     z-index: 20;
 }
 
-.marker-pin.active {
-    box-shadow: var(--shadow-xl);
-    z-index: 21;
-    transform: translateY(-2px) scale(1.08);
-    border: 2px solid var(--indigo-600);
+.marker-pin-project {
+    background-color: var(--indigo-50);
+    border-color: var(--indigo-200);
+}
+
+.marker-pin-project.active {
+    border-color: var(--indigo-600);
 }
 
 .marker-pin-glow {

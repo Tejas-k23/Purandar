@@ -161,7 +161,7 @@ Source: `src/pages/public/AddProjectForm.jsx` and `src/utils/projectTypeConfig.j
 - city
 - area
 - pincode
-- mapLink (URL or coordinates)
+- mapLink (Google Maps URL only)
 - latitude (via map picker)
 - longitude (via map picker)
 

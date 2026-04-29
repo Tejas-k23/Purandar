@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MapPin, Heart, ShieldCheck, BedDouble, Bath, Ruler, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
+import { MapPin, Heart, ShieldCheck, BedDouble, Bath, Ruler, ChevronLeft, ChevronRight, Share2, Images } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatCompactPrice } from '../../utils/formatPrice';
 import { getPropertyImageUrls } from '../../utils/propertyImages';
 import { resolveContact } from '../common/ContactCard';
+import Modal from '../common/Modal';
+import PropertyGallery from './PropertyGallery';
 import './PropertyCard.css';
 
 const getLocation = (property) => [property.subLocality, property.locality, property.city].filter(Boolean).join(', ');
@@ -18,10 +20,37 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const contact = useMemo(() => resolveContact(property), [property]);
   const showBachelorsBadge = property.propertyType === 'PG / Hostel' || property.tenantPreference === 'bachelors';
+  const [imageErrors, setImageErrors] = useState(new Set());
+
+  const handleImageError = (imageUrl) => {
+    setImageErrors(prev => new Set([...prev, imageUrl]));
+  };
+
+  const getCurrentImage = () => {
+    const currentImage = images[activeImageIndex];
+    if (imageErrors.has(currentImage)) {
+      // Find next valid image
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        if (!imageErrors.has(img)) {
+          return img;
+        }
+      }
+      return getFallbackImage();
+    }
+    return currentImage;
+  };
 
   useEffect(() => {
     setActiveImageIndex(0);
+    setImageErrors(new Set());
   }, [property._id]);
+
+  useEffect(() => {
+    if (activeImageIndex >= images.length) {
+      setActiveImageIndex(0);
+    }
+  }, [images.length, activeImageIndex]);
 
   const showCarouselControls = images.length > 1;
 
@@ -62,11 +91,12 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
     >
       <div className="property-image-container">
         <img
-          src={images[activeImageIndex]}
+          src={getCurrentImage()}
           alt={property.title}
           className="property-image"
           loading="lazy"
           decoding="async"
+          onError={() => handleImageError(images[activeImageIndex])}
         />
         {showCarouselControls ? (
           <>
@@ -77,7 +107,7 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
               <ChevronRight className="w-4 h-4" />
             </button>
             <div className="property-carousel-dots">
-              {images.slice(0, 6).map((image, index) => (
+              {images.map((image, index) => (
                 <button
                   key={`${property._id}-${image}-${index}`}
                   type="button"
@@ -102,6 +132,11 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
             <button className="save-btn share-btn" onClick={shareProperty} aria-label="Share property">
               <Share2 className="w-4 h-4" />
             </button>
+            {images.length > 1 ? (
+              <button className="save-btn gallery-btn" onClick={(event) => { event.stopPropagation(); setShowGalleryModal(true); }} aria-label="View all images">
+                <Images className="w-4 h-4" />
+              </button>
+            ) : null}
             {onToggleSave ? (
               <button className={`save-btn ${isSaved ? 'saved' : ''}`} onClick={(event) => { event.stopPropagation(); onToggleSave(property._id); }}>
                 <Heart className={`w-4 h-4 ${isSaved ? 'fill-red-500 text-red-500' : ''}`} />
@@ -130,6 +165,9 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
           <span className="feature-item"><Ruler size={15} /> <span className="feature-val">{property.totalArea || property.plotArea || property.carpetArea || '-'} {property.areaUnit || 'sq.ft'}</span></span>
         </div>
       </div>
+      <Modal isOpen={showGalleryModal} onClose={() => setShowGalleryModal(false)} className="property-gallery-modal">
+        <PropertyGallery photos={property.photos} images={property.images} intent={property.intent} />
+      </Modal>
     </div>
   );
 }

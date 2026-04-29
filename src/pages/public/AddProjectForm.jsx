@@ -141,8 +141,8 @@ function validateForm(data) {
 
   if (data.mapLink.trim()) {
     const isUrl = /^https?:\/\/.+/i.test(data.mapLink.trim());
-    if (!isUrl && !isCoordinates(data.mapLink)) {
-      errors.mapLink = 'Enter a valid Google Maps URL or coordinates';
+    if (!isUrl) {
+      errors.mapLink = 'Enter a valid Google Maps URL';
     }
   }
 
@@ -816,8 +816,8 @@ export default function AddProjectForm() {
               </Field>
             </div>
 
-            <Field label="Google Map Link / Coordinates" error={errors.mapLink} hint="Optional. Paste a Google Maps URL or coordinates like `18.4529, 73.9777`." icon={MapPin}>
-              <TextInput name="mapLink" type="text" placeholder="https://maps.google.com/... or 18.4529, 73.9777" value={formData.mapLink} onChange={(event) => updateField('mapLink', event.target.value)} error={errors.mapLink} />
+            <Field label="Google Map Link" error={errors.mapLink} hint="Optional. Paste a Google Maps URL for direct linking." icon={MapPin}>
+              <TextInput name="mapLink" type="text" placeholder="https://maps.google.com/..." value={formData.mapLink} onChange={(event) => updateField('mapLink', event.target.value)} error={errors.mapLink} />
             </Field>
 
             <div className="ppf-field">
@@ -1282,7 +1282,7 @@ export default function AddProjectForm() {
               onSelect={({ latitude, longitude }) => {
                 updateField('latitude', latitude);
                 updateField('longitude', longitude);
-                updateField('mapLink', `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+                // Don't overwrite mapLink - keep Google Maps URLs separate from Mapbox coordinates
                 setMapOpen(false);
               }}
             />

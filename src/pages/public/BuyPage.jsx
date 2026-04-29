@@ -63,7 +63,7 @@ export default function BuyPage() {
           />
         </div>
         <div className="map-wrapper">
-          <MapPanel properties={properties} activePropertyId={hoveredPropertyId} intent="sell" />
+          <MapPanel properties={properties} projects={projects} activePropertyId={hoveredPropertyId} intent="sell" />
         </div>
       </div>
     </>

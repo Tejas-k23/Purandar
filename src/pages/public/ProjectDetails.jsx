@@ -278,7 +278,7 @@ function ProjectMap({ project }) {
   const longitude = Number.isFinite(project.longitude) ? project.longitude : fallbackLongitude;
   const latitude = Number.isFinite(project.latitude) ? project.latitude : fallbackLatitude;
   const hasCoords = Number.isFinite(project.longitude) && Number.isFinite(project.latitude);
-  const searchQuery = project.mapLink || [project.address, project.area, project.city].filter(Boolean).join(', ');
+  const searchQuery = [project.address, project.area, project.city].filter(Boolean).join(', ');
   const hasDirectMapLink = /^https?:\/\//i.test(project.mapLink || '');
   const src = hasDirectMapLink
     ? project.mapLink
