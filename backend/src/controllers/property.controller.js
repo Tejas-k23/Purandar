@@ -24,6 +24,7 @@ import {
   prunePropertyPayload,
   validatePropertyPayload,
 } from '../utils/propertyConfig.js';
+import { extractGoogleMapsData } from '../utils/googleMaps.js';
 
 const numericFields = [
   'bedrooms',
@@ -152,6 +153,15 @@ const normalizePayload = (payload) => {
 
   if ('title' in payload && !data.title) {
     data.title = [data.propertyType, data.locality, data.city].filter(Boolean).join(' in ');
+  }
+
+  const extractedMapData = extractGoogleMapsData(data.mapLink || '');
+  if ('mapLink' in data) {
+    data.mapLink = extractedMapData.mapLink || String(data.mapLink || '').trim();
+  }
+  if ((!Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) && extractedMapData.latitude !== null && extractedMapData.longitude !== null) {
+    data.latitude = extractedMapData.latitude;
+    data.longitude = extractedMapData.longitude;
   }
 
   return prunePropertyPayload(data);

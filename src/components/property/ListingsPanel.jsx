@@ -13,7 +13,9 @@ export default function ListingsPanel({
   projects = [],
   loading = false,
   savedPropertyIds = new Set(),
+  savedProjectIds = new Set(),
   onToggleSave,
+  onToggleProjectSave,
   onPropertyHover,
   activePropertyId,
   sortValue = 'newest',
@@ -91,7 +93,11 @@ export default function ListingsPanel({
             className="listing-project-card-wrap"
             onMouseEnter={() => handleCardHover(project._id)}
           >
-            <ProjectCard project={project} />
+            <ProjectCard
+              project={project}
+              isSaved={savedProjectIds.has(project._id)}
+              onToggleSave={onToggleProjectSave}
+            />
           </div>
         ))}
       </div>

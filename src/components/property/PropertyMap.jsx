@@ -10,18 +10,19 @@ export default function PropertyMap({ property = {} }) {
   const longitude = Number.isFinite(property.longitude) ? property.longitude : fallbackLongitude;
   const latitude = Number.isFinite(property.latitude) ? property.latitude : fallbackLatitude;
   const hasCoords = Number.isFinite(property.longitude) && Number.isFinite(property.latitude);
+  const hasDirectMapLink = /^https?:\/\//i.test(property.mapLink || '');
   const searchQuery = [property.flatNo, property.subLocality, property.locality, property.city, property.landmark].filter(Boolean).join(', ');
-  const googleMapsUrl = buildGoogleMapsSearchUrl({
+  const googleMapsUrl = hasDirectMapLink ? property.mapLink : buildGoogleMapsSearchUrl({
     latitude: hasCoords ? property.latitude : null,
     longitude: hasCoords ? property.longitude : null,
     query: searchQuery,
   });
-  const googleEmbedUrl = buildGoogleMapsEmbedUrl({
+  const googleEmbedUrl = hasDirectMapLink ? property.mapLink : buildGoogleMapsEmbedUrl({
     latitude: hasCoords ? property.latitude : null,
     longitude: hasCoords ? property.longitude : null,
     query: searchQuery,
   });
-  const hasMapbox = Boolean(env.mapboxAccessToken);
+  const hasMapbox = Boolean(env.mapboxAccessToken) && hasCoords && !hasDirectMapLink;
 
   return (
     <div>

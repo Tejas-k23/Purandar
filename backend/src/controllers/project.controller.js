@@ -4,6 +4,7 @@ import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import slugify from '../utils/slugify.js';
+import { env } from '../config/env.js';
 import {
   buildFileName,
   getImageUrl,
@@ -16,6 +17,7 @@ import {
   removeInvalidTokens,
   sendNotificationToTokens,
 } from '../utils/notifications.js';
+import { extractGoogleMapsData } from '../utils/googleMaps.js';
 
 const toNumberOrNull = (value) => {
   if (value === '' || value === undefined || value === null) {
@@ -68,6 +70,22 @@ const normalizePayload = (payload = {}) => {
   next.extraConfigurations = Array.isArray(next.extraConfigurations) ? next.extraConfigurations : [];
   next.amenities = Array.isArray(next.amenities) ? next.amenities : [];
   next.tags = Array.isArray(next.tags) ? next.tags : [];
+
+  const extractedMapData = extractGoogleMapsData(next.mapLink || '');
+  if ('mapLink' in next) {
+    next.mapLink = extractedMapData.mapLink || String(next.mapLink || '').trim();
+  }
+  if ((next.latitude === null || next.longitude === null) && extractedMapData.latitude !== null && extractedMapData.longitude !== null) {
+    next.latitude = extractedMapData.latitude;
+    next.longitude = extractedMapData.longitude;
+  }
+
+  if ('coverImage' in next) {
+    next.coverImage = String(next.coverImage || '').trim();
+  }
+  if ('coverImageKey' in next) {
+    next.coverImageKey = String(next.coverImageKey || '').trim();
+  }
   return next;
 };
 
@@ -113,8 +131,15 @@ const validateProjectPayload = (payload = {}) => {
   if (payload.showWhatsappButton && payload.whatsappDisplayMode === 'custom' && !payload.customWhatsappNumber?.trim()) {
     errors.push('customWhatsappNumber is required');
   }
-  if (payload.videoUrl?.trim() && !/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(payload.videoUrl.trim())) {
-    errors.push('videoUrl must be a valid YouTube URL');
+  if (payload.videoUrl?.trim()) {
+    try {
+      const candidate = new URL(payload.videoUrl.trim());
+      if (!/^https?:$/i.test(candidate.protocol)) {
+        errors.push('videoUrl must be a valid video URL');
+      }
+    } catch (_error) {
+      errors.push('videoUrl must be a valid video URL');
+    }
   }
   if (payload.projectType === 'Plots') {
     if (payload.pricePerSqFt === null || payload.pricePerSqFt === undefined) errors.push('pricePerSqFt is required');
@@ -157,6 +182,9 @@ const ensureProjectImages = (project) => {
   if (fallback.length) {
     project.projectImages = fallback;
   }
+  if (!project.coverImage && project.projectImages?.length) {
+    project.coverImage = project.projectImages[0];
+  }
   return project;
 };
 
@@ -198,7 +226,7 @@ export const listProjects = asyncHandler(async (req, res) => {
 
 export const getProjectById = asyncHandler(async (req, res) => {
   const identifier = req.params.id;
-  const project = await findProjectByIdentifier(identifier);
+  const project = await findProjectByIdentifier(identifier).populate('owner', 'name email phone');
   ensureProjectImages(project);
 
   if (!project) {
@@ -328,8 +356,9 @@ export const uploadProjectMedia = asyncHandler(async (req, res) => {
 
   const imageFiles = req.files?.images || [];
   const videoFiles = req.files?.videos || [];
+  const brochureFile = req.files?.brochure?.[0] || null;
 
-  if (!imageFiles.length && !videoFiles.length) {
+  if (!imageFiles.length && !videoFiles.length && !brochureFile) {
     throw new ApiError(400, 'No files uploaded');
   }
 
@@ -355,6 +384,10 @@ export const uploadProjectMedia = asyncHandler(async (req, res) => {
     if (error) {
       throw new ApiError(400, error);
     }
+  }
+
+  if (brochureFile && brochureFile.mimetype !== 'application/pdf') {
+    throw new ApiError(400, 'Brochure must be a PDF file');
   }
 
   const imageUploads = imageFiles.map(async (file) => {
@@ -407,14 +440,47 @@ export const uploadProjectMedia = asyncHandler(async (req, res) => {
     };
   });
 
-  const [uploadedImages, uploadedVideos] = await Promise.all([
+  const brochureUpload = brochureFile ? (async () => {
+    const filename = buildFileName(brochureFile.originalname || 'brochure.pdf');
+    const key = `projects/${project._id}/brochures/${filename}`;
+    try {
+      await uploadToR2({
+        key,
+        body: brochureFile.buffer,
+        contentType: brochureFile.mimetype,
+      });
+    } catch (error) {
+      console.error('R2 brochure upload failed:', error);
+      throw new ApiError(502, 'Upload failed', {
+        code: error?.code,
+        name: error?.name,
+        message: error?.message,
+      });
+    }
+
+    return {
+      url: getImageUrl(key),
+      key,
+      name: brochureFile.originalname || 'brochure.pdf',
+    };
+  })() : null;
+
+  const [uploadedImages, uploadedVideos, uploadedBrochure] = await Promise.all([
     Promise.all(imageUploads),
     Promise.all(videoUploads),
+    brochureUpload,
   ]);
 
   project.images = [...(project.images || []), ...uploadedImages];
   project.videos = [...(project.videos || []), ...uploadedVideos];
   project.projectImages = project.images.map((image) => image.url);
+  if (uploadedBrochure) {
+    project.brochure = uploadedBrochure;
+  }
+  if (!project.coverImage && project.projectImages.length) {
+    project.coverImage = project.projectImages[0];
+    project.coverImageKey = project.images[0]?.key || '';
+  }
   if (project.videos.length) {
     project.videoUrl = project.videos[0].url;
   }
@@ -427,6 +493,7 @@ export const uploadProjectMedia = asyncHandler(async (req, res) => {
     data: {
       images: project.images,
       videos: project.videos,
+      brochure: project.brochure,
     },
   });
 });
@@ -441,6 +508,7 @@ export const deleteProject = asyncHandler(async (req, res) => {
   const keys = [
     ...(project.images || []).map((image) => image.key),
     ...(project.videos || []).map((video) => video.key),
+    project.brochure?.key,
   ].filter(Boolean);
 
   await deleteManyFromR2(keys);
@@ -448,6 +516,9 @@ export const deleteProject = asyncHandler(async (req, res) => {
   project.images = [];
   project.videos = [];
   project.projectImages = [];
+  project.coverImage = '';
+  project.coverImageKey = '';
+  project.brochure = { url: '', key: '', name: '' };
   project.videoUrl = '';
   project.status = 'archived';
   await project.save();
@@ -502,4 +573,70 @@ export const createProjectEnquiry = asyncHandler(async (req, res) => {
       .map((token) => token.token);
     await removeInvalidTokens(invalid);
   }
+});
+
+export const unlockProjectSellerDetails = asyncHandler(async (req, res) => {
+  const project = await findProjectByIdentifier(req.params.id).populate('owner', 'name email phone');
+  ensureProjectImages(project);
+
+  if (!project || project.visible === false || project.status !== 'approved') {
+    throw new ApiError(404, 'Project not found');
+  }
+
+  const isOwner = project.owner?._id?.toString() === req.user._id.toString();
+  const isAdmin = req.user.role === 'admin';
+  const contactDisplayMode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
+
+  if (!isOwner && !isAdmin && contactDisplayMode === 'original') {
+    await Enquiry.findOneAndUpdate(
+      {
+        project: project._id,
+        user: req.user._id,
+        leadType: 'seller_detail',
+      },
+      {
+        $set: {
+          name: req.user.name,
+          email: req.user.email,
+          phone: req.user.phone || '',
+        },
+        $setOnInsert: {
+          message: 'Requested seller details',
+          status: 'new',
+          leadType: 'seller_detail',
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+  }
+
+  const originalContact = {
+    name: project.contactPersonName || project.owner?.name || project.developerName || 'Developer',
+    phone: project.phoneNumber || project.owner?.phone || '',
+    email: project.email || project.owner?.email || '',
+  };
+  const customContact = {
+    name: project.customContactName || originalContact.name,
+    phone: project.customContactPhone || originalContact.phone,
+    email: project.customContactEmail || originalContact.email,
+  };
+  const companyContact = {
+    name: env.COMPANY_CONTACT_NAME || originalContact.name,
+    phone: env.COMPANY_CONTACT_PHONE || originalContact.phone,
+    email: env.COMPANY_CONTACT_EMAIL || originalContact.email,
+  };
+
+  const resolved = contactDisplayMode === 'company'
+    ? companyContact
+    : contactDisplayMode === 'custom'
+      ? customContact
+      : originalContact;
+
+  res.json({
+    success: true,
+    data: resolved,
+  });
 });

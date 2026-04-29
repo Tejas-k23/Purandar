@@ -74,6 +74,19 @@ const projectSchema = new mongoose.Schema(
     visible: { type: Boolean, default: true },
     featuredOnHome: { type: Boolean, default: false },
     projectImages: { type: [String], default: [] },
+    coverImage: { type: String, trim: true, default: '' },
+    coverImageKey: { type: String, trim: true, default: '' },
+    brochure: {
+      type: new mongoose.Schema(
+        {
+          url: { type: String, trim: true, default: '' },
+          key: { type: String, trim: true, default: '' },
+          name: { type: String, trim: true, default: '' },
+        },
+        { _id: false },
+      ),
+      default: () => ({ url: '', key: '', name: '' }),
+    },
     videoUrl: { type: String, trim: true, default: '' },
     images: { type: [mediaSchema], default: [] },
     videos: { type: [mediaSchema], default: [] },

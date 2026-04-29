@@ -528,7 +528,7 @@ export function getVisiblePropertyFieldKeys(propertyType, intent) {
 
 export function getVisibleLocationFieldKeys(propertyType, category) {
   const config = getPropertyTypeConfig(propertyType);
-  const visible = new Set(['city', 'locality', 'subLocality', 'landmark', 'latitude', 'longitude']);
+  const visible = new Set(['city', 'locality', 'subLocality', 'landmark', 'mapLink', 'latitude', 'longitude']);
   const location = config?.location;
 
   if (!location && category === 'residential') visible.add('flatNo');

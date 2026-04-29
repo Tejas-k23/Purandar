@@ -22,7 +22,7 @@ export default function BuyPage() {
     search: routeFilters.locality || routeFilters.city,
   }), [routeFilters.city, routeFilters.locality]);
   const { projects, loading: projectsLoading } = useProjects(projectParams);
-  const { savedPropertyIds, toggleSavedProperty, isAuthenticated } = useAuth();
+  const { savedPropertyIds, savedProjectIds, toggleSavedProperty, toggleSavedProject, isAuthenticated } = useAuth();
   const locationLabel = routeFilters.locality || routeFilters.city || 'Purandar';
   const propertyTypeLabel = routeFilters.propertyType ? `${routeFilters.propertyType} ` : '';
   const seoTitle = `Buy ${propertyTypeLabel}properties in ${locationLabel} | Purandar Properties`;
@@ -55,7 +55,9 @@ export default function BuyPage() {
             projects={projects}
             loading={loading || projectsLoading}
             savedPropertyIds={savedPropertyIds}
+            savedProjectIds={savedProjectIds}
             onToggleSave={isAuthenticated ? toggleSavedProperty : undefined}
+            onToggleProjectSave={isAuthenticated ? toggleSavedProject : undefined}
             onPropertyHover={setHoveredPropertyId}
             activePropertyId={hoveredPropertyId}
             sortValue={routeFilters.sort || 'newest'}

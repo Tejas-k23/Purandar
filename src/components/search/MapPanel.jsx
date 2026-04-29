@@ -4,6 +4,7 @@ import Map, { FullscreenControl, Marker, NavigationControl, Popup } from 'react-
 import { useNavigate } from 'react-router-dom';
 import env from '../../config/env';
 import { formatCompactPrice } from '../../utils/formatPrice';
+import { extractGoogleMapsData } from '../../utils/googleMaps';
 import { flyToCoordinates } from '../../utils/mapHelpers';
 import { getPropertyImageUrls } from '../../utils/propertyImages';
 import SearchBar from './SearchBar';
@@ -19,14 +20,20 @@ export default function MapPanel({ properties = [], projects = [], activePropert
   const mapRef = useRef(null);
   const items = useMemo(() => {
     const allItems = [...properties, ...projects].slice(0, 12).map((item, index) => {
+      // Extract coordinates from Google Maps links if available
+      const extracted = extractGoogleMapsData(item.mapLink || '');
       const hasCoords = isValidCoord(item.longitude) && isValidCoord(item.latitude);
+      const longitude = hasCoords ? Number(item.longitude) : (extracted.longitude || baseLongitude + (index % 4) * 0.02);
+      const latitude = hasCoords ? Number(item.latitude) : (extracted.latitude || baseLatitude + Math.floor(index / 4) * 0.018);
+      
       return {
         ...item,
-        longitude: hasCoords ? Number(item.longitude) : baseLongitude + (index % 4) * 0.02,
-        latitude: hasCoords ? Number(item.latitude) : baseLatitude + Math.floor(index / 4) * 0.018,
+        longitude,
+        latitude,
+        hasCoords: isValidCoord(longitude) && isValidCoord(latitude),
         isProject: item.projectName !== undefined, // Distinguish projects from properties
       };
-    });
+    }).filter((item) => item.hasCoords);
     return allItems;
   }, [properties, projects]);
 

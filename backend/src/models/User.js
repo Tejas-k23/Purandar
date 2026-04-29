@@ -67,6 +67,12 @@ const userSchema = new mongoose.Schema(
         ref: 'Property',
       },
     ],
+    savedProjects: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+      },
+    ],
     refreshTokenHash: {
       type: String,
       select: false,

@@ -94,6 +94,7 @@ const propertySchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    mapLink: { type: String, trim: true, default: '' },
     latitude: { type: Number, default: null },
     longitude: { type: Number, default: null },
     subLocality: { type: String, trim: true, default: '' },

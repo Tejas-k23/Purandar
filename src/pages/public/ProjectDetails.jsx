@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Bath, Building2, CalendarDays, CarFront, Dumbbell, FileText, Mail, MapPin, MapPinned, Phone, ShieldCheck, Trees, Waves, Users, Building, Lock, Blocks, Sparkles, UserCircle } from 'lucide-react';
+import { ArrowLeft, Bath, Building2, CalendarDays, CarFront, Dumbbell, FileText, Heart, Mail, MapPin, MapPinned, Phone, Share2, ShieldCheck, Trees, Waves, Users, Building, Lock, Blocks, Sparkles, UserCircle } from 'lucide-react';
 import Map, { Marker, NavigationControl } from 'react-map-gl/mapbox';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { resolveContact, resolveWhatsappContact } from '../../components/common/ContactCard';
@@ -342,12 +342,17 @@ export default function ProjectDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, savedProjectIds, toggleSavedProject } = useAuth();
   const [project, setProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [enquiry, setEnquiry] = useState({ name: '', email: '', phone: '', message: '' });
   const [message, setMessage] = useState('');
+  const [shareMessage, setShareMessage] = useState('');
+  const [sellerMessage, setSellerMessage] = useState('');
+  const [showSellerDetails, setShowSellerDetails] = useState(false);
+  const [sellerDetails, setSellerDetails] = useState(null);
+  const [sellerLoading, setSellerLoading] = useState(false);
   const [feedbackItems, setFeedbackItems] = useState([]);
   const [feedbackForm, setFeedbackForm] = useState({ name: '', rating: 0, feedback: '' });
   const [feedbackStatus, setFeedbackStatus] = useState('');
@@ -450,6 +455,7 @@ export default function ProjectDetails() {
   const whatsappNumber = normalizeWhatsapp(whatsappContact.number);
   const videoEmbedUrl = getYoutubeEmbedUrl(project.videoUrl || '');
   const uploadedDate = formatDate(project.createdAt);
+  const pageUrl = `${window.location.origin}/projects/${project.slug || project._id}`;
   const whatsappMessage = `WhatsApp chat started for ${project.projectName || 'Project'}`;
   const handleWhatsappClick = async () => {
     if (isAuthenticated && user?.email) {
@@ -468,12 +474,62 @@ export default function ProjectDetails() {
     window.open(`https://wa.me/${whatsappNumber}`, '_blank');
   };
 
+  const revealSellerDetails = async () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: authRouteState });
+      return;
+    }
+
+    if (showSellerDetails) {
+      setShowSellerDetails(false);
+      return;
+    }
+
+    const mode = project.contactDisplayMode || (project.useCustomContactDetails ? 'custom' : 'original');
+    if (mode === 'custom' || mode === 'company') {
+      setSellerDetails(visibleContact);
+      setShowSellerDetails(true);
+      return;
+    }
+
+    setSellerLoading(true);
+    setSellerMessage('');
+    try {
+      const response = await projectService.requestSellerDetails(id);
+      setSellerDetails(response.data.data);
+      setShowSellerDetails(true);
+    } catch (error) {
+      setSellerMessage(error.message || 'Unable to fetch seller details.');
+    } finally {
+      setSellerLoading(false);
+    }
+  };
+
+  const shareProject = async () => {
+    const title = project.projectName || 'Project';
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url: pageUrl });
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(pageUrl);
+        setShareMessage('Share link copied to clipboard.');
+        window.setTimeout(() => setShareMessage(''), 2500);
+        return;
+      }
+    } catch (_error) {
+      // fall back to prompt
+    }
+    window.prompt('Copy link to share this project:', pageUrl);
+  };
+
   return (
     <div className="pd-page" style={{ paddingBottom: '3rem' }}>
       <div className="pd-layout">
         <div className="pd-main">
           <button onClick={() => navigate(-1)} className="pd-back-btn"><ArrowLeft size={16} /> Back to projects</button>
-          <Gallery images={project.projectImages} status={project.projectStatus} />
+          <Gallery images={[project.coverImage, ...(project.projectImages || []).filter((image) => image && image !== project.coverImage)].filter(Boolean)} status={project.projectStatus} />
           {project.videoUrl ? (
             <div className="pd-card">
               <h2 className="pd-section-title">Project Video</h2>
@@ -566,10 +622,38 @@ export default function ProjectDetails() {
           <div className="pd-contact-card">
             <h3>Quick Contact</h3>
             <p>Reach out directly for brochure, site visit, and latest availability.</p>
+            <div className="pd-cta-group" style={{ marginBottom: 12 }}>
+              <button className="pd-cta-primary" onClick={revealSellerDetails} disabled={sellerLoading}>
+                {sellerLoading ? 'Loading...' : isAuthenticated ? (showSellerDetails ? 'Hide Seller Details' : 'Get Seller Details') : 'Login to Get Seller Details'}
+              </button>
+            </div>
             <div className="pd-chip-list">
               <span className="pd-info-chip"><Phone size={14} /> {visibleContact.phone || '-'}</span>
               <span className="pd-info-chip"><Mail size={14} /> {visibleContact.email || '-'}</span>
             </div>
+            <div className="pd-title-actions" style={{ marginTop: 12 }}>
+              <button className="pd-icon-btn" onClick={shareProject} aria-label="Share project">
+                <Share2 size={18} />
+              </button>
+              {isAuthenticated ? (
+                <button className="pd-icon-btn pd-icon-btn--heart" onClick={() => toggleSavedProject(project._id)} aria-label="Save project">
+                  <Heart size={18} fill={savedProjectIds.has(project._id) ? 'currentColor' : 'none'} />
+                </button>
+              ) : null}
+            </div>
+            {sellerMessage ? <p style={{ marginTop: 12 }}>{sellerMessage}</p> : null}
+            {shareMessage ? <p style={{ marginTop: 8 }}>{shareMessage}</p> : null}
+            {showSellerDetails && sellerDetails ? (
+              <div className="pd-trust" style={{ marginTop: 16 }}>
+                <div className="pd-trust-badge">
+                  <div className="pd-trust-icon"><UserCircle size={16} /></div>
+                  <span className="pd-trust-label">Seller Information</span>
+                </div>
+                <p className="pd-trust-text">Name: {sellerDetails.name || 'Developer'}</p>
+                <p className="pd-trust-text">Phone: {sellerDetails.phone || 'Not available'}</p>
+                <p className="pd-trust-text">Email: {sellerDetails.email || 'Not available'}</p>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
