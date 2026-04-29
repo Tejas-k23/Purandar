@@ -287,14 +287,13 @@ function ProjectMap({ project }) {
       longitude: project.longitude,
       query: searchQuery,
     });
-  const googleMapsUrl = hasDirectMapLink
-    ? project.mapLink
-    : buildGoogleMapsSearchUrl({
-      latitude: project.latitude,
-      longitude: project.longitude,
-      query: searchQuery,
-    });
-  const hasMapbox = Boolean(env.mapboxAccessToken) && hasCoords && !hasDirectMapLink;
+  const googleMapsUrl = buildGoogleMapsSearchUrl({
+    latitude: project.latitude,
+    longitude: project.longitude,
+    query: searchQuery,
+  });
+  // Prioritize Mapbox when token and coordinates are available
+  const hasMapbox = Boolean(env.mapboxAccessToken) && hasCoords;
 
   return (
     <div>
