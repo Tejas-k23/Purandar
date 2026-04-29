@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bath, BedDouble, MapPin, MoveUpRight, Ruler, X } from 'lucide-react';
+import { Bath, BedDouble, Building2, MapPin, MoveUpRight, Ruler, X } from 'lucide-react';
 import Map, { FullscreenControl, Marker, NavigationControl, Popup } from 'react-map-gl/mapbox';
 import { useNavigate } from 'react-router-dom';
 import env from '../../config/env';
@@ -67,7 +67,6 @@ export default function MapPanel({ properties = [], projects = [], activePropert
           duration: 1800,
           essential: true,
           pitch: 12,
-          easing: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t, // easeInOutQuad
         });
       }
     } else if (!activePropertyId && items.length && map) {
