@@ -1,18 +1,11 @@
 import React from 'react';
-import { BarChart3, CheckSquare, FileText, Mail, PlusSquare, ShieldCheck, Building2, FolderKanban, Home, MessageSquare, Bell, Package, Zap, Settings } from 'lucide-react';
+import { ShieldCheck, Mail, Bell, MessageSquare, Package, Zap, Settings } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const items = [
-  { label: 'Dashboard', to: '/admin', icon: BarChart3 },
-  { label: 'Properties', to: '/admin/properties', icon: Home },
-  { label: 'Add Property', to: '/admin/properties/form', icon: PlusSquare },
-  { label: 'Projects', to: '/admin/projects', icon: FolderKanban },
-  { label: 'Add Project', to: '/admin/add-project', icon: Building2 },
   { label: 'Enquiries', to: '/admin/enquiries', icon: Mail },
   { label: 'Notifications', to: '/admin/notifications', icon: Bell },
   { label: 'Feedback', to: '/admin/feedback', icon: MessageSquare },
-  { label: 'Blogs', to: '/admin/blogs', icon: FileText },
-  { label: 'Property Approval', to: '/admin/properties/pending', icon: CheckSquare },
   { label: 'Packages', to: '/admin/packages', icon: Package },
   { label: 'Subscriptions', to: '/admin/subscriptions', icon: Zap },
   { label: 'Payment History', to: '/admin/payments', icon: Mail },
