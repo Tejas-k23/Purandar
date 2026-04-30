@@ -140,11 +140,11 @@
     display: none;
     align-items: center;
     gap: 8px;
-    padding: 12px 28px;
+    padding: 8px 16px;
     border-radius: 50px;
     background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
     color: var(--white);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.01em;
     border: none;
@@ -183,9 +183,9 @@
 
 .auth-btn {
     text-decoration: none;
-    padding: 12px 28px;
+    padding: 8px 16px;
     border-radius: 50px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.01em;
     transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s, border-color 0.2s;

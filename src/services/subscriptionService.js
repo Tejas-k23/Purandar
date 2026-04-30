@@ -1,7 +1,5 @@
-import axios from 'axios';
+import api from './api';
 import env from '../config/env';
-
-const api = axios.create({ baseURL: env.apiUrl });
 
 // Packages
 export const listPackages = () => api.get('/packages');
