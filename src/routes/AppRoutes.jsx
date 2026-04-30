@@ -39,6 +39,10 @@ import AdminEnquiries from '../pages/admin/AdminEnquiries';
 import AdminLogin from '../pages/admin/AdminLogin';
 import AdminFeedback from '../pages/admin/AdminFeedback';
 import AdminNotifications from '../pages/admin/AdminNotifications';
+import AdminPackages from '../pages/admin/AdminPackages';
+import AdminSubscriptions from '../pages/admin/AdminSubscriptions';
+import AdminSettings from '../pages/admin/AdminSettings';
+import AdminPayments from '../pages/admin/AdminPayments';
 import SubscriptionPage from '../pages/public/SubscriptionPage';
 
 export default function AppRoutes() {
@@ -96,6 +100,10 @@ export default function AppRoutes() {
             <Route path="blogs" element={<AdminBlogs />} />
             <Route path="blogs/:id" element={<AdminBlogForm />} />
             <Route path="properties/pending" element={<PendingProperties />} />
+            <Route path="packages" element={<AdminPackages />} />
+            <Route path="subscriptions" element={<AdminSubscriptions />} />
+            <Route path="payments" element={<AdminPayments />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Route>
 

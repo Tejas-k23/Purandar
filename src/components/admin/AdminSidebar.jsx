@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, CheckSquare, FileText, Mail, PlusSquare, ShieldCheck, Building2, FolderKanban, Home, MessageSquare, Bell } from 'lucide-react';
+import { BarChart3, CheckSquare, FileText, Mail, PlusSquare, ShieldCheck, Building2, FolderKanban, Home, MessageSquare, Bell, Package, Zap, Settings } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const items = [
@@ -13,6 +13,10 @@ const items = [
   { label: 'Feedback', to: '/admin/feedback', icon: MessageSquare },
   { label: 'Blogs', to: '/admin/blogs', icon: FileText },
   { label: 'Property Approval', to: '/admin/properties/pending', icon: CheckSquare },
+  { label: 'Packages', to: '/admin/packages', icon: Package },
+  { label: 'Subscriptions', to: '/admin/subscriptions', icon: Zap },
+  { label: 'Payment History', to: '/admin/payments', icon: Mail },
+  { label: 'Pricing Settings', to: '/admin/settings', icon: Settings },
 ];
 
 export default function AdminSidebar() {

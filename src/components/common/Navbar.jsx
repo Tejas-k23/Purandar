@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, ChevronDown, Home, Building2, KeyRound, Phone, PlusCircle, User, Heart, List, LogOut, BarChart3, Shield } from 'lucide-react';
+import { Bell, ChevronDown, Home, Building2, KeyRound, Phone, PlusCircle, User, Heart, List, LogOut, BarChart3, Shield, Zap } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import CitySearch from './CitySearch';
@@ -11,6 +11,7 @@ const navItems = [
   { label: 'Buy', to: '/buy', icon: Building2 },
   { label: 'Rent', to: '/rent', icon: KeyRound },
   { label: 'Projects', to: '/projects', icon: Building2 },
+  { label: 'Plans', to: '/subscription', icon: Zap },
   { label: 'Contact Us', to: '/contact', icon: Phone },
 ];
 
@@ -125,6 +126,7 @@ export default function Navbar() {
                     </div>
                     <div className="dropdown-links">
                       <NavLink to="/profile" className="dropdown-item" onClick={() => setProfileOpen(false)}><User className="w-4 h-4" />Profile</NavLink>
+                      <NavLink to="/subscription" className="dropdown-item" onClick={() => setProfileOpen(false)}><Zap className="w-4 h-4" />My Subscription</NavLink>
                       <NavLink to="/profile/saved" className="dropdown-item" onClick={() => setProfileOpen(false)}><Heart className="w-4 h-4" />Favourites</NavLink>
                       <NavLink to="/profile/properties" className="dropdown-item" onClick={() => setProfileOpen(false)}><List className="w-4 h-4" />My Properties</NavLink>
                       <NavLink to="/post-property" className="dropdown-item" onClick={() => setProfileOpen(false)}><PlusCircle className="w-4 h-4" />Add Property</NavLink>
