@@ -4,7 +4,7 @@ import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { env } from '../config/env.js';
-import { consumeListing, ensureActiveSubscriptionForUser } from '../utils/subscriptions.js';
+import { consumeListing, ensureListingAccessForUser } from '../utils/subscriptions.js';
 import {
   buildFileName,
   getImageUrl,
@@ -399,8 +399,10 @@ export const createProperty = asyncHandler(async (req, res) => {
   }
 
   if (!isAdmin) {
-    const subscription = await ensureActiveSubscriptionForUser(req.user._id);
-    await consumeListing(subscription);
+    const subscription = await ensureListingAccessForUser(req.user._id);
+    if (subscription) {
+      await consumeListing(subscription);
+    }
   }
 
   const property = await Property.create({

@@ -72,7 +72,7 @@ const mapPhotosForForm = (photos = []) => photos.map((photo, index) => ({
 }));
 
 const buildPayload = (formData) => {
-  const { videoFile, ...serializableData } = prunePropertyFormData(formData);
+  const { videoFile: _videoFile, ...serializableData } = prunePropertyFormData(formData);
   return {
   ...serializableData,
   contactDisplayMode: formData.contactDisplayMode || (formData.useOriginalSellerContact ? 'original' : 'custom'),
@@ -113,7 +113,7 @@ export default function PostPropertyForm() {
         if (isAdminPath) {
           try {
             response = await adminService.getProperty(editId);
-          } catch (e) {
+          } catch {
             response = await propertyService.getById(editId);
           }
         } else {
@@ -204,7 +204,7 @@ export default function PostPropertyForm() {
 
   useEffect(() => {
     if (editId) return;
-    const { photos, videoFile, ...serializableDraft } = formData;
+    const { photos, videoFile: _videoFile, ...serializableDraft } = formData;
     window.localStorage.setItem(PROPERTY_DRAFT_KEY, JSON.stringify({
       ...serializableDraft,
       photos: (photos || []).filter((photo) => !photo?.isLocal),
@@ -279,6 +279,11 @@ export default function PostPropertyForm() {
         setTimeout(() => navigate(isAdminPath ? '/admin/properties' : '/profile/properties'), 800);
       }
     } catch (error) {
+      if (!editId && error?.status === 402) {
+        setStatusMessage(error.message || 'Please buy a plan before posting a property.');
+        setTimeout(() => navigate('/subscription'), 600);
+        return;
+      }
       setStatusMessage(error.message);
     } finally {
       setSubmitting(false);

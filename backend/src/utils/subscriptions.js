@@ -1,4 +1,5 @@
 import Subscription from '../models/Subscription.js';
+import Setting from '../models/Setting.js';
 import ApiError from './ApiError.js';
 
 export const expireOutdatedSubscriptions = async () => {
@@ -29,6 +30,16 @@ export const ensureActiveSubscriptionForUser = async (userId) => {
     throw new ApiError(402, 'Upgrade your plan to create a new property listing');
   }
   return subscription;
+};
+
+export const ensureListingAccessForUser = async (userId) => {
+  const settings = await Setting.getEffectiveSingleton();
+
+  if (!settings.isPricingActive) {
+    return null;
+  }
+
+  return ensureActiveSubscriptionForUser(userId);
 };
 
 export const consumeListing = async (subscription) => {

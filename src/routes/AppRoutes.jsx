@@ -43,7 +43,7 @@ import AdminPackages from '../pages/admin/AdminPackages';
 import AdminSubscriptions from '../pages/admin/AdminSubscriptions';
 import AdminSettings from '../pages/admin/AdminSettings';
 import AdminPayments from '../pages/admin/AdminPayments';
-import SubscriptionPage from '../pages/public/SubscriptionPage';
+import SubscriptionPage from '../pages/public/SubscriptionCheckoutPage';
 
 export default function AppRoutes() {
   const location = useLocation();
