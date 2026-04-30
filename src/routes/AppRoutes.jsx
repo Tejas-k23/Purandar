@@ -39,6 +39,7 @@ import AdminEnquiries from '../pages/admin/AdminEnquiries';
 import AdminLogin from '../pages/admin/AdminLogin';
 import AdminFeedback from '../pages/admin/AdminFeedback';
 import AdminNotifications from '../pages/admin/AdminNotifications';
+import SubscriptionPage from '../pages/public/SubscriptionPage';
 
 export default function AppRoutes() {
   const location = useLocation();
@@ -59,6 +60,7 @@ export default function AppRoutes() {
         <Route path="/property-in-:location" element={<LocationListingsPage mode="location" />} />
         <Route path="/property-near-:landmark" element={<LocationListingsPage mode="landmark" />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/subscription" element={<SubscriptionPage />} />
         <Route path="/why-invest" element={<WhyInvestPurandar />} />
         <Route path="/post-property" element={<PostProperty />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />

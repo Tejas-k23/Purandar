@@ -4,6 +4,7 @@ import Enquiry from '../models/Enquiry.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { env } from '../config/env.js';
+import { consumeListing, ensureActiveSubscriptionForUser } from '../utils/subscriptions.js';
 import {
   buildFileName,
   getImageUrl,
@@ -395,6 +396,11 @@ export const createProperty = asyncHandler(async (req, res) => {
       ? 'You already have a similar property under review. Please wait for approval or contact support.'
       : 'A similar property already exists in your listings.';
     throw new ApiError(409, statusMessage);
+  }
+
+  if (!isAdmin) {
+    const subscription = await ensureActiveSubscriptionForUser(req.user._id);
+    await consumeListing(subscription);
   }
 
   const property = await Property.create({
