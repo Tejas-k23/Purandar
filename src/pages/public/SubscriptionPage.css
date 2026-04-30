@@ -7,8 +7,15 @@
   background: #f8fafc;
 }
 
+.subscription-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+}
+
 .subscription-card {
-  width: min(100%, 52rem);
   border-radius: 2rem;
   border: 1px solid #e2e8f0;
   background: #ffffff;
@@ -123,6 +130,19 @@
   color: #475569;
   font-weight: 700;
   cursor: not-allowed;
+  transition: background-color 0.2s, color 0.2s, cursor 0.2s;
+}
+
+.subscription-button:not(:disabled) {
+  background: linear-gradient(90deg, #ff8c38 0%, #ff6b00 100%);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+}
+
+.subscription-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(255, 107, 0, 0.3);
 }
 
 .subscription-footer {
