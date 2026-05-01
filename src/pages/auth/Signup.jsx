@@ -177,7 +177,7 @@ export default function Signup() {
     } catch (error) {
       if (otpClicksLeft === 2 && error.message.includes('not available')) {
         setOtpClicksLeft(1);
-        setFormError('Connecting... Please click Send OTP (1) to dispatch.');
+        setFormError('');
       } else {
         setFormError(error.message);
       }
@@ -345,13 +345,8 @@ export default function Signup() {
           </div>
 
           <button type="button" className="auth-primary-btn" onClick={continueWithPhone} disabled={loading}>
-            {loading ? 'Please wait...' : `Send OTP ${otpClicksLeft > 0 ? `(${otpClicksLeft})` : ''}`}
+            {loading ? 'Please wait...' : (otpClicksLeft === 1 ? 'Click Again' : 'Send OTP')}
           </button>
-          {otpClicksLeft === 1 ? (
-            <p style={{ fontSize: '12px', marginTop: '8px', textAlign: 'center', color: '#666' }}>
-              * Security check: Click again to dispatch OTP.
-            </p>
-          ) : null}
 
           {formError ? <div className="auth-info"><Phone size={16} /><span>{formError}</span></div> : null}
         </div>
@@ -404,16 +399,9 @@ export default function Signup() {
                 />
               </div>
               {!otpSent ? (
-                <>
                   <button type="button" className="auth-secondary-btn" onClick={sendOtpForLockedPhone} disabled={loading}>
-                    {loading ? 'Sending...' : `Send OTP ${otpClicksLeft > 0 ? `(${otpClicksLeft})` : ''}`}
+                    {loading ? 'Sending...' : (otpClicksLeft === 1 ? 'Click Again' : 'Send OTP')}
                   </button>
-                  {otpClicksLeft === 1 ? (
-                    <p style={{ fontSize: '12px', marginTop: '4px', textAlign: 'center', color: '#666', width: '100%' }}>
-                      * Security check: Click again to dispatch OTP.
-                    </p>
-                  ) : null}
-                </>
               ) : null}
               <button type="button" className="auth-secondary-btn" onClick={verifyOtp} disabled={loading}>
                 {loading ? 'Verifying...' : 'Verify OTP'}
