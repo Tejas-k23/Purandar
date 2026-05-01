@@ -294,9 +294,28 @@ export default function Login() {
       <p className="auth-footer">
         By clicking you agree to <a href="#" className="auth-link">Terms and Conditions</a>
       </p>
-      <p className="auth-footer" style={{ marginTop: 10 }}>
-        New here? <Link to="/signup" state={{ backgroundLocation: backgroundLocation || closeTarget }} className="auth-link">Create Account</Link>
-      </p>
+      <div style={{ marginTop: 24, textAlign: 'center', padding: '16px 0', borderTop: '1px solid #eee' }}>
+        <p style={{ fontSize: '14px', color: '#666', marginBottom: '12px' }}>New to Purandar Prime Properties?</p>
+        <Link 
+          to="/signup" 
+          state={{ backgroundLocation: backgroundLocation || closeTarget }} 
+          style={{
+            display: 'block',
+            width: '100%',
+            padding: '12px',
+            background: '#fff',
+            border: '2px solid var(--indigo-600)',
+            borderRadius: '999px',
+            color: 'var(--indigo-600)',
+            fontWeight: '700',
+            textDecoration: 'none',
+            fontSize: '15px',
+            transition: 'all 0.2s'
+          }}
+        >
+          Create New Account
+        </Link>
+      </div>
     </Modal>
   );
 }
