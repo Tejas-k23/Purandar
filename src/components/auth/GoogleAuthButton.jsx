@@ -2,7 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import useAuth from '../../hooks/useAuth';
 import env from '../../config/env';
 
-let googleScriptPromise;
+let googleScriptPromise = null;
+// Track whether google.accounts.id.initialize() has already been called.
+// The GSI library only supports a single initialisation per page load.
+let gsiInitialised = false;
 
 const loadGoogleScript = () => {
   if (typeof window === 'undefined') {
@@ -48,6 +51,25 @@ export default function GoogleAuthButton({
   const [loading, setLoading] = useState(false);
   const [available, setAvailable] = useState(Boolean(env.googleClientId));
 
+  // Keep latest callback refs so the GSI callback always calls the current
+  // versions without needing to re-initialise the library.
+  const loginWithGoogleRef = useRef(loginWithGoogle);
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+  const roleRef = useRef(role);
+
+  // Update refs on every render — no re-mount needed.
+  loginWithGoogleRef.current = loginWithGoogle;
+  onSuccessRef.current = onSuccess;
+  onErrorRef.current = onError;
+  roleRef.current = role;
+
+  // Re-render the button when mode changes (signin vs signup label).
+  const modeRef = useRef(mode);
+  const prevMode = modeRef.current;
+  modeRef.current = mode;
+  const modeChanged = prevMode !== mode;
+
   useEffect(() => {
     let cancelled = false;
 
@@ -61,33 +83,39 @@ export default function GoogleAuthButton({
         const google = await loadGoogleScript();
         if (cancelled || !buttonRef.current || !google?.accounts?.id) return;
 
-        buttonRef.current.innerHTML = '';
-        google.accounts.id.initialize({
-          client_id: env.googleClientId,
-          callback: async (response) => {
-            if (!response?.credential) {
-              onError?.('Google Sign-In did not return a credential.');
-              return;
-            }
-
-            setLoading(true);
-            try {
-              await loginWithGoogle({ credential: response.credential, role });
-              await onSuccess?.();
-            } catch (error) {
-              onError?.(error.message || 'Unable to continue with Google.');
-            } finally {
-              if (!cancelled) {
-                setLoading(false);
+        // initialize() must only be called ONCE per page load across all
+        // instances of this component. Subsequent mounts/re-renders skip it
+        // and just re-render the button using the existing initialisation.
+        if (!gsiInitialised) {
+          google.accounts.id.initialize({
+            client_id: env.googleClientId,
+            callback: async (response) => {
+              if (!response?.credential) {
+                onErrorRef.current?.('Google Sign-In did not return a credential.');
+                return;
               }
-            }
-          },
-        });
 
+              setLoading(true);
+              try {
+                await loginWithGoogleRef.current({ credential: response.credential, role: roleRef.current });
+                await onSuccessRef.current?.();
+              } catch (error) {
+                onErrorRef.current?.(error.message || 'Unable to continue with Google.');
+              } finally {
+                if (!cancelled) {
+                  setLoading(false);
+                }
+              }
+            },
+          });
+          gsiInitialised = true;
+        }
+
+        buttonRef.current.innerHTML = '';
         google.accounts.id.renderButton(buttonRef.current, {
           theme: 'outline',
           size: 'large',
-          text: mode === 'signup' ? 'signup_with' : 'signin_with',
+          text: modeRef.current === 'signup' ? 'signup_with' : 'signin_with',
           shape: 'pill',
           width: Math.max(260, Math.min(buttonRef.current.offsetWidth || 320, 360)),
         });
@@ -95,7 +123,7 @@ export default function GoogleAuthButton({
       } catch (error) {
         if (!cancelled) {
           setAvailable(false);
-          onError?.(error.message || 'Unable to load Google Sign-In.');
+          onErrorRef.current?.(error.message || 'Unable to load Google Sign-In.');
         }
       }
     };
@@ -105,7 +133,10 @@ export default function GoogleAuthButton({
     return () => {
       cancelled = true;
     };
-  }, [loginWithGoogle, mode, onError, onSuccess, role]);
+    // Only re-run when the button label changes (signin ↔ signup).
+    // All callbacks are accessed via refs so they never trigger a re-run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   if (!available) {
     return null;
