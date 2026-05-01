@@ -4,29 +4,55 @@ const SCRIPT_URLS = [
 ];
 
 let scriptPromise = null;
+let widgetInitPromise = null;
 const SEND_OTP_DEDUP_MS = 4000;
 const activeOtpSends = new Map();
 
+const allGlobalsReady = () =>
+  typeof window.initSendOTP === 'function' &&
+  typeof window.sendOtp === 'function' &&
+  typeof window.verifyOtp === 'function';
+
+/**
+ * Loads the MSG91 script AND waits until all three widget globals are defined.
+ * otp-provider.js uses Zone.js which sets globals asynchronously *after* the
+ * script onload fires — so we poll for up to 20 s before giving up.
+ * Returns the same promise on every call (singleton).
+ */
 export const loadMsg91Script = () => {
   if (scriptPromise) return scriptPromise;
 
   scriptPromise = new Promise((resolve, reject) => {
+    if (allGlobalsReady()) { resolve(); return; }
+
     let index = 0;
+
+    const waitForGlobals = () => {
+      const deadline = Date.now() + 20000;
+      const timer = setInterval(() => {
+        if (allGlobalsReady()) {
+          clearInterval(timer);
+          resolve();
+        } else if (Date.now() >= deadline) {
+          clearInterval(timer);
+          reject(new Error('MSG91 widget globals did not become available.'));
+        }
+      }, 100);
+    };
+
     const attempt = () => {
       const script = document.createElement('script');
       script.src = SCRIPT_URLS[index];
       script.async = true;
-      script.onload = () => resolve();
+      script.onload = waitForGlobals;
       script.onerror = () => {
         index += 1;
-        if (index < SCRIPT_URLS.length) {
-          attempt();
-        } else {
-          reject(new Error('Unable to load MSG91 widget script.'));
-        }
+        if (index < SCRIPT_URLS.length) attempt();
+        else reject(new Error('Unable to load MSG91 widget script.'));
       };
       document.head.appendChild(script);
     };
+
     attempt();
   });
 
@@ -44,33 +70,24 @@ export const buildIdentifier = (phone) => {
 const REQ_ID_KEY_PREFIX = 'msg91:reqId:';
 
 export const storeReqId = (phone, reqId) => {
-  if (!reqId) return;
-  if (typeof window === 'undefined' || !window.sessionStorage) return;
-  const identifier = buildIdentifier(phone);
-  if (!identifier) return;
-  try {
-    window.sessionStorage.setItem(`${REQ_ID_KEY_PREFIX}${identifier}`, reqId);
-  } catch (_error) {}
+  if (!reqId || typeof window === 'undefined' || !window.sessionStorage) return;
+  const id = buildIdentifier(phone);
+  if (!id) return;
+  try { window.sessionStorage.setItem(`${REQ_ID_KEY_PREFIX}${id}`, reqId); } catch (_) {}
 };
 
 export const readReqId = (phone) => {
   if (typeof window === 'undefined' || !window.sessionStorage) return '';
-  const identifier = buildIdentifier(phone);
-  if (!identifier) return '';
-  try {
-    return window.sessionStorage.getItem(`${REQ_ID_KEY_PREFIX}${identifier}`) || '';
-  } catch (_error) {
-    return '';
-  }
+  const id = buildIdentifier(phone);
+  if (!id) return '';
+  try { return window.sessionStorage.getItem(`${REQ_ID_KEY_PREFIX}${id}`) || ''; } catch (_) { return ''; }
 };
 
 export const clearReqId = (phone) => {
   if (typeof window === 'undefined' || !window.sessionStorage) return;
-  const identifier = buildIdentifier(phone);
-  if (!identifier) return;
-  try {
-    window.sessionStorage.removeItem(`${REQ_ID_KEY_PREFIX}${identifier}`);
-  } catch (_error) {}
+  const id = buildIdentifier(phone);
+  if (!id) return;
+  try { window.sessionStorage.removeItem(`${REQ_ID_KEY_PREFIX}${id}`); } catch (_) {}
 };
 
 export const extractAccessToken = (data) => (
@@ -87,28 +104,30 @@ export const extractReqId = (data) => (
   || (typeof data === 'string' ? data : '')
 );
 
-const waitForWidgetGlobals = (timeoutMs = 5000, intervalMs = 50) =>
-  new Promise((resolve, reject) => {
-    const allReady = () =>
-      typeof window.initSendOTP === 'function' &&
-      typeof window.sendOtp === 'function' &&
-      typeof window.verifyOtp === 'function';
-
-    if (allReady()) { resolve(); return; }
-    const deadline = Date.now() + timeoutMs;
-    const timer = setInterval(() => {
-      if (allReady()) { clearInterval(timer); resolve(); }
-      else if (Date.now() >= deadline) { clearInterval(timer); reject(new Error('MSG91 widget is not available.')); }
-    }, intervalMs);
-  });
-
-export const initWidget = async (config) => {
-  await waitForWidgetGlobals();
-  window.initSendOTP(config);
+/**
+ * Initialises the MSG91 widget with the given config.
+ *
+ * Callers MUST `await` this before calling sendOtpWithWidget.
+ *
+ * window.initSendOTP returns synchronously but MSG91 does its real internal
+ * setup (iframe init, token handshake) asynchronously after returning.
+ * The 300 ms delay gives that setup time to complete.
+ */
+export const initWidget = (config) => {
+  widgetInitPromise = (async () => {
+    // Globals are guaranteed ready by the time loadMsg91Script resolves.
+    window.initSendOTP(config);
+    // Give MSG91's internal async setup time to settle before sendOtp is called.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  })();
+  return widgetInitPromise;
 };
 
 export const sendOtpWithWidget = async (identifier, onSuccess, onFailure) => {
-  await waitForWidgetGlobals();
+  // Wait for initWidget's settle delay — key guard against "widget not found".
+  if (widgetInitPromise) {
+    await widgetInitPromise.catch(() => {});
+  }
 
   const normalizedIdentifier = buildIdentifier(identifier);
   const currentTime = Date.now();
@@ -125,7 +144,6 @@ export const sendOtpWithWidget = async (identifier, onSuccess, onFailure) => {
         if (latest?.startedAt === currentTime) activeOtpSends.delete(normalizedIdentifier);
       }, SEND_OTP_DEDUP_MS);
     };
-
     window.sendOtp(
       normalizedIdentifier,
       (data) => { onSuccess?.(data); release(); resolve(data); },
@@ -139,6 +157,6 @@ export const sendOtpWithWidget = async (identifier, onSuccess, onFailure) => {
 };
 
 export const verifyOtpWithWidget = async (otp, onSuccess, onFailure, reqId) => {
-  await waitForWidgetGlobals();
+  if (widgetInitPromise) await widgetInitPromise.catch(() => {});
   window.verifyOtp(otp, onSuccess, onFailure, reqId);
 };

@@ -65,7 +65,7 @@ export default function Login() {
     }
 
     await loadMsg91Script();
-    initWidget({
+    await initWidget({
       widgetId: env.msg91WidgetId,
       tokenAuth: env.msg91WidgetToken,
       authToken: env.msg91WidgetToken,
