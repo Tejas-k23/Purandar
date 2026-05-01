@@ -7,16 +7,11 @@ let scriptPromise = null;
 const SEND_OTP_DEDUP_MS = 4000;
 const activeOtpSends = new Map();
 
-// Serializes concurrent initWidget calls so only one runs at a time.
-// This prevents Login + MobileVerificationCard from racing each other.
-let widgetInitPromise = null;
-
 export const loadMsg91Script = () => {
   if (scriptPromise) return scriptPromise;
 
   scriptPromise = new Promise((resolve, reject) => {
     let index = 0;
-
     const attempt = () => {
       const script = document.createElement('script');
       script.src = SCRIPT_URLS[index];
@@ -32,7 +27,6 @@ export const loadMsg91Script = () => {
       };
       document.head.appendChild(script);
     };
-
     attempt();
   });
 
@@ -56,9 +50,7 @@ export const storeReqId = (phone, reqId) => {
   if (!identifier) return;
   try {
     window.sessionStorage.setItem(`${REQ_ID_KEY_PREFIX}${identifier}`, reqId);
-  } catch (_error) {
-    // ignore storage failures (private mode, quota, etc.)
-  }
+  } catch (_error) {}
 };
 
 export const readReqId = (phone) => {
@@ -78,55 +70,23 @@ export const clearReqId = (phone) => {
   if (!identifier) return;
   try {
     window.sessionStorage.removeItem(`${REQ_ID_KEY_PREFIX}${identifier}`);
-  } catch (_error) {
-    // ignore
-  }
+  } catch (_error) {}
 };
 
 export const extractAccessToken = (data) => (
-  data?.token
-  || data?.accessToken
-  || data?.access_token
-  || data?.otp_token
-  || data?.message
-  || data
+  data?.token || data?.accessToken || data?.access_token || data?.otp_token || data?.message || data
 );
 
 export const extractReqId = (data) => (
-  data?.reqId
-  || data?.requestId
-  || data?.request_id
-  || data?.req_id
-  || data?.otpId
-  || data?.otp_id
-  || data?.message
-  || data?.messageId
-  || data?.message_id
-  || data?.data?.reqId
-  || data?.data?.requestId
-  || data?.data?.request_id
-  || data?.data?.req_id
-  || data?.data?.otpId
-  || data?.data?.otp_id
-  || data?.data?.message
-  || data?.data?.messageId
-  || data?.data?.message_id
-  || data?.details?.request_id
-  || data?.details?.reqId
-  || data?.details?.requestId
-  || data?.details?.req_id
+  data?.reqId || data?.requestId || data?.request_id || data?.req_id
+  || data?.otpId || data?.otp_id || data?.message || data?.messageId || data?.message_id
+  || data?.data?.reqId || data?.data?.requestId || data?.data?.request_id || data?.data?.req_id
+  || data?.data?.otpId || data?.data?.otp_id || data?.data?.message || data?.data?.messageId
+  || data?.data?.message_id || data?.details?.request_id || data?.details?.reqId
+  || data?.details?.requestId || data?.details?.req_id
   || (typeof data === 'string' ? data : '')
 );
 
-/**
- * Polls until ALL three MSG91 widget globals are defined:
- *   - window.initSendOTP  (widget initialisation)
- *   - window.sendOtp      (OTP send)
- *   - window.verifyOtp    (OTP verify)
- *
- * The MSG91 otp-provider.js sets these globals *after* its own internal async
- * setup, which runs even after the script tag fires `onload`.
- */
 const waitForWidgetGlobals = (timeoutMs = 5000, intervalMs = 50) =>
   new Promise((resolve, reject) => {
     const allReady = () =>
@@ -134,56 +94,21 @@ const waitForWidgetGlobals = (timeoutMs = 5000, intervalMs = 50) =>
       typeof window.sendOtp === 'function' &&
       typeof window.verifyOtp === 'function';
 
-    if (allReady()) {
-      resolve();
-      return;
-    }
+    if (allReady()) { resolve(); return; }
     const deadline = Date.now() + timeoutMs;
     const timer = setInterval(() => {
-      if (allReady()) {
-        clearInterval(timer);
-        resolve();
-      } else if (Date.now() >= deadline) {
-        clearInterval(timer);
-        reject(new Error('MSG91 widget is not available.'));
-      }
+      if (allReady()) { clearInterval(timer); resolve(); }
+      else if (Date.now() >= deadline) { clearInterval(timer); reject(new Error('MSG91 widget is not available.')); }
     }, intervalMs);
   });
 
-/**
- * Initialises the MSG91 widget with the given config.
- *
- * IMPORTANT: callers MUST `await` this function before calling
- * sendOtpWithWidget.
- *
- * window.initSendOTP(config) returns synchronously but MSG91 does its real
- * internal setup asynchronously after returning (iframe initialisation,
- * token handshake, etc.). Calling window.sendOtp immediately after produces
- * "widget not found" because that async setup hasn't finished yet.
- *
- * The 300 ms setTimeout gives MSG91 time to complete its internal async work
- * before sendOtpWithWidget is called. Concurrent initWidget calls share the
- * same in-flight promise so the delay only happens once at a time.
- */
-export const initWidget = (config) => {
-  widgetInitPromise = (async () => {
-    await waitForWidgetGlobals();
-    window.initSendOTP(config);
-    // Wait for MSG91's internal async setup to settle before sendOtp is usable.
-    await new Promise((resolve) => setTimeout(resolve, 300));
-  })();
-  return widgetInitPromise;
+export const initWidget = async (config) => {
+  await waitForWidgetGlobals();
+  window.initSendOTP(config);
 };
 
 export const sendOtpWithWidget = async (identifier, onSuccess, onFailure) => {
-  // Wait for initWidget's settle delay to finish (if it's still in progress).
-  // This is the key guard: MSG91's async internal setup must be done before
-  // we call window.sendOtp, otherwise we get "widget not found".
-  if (widgetInitPromise) {
-    await widgetInitPromise.catch(() => {});
-  } else {
-    await waitForWidgetGlobals();
-  }
+  await waitForWidgetGlobals();
 
   const normalizedIdentifier = buildIdentifier(identifier);
   const currentTime = Date.now();
@@ -197,24 +122,14 @@ export const sendOtpWithWidget = async (identifier, onSuccess, onFailure) => {
     const release = () => {
       window.setTimeout(() => {
         const latest = activeOtpSends.get(normalizedIdentifier);
-        if (latest?.startedAt === currentTime) {
-          activeOtpSends.delete(normalizedIdentifier);
-        }
+        if (latest?.startedAt === currentTime) activeOtpSends.delete(normalizedIdentifier);
       }, SEND_OTP_DEDUP_MS);
     };
 
     window.sendOtp(
       normalizedIdentifier,
-      (data) => {
-        onSuccess?.(data);
-        release();
-        resolve(data);
-      },
-      (error) => {
-        onFailure?.(error);
-        release();
-        reject(error);
-      },
+      (data) => { onSuccess?.(data); release(); resolve(data); },
+      (error) => { onFailure?.(error); release(); reject(error); },
     );
   });
 

@@ -65,13 +65,15 @@ export default function Login() {
     }
 
     await loadMsg91Script();
-    await initWidget({
+    initWidget({
       widgetId: env.msg91WidgetId,
       tokenAuth: env.msg91WidgetToken,
       authToken: env.msg91WidgetToken,
       exposeMethods: true,
       success: async (data) => {
         const accessToken = extractAccessToken(data);
+        window.__msg91LastOtpResponse = data;
+        window.__msg91LastOtpResponse = data;
         if (!accessToken) {
           setFormMessage('OTP verified but token was missing.');
           return;
@@ -120,6 +122,8 @@ export default function Login() {
       await sendOtpWithWidget(
         buildIdentifier(formattedPhone),
         (data) => {
+          window.__msg91LastSendOtpResponse = data;
+          window.__msg91LastSendOtpResponse = data;
           const nextReqId = extractReqId(data);
           setReqId(nextReqId);
           storeReqId(formattedPhone, nextReqId);
@@ -129,6 +133,7 @@ export default function Login() {
           otpSendInFlightRef.current = false;
         },
         (error) => {
+          const errorResponse = error;
           const msg = typeof error === 'string' ? error : (error?.message || error?.reason || 'Failed to send OTP');
           setFormMessage(msg);
           setLoading(false);
@@ -160,10 +165,12 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await verifyOtpWithWidget(
+      verifyOtpWithWidget(
         otp.trim(),
         async (data) => {
           const accessToken = extractAccessToken(data);
+          window.__msg91LastOtpResponse = data;
+          window.__msg91LastOtpResponse = data;
           if (!accessToken) {
             setFormMessage('OTP verified but token was missing.');
             setLoading(false);
