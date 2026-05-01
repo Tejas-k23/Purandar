@@ -7,6 +7,10 @@ let scriptPromise = null;
 const SEND_OTP_DEDUP_MS = 4000;
 const activeOtpSends = new Map();
 
+// Serializes concurrent initWidget calls so only one runs at a time.
+// This prevents Login + MobileVerificationCard from racing each other.
+let widgetInitPromise = null;
+
 export const loadMsg91Script = () => {
   if (scriptPromise) return scriptPromise;
 
@@ -150,22 +154,36 @@ const waitForWidgetGlobals = (timeoutMs = 5000, intervalMs = 50) =>
  * Initialises the MSG91 widget with the given config.
  *
  * IMPORTANT: callers MUST `await` this function before calling
- * sendOtpWithWidget. Without the await, sendOtpWithWidget races ahead before
- * initSendOTP has run — MSG91 responds with "widget not found" on the first
- * click (works on the second because initSendOTP has finished by then).
+ * sendOtpWithWidget.
  *
- * window.initSendOTP is synchronous — it registers the config and callbacks
- * onto the already-loaded widget and does NOT clear window.sendOtp, so
- * window.sendOtp is immediately usable after this function resolves.
+ * window.initSendOTP(config) returns synchronously but MSG91 does its real
+ * internal setup asynchronously after returning (iframe initialisation,
+ * token handshake, etc.). Calling window.sendOtp immediately after produces
+ * "widget not found" because that async setup hasn't finished yet.
+ *
+ * The 300 ms setTimeout gives MSG91 time to complete its internal async work
+ * before sendOtpWithWidget is called. Concurrent initWidget calls share the
+ * same in-flight promise so the delay only happens once at a time.
  */
-export const initWidget = async (config) => {
-  await waitForWidgetGlobals();
-  window.initSendOTP(config);
+export const initWidget = (config) => {
+  widgetInitPromise = (async () => {
+    await waitForWidgetGlobals();
+    window.initSendOTP(config);
+    // Wait for MSG91's internal async setup to settle before sendOtp is usable.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  })();
+  return widgetInitPromise;
 };
 
 export const sendOtpWithWidget = async (identifier, onSuccess, onFailure) => {
-  // Globals are already ready after initWidget, but this is a cheap safety net.
-  await waitForWidgetGlobals();
+  // Wait for initWidget's settle delay to finish (if it's still in progress).
+  // This is the key guard: MSG91's async internal setup must be done before
+  // we call window.sendOtp, otherwise we get "widget not found".
+  if (widgetInitPromise) {
+    await widgetInitPromise.catch(() => {});
+  } else {
+    await waitForWidgetGlobals();
+  }
 
   const normalizedIdentifier = buildIdentifier(identifier);
   const currentTime = Date.now();
