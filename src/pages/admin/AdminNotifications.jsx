@@ -5,10 +5,10 @@ import adminService from '../../services/adminService';
 
 const intents = ['sell', 'rent'];
 const audiences = [
-  { label: 'All Users', value: 'users' },
-  { label: 'Admins', value: 'admins' },
-  { label: 'Guests', value: 'guests' },
-  { label: 'Everyone', value: 'all' },
+  { label: 'Registered Users', value: 'users' },
+  { label: 'Admin Devices', value: 'admins' },
+  { label: 'Guest Devices', value: 'guests' },
+  { label: 'All Devices', value: 'all' },
 ];
 
 export default function AdminNotifications() {
@@ -119,7 +119,7 @@ export default function AdminNotifications() {
     <div className="admin-page">
       <AdminHeader
         title="Notifications"
-        subtitle="Send custom notifications to users, guests, or admins."
+        subtitle="Send custom notifications to registered users, guest devices, admin devices, or all devices."
       />
 
       <div className="admin-panel-card" style={{ maxWidth: 720 }}>

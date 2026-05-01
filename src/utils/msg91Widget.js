@@ -114,10 +114,36 @@ export const extractReqId = (data) => (
   || (typeof data === 'string' ? data : '')
 );
 
-export const initWidget = (config) => {
-  if (typeof window.initSendOTP !== 'function') {
-    throw new Error('MSG91 widget is not available.');
-  }
+/**
+ * Polls until window.initSendOTP is defined (set by the MSG91 script after its
+ * own async setup), then calls it with the given config.
+ *
+ * The MSG91 otp-provider.js sets window.initSendOTP *after* the script's own
+ * internal initialisation which happens asynchronously even after the script
+ * tag fires `onload`. Without this wait, the very first Send-OTP click always
+ * fails with "widget not found / not available" and only the second click works
+ * (because by then the script has had enough time to finish setting itself up).
+ */
+const waitForWidget = (timeoutMs = 5000, intervalMs = 50) =>
+  new Promise((resolve, reject) => {
+    if (typeof window.initSendOTP === 'function') {
+      resolve();
+      return;
+    }
+    const deadline = Date.now() + timeoutMs;
+    const timer = setInterval(() => {
+      if (typeof window.initSendOTP === 'function') {
+        clearInterval(timer);
+        resolve();
+      } else if (Date.now() >= deadline) {
+        clearInterval(timer);
+        reject(new Error('MSG91 widget is not available.'));
+      }
+    }, intervalMs);
+  });
+
+export const initWidget = async (config) => {
+  await waitForWidget();
   window.initSendOTP(config);
 };
 

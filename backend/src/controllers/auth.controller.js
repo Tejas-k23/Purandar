@@ -10,6 +10,11 @@ import {
   verifyRefreshToken,
 } from '../utils/token.js';
 import verifyMsg91AccessToken from '../utils/msg91.js';
+import {
+  fetchTokens,
+  saveNotificationsForUsers,
+  sendNotificationToTokens,
+} from '../utils/notifications.js';
 
 const cookieOptions = {
   httpOnly: true,
@@ -28,6 +33,33 @@ const normalizePhone = (phone = '') => {
 const buildPhonePlaceholderEmail = (phone) => `phone.${phone}@purandar.local`;
 
 const buildPhonePlaceholderPassword = (phone) => `PhoneAuth@${phone}`;
+
+const notifyAdminsAboutNewUser = async (user) => {
+  const tokens = await fetchTokens({ role: 'admin' });
+  if (!tokens.length) return;
+
+  const title = 'New user registration';
+  const body = `${user.name} has just signed up.`;
+  const data = { type: 'new_user_registration', userId: user._id.toString() };
+
+  await sendNotificationToTokens({
+    tokens,
+    title,
+    body,
+    data,
+  });
+
+  const adminUserIds = [...new Set(tokens.map((token) => token.user).filter(Boolean))];
+  if (adminUserIds.length) {
+    await saveNotificationsForUsers({
+      users: adminUserIds,
+      role: 'admin',
+      title,
+      body,
+      data,
+    });
+  }
+};
 
 const sendAuthResponse = async (user, res) => {
   const accessToken = createAccessToken(user);
@@ -157,6 +189,10 @@ export const register = asyncHandler(async (req, res) => {
     role: role === 'agent' ? 'agent' : 'user',
   });
 
+  await notifyAdminsAboutNewUser(user).catch((error) => {
+    console.error('[Notify] Failed to notify admins about new registration:', error?.message || error);
+  });
+
   await sendAuthResponse(user, res);
 });
 
@@ -179,6 +215,10 @@ export const registerWithPhone = asyncHandler(async (req, res) => {
     password: buildPhonePlaceholderPassword(phone),
     phone,
     role: role === 'agent' ? 'agent' : 'user',
+  });
+
+  await notifyAdminsAboutNewUser(user).catch((error) => {
+    console.error('[Notify] Failed to notify admins about new registration:', error?.message || error);
   });
 
   await sendAuthResponse(user, res);
