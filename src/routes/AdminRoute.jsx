@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import Loader from '../components/common/Loader';
 import useAuth from '../hooks/useAuth';
@@ -16,7 +16,7 @@ export default function AdminRoute() {
   }
 
   if (user.role !== 'admin') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/tk23" replace state={{ from: location.pathname }} />;
   }
 
   return <Outlet />;
