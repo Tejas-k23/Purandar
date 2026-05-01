@@ -42,6 +42,7 @@ export default function Signup() {
   const [termsError, setTermsError] = useState('');
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [otpClicksLeft, setOtpClicksLeft] = useState(2);
   const otpSendInFlightRef = useRef(false);
   const phone = normalizePhoneInput(searchParams.get('phone'));
   const hasLockedPhone = isValidPhone(phone);
@@ -174,7 +175,12 @@ export default function Signup() {
         },
       );
     } catch (error) {
-      setFormError(error.message);
+      if (otpClicksLeft === 2 && error.message.includes('not available')) {
+        setOtpClicksLeft(1);
+        setFormError('Connecting... Please click Send OTP (1) to dispatch.');
+      } else {
+        setFormError(error.message);
+      }
       setLoading(false);
       otpSendInFlightRef.current = false;
     }
@@ -339,8 +345,13 @@ export default function Signup() {
           </div>
 
           <button type="button" className="auth-primary-btn" onClick={continueWithPhone} disabled={loading}>
-            {loading ? 'Please wait...' : 'Send OTP'}
+            {loading ? 'Please wait...' : `Send OTP ${otpClicksLeft > 0 ? `(${otpClicksLeft})` : ''}`}
           </button>
+          {otpClicksLeft === 1 ? (
+            <p style={{ fontSize: '12px', marginTop: '8px', textAlign: 'center', color: '#666' }}>
+              * Security check: Click again to dispatch OTP.
+            </p>
+          ) : null}
 
           {formError ? <div className="auth-info"><Phone size={16} /><span>{formError}</span></div> : null}
         </div>
@@ -393,9 +404,16 @@ export default function Signup() {
                 />
               </div>
               {!otpSent ? (
-                <button type="button" className="auth-secondary-btn" onClick={sendOtpForLockedPhone} disabled={loading}>
-                  {loading ? 'Sending...' : 'Send OTP'}
-                </button>
+                <>
+                  <button type="button" className="auth-secondary-btn" onClick={sendOtpForLockedPhone} disabled={loading}>
+                    {loading ? 'Sending...' : `Send OTP ${otpClicksLeft > 0 ? `(${otpClicksLeft})` : ''}`}
+                  </button>
+                  {otpClicksLeft === 1 ? (
+                    <p style={{ fontSize: '12px', marginTop: '4px', textAlign: 'center', color: '#666', width: '100%' }}>
+                      * Security check: Click again to dispatch OTP.
+                    </p>
+                  ) : null}
+                </>
               ) : null}
               <button type="button" className="auth-secondary-btn" onClick={verifyOtp} disabled={loading}>
                 {loading ? 'Verifying...' : 'Verify OTP'}
