@@ -19,7 +19,7 @@ export default function RentPage() {
   const { savedPropertyIds, toggleSavedProperty, isAuthenticated } = useAuth();
   const locationLabel = routeFilters.locality || routeFilters.city || 'Purandar';
   const propertyTypeLabel = routeFilters.propertyType ? `${routeFilters.propertyType} ` : '';
-  const seoTitle = `Rental ${propertyTypeLabel}properties in ${locationLabel} | Purandar Properties`;
+  const seoTitle = `Rental ${propertyTypeLabel}properties in ${locationLabel} | Purandar Prime Properties`;
   const seoDescription = `Discover ${propertyTypeLabel}rental properties in ${locationLabel} with photos, pricing, and map insights for quick comparisons.`;
 
   const handleSortChange = React.useCallback((sort) => {
@@ -37,7 +37,7 @@ export default function RentPage() {
         title={seoTitle}
         description={seoDescription}
         canonicalPath="/rent"
-        siteName="Purandar Properties"
+        siteName="Purandar Prime Properties"
       />
       <SearchBar intent="rent" />
       <div className="buy-page-content">

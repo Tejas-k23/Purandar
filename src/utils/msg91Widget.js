@@ -115,24 +115,30 @@ export const extractReqId = (data) => (
 );
 
 /**
- * Polls until window.initSendOTP is defined (set by the MSG91 script after its
- * own async setup), then calls it with the given config.
+ * Polls until ALL three MSG91 widget globals are defined:
+ *   - window.initSendOTP  (widget initialisation)
+ *   - window.sendOtp      (OTP send)
+ *   - window.verifyOtp    (OTP verify)
  *
- * The MSG91 otp-provider.js sets window.initSendOTP *after* the script's own
- * internal initialisation which happens asynchronously even after the script
- * tag fires `onload`. Without this wait, the very first Send-OTP click always
- * fails with "widget not found / not available" and only the second click works
- * (because by then the script has had enough time to finish setting itself up).
+ * The MSG91 otp-provider.js sets these globals *after* its own internal async
+ * setup, which runs even after the script tag fires `onload`. Checking any one
+ * of them immediately (synchronously) after the script loads will fail on the
+ * first attempt because they are not all set at the same time.
  */
-const waitForWidget = (timeoutMs = 5000, intervalMs = 50) =>
+const waitForWidgetGlobals = (timeoutMs = 5000, intervalMs = 50) =>
   new Promise((resolve, reject) => {
-    if (typeof window.initSendOTP === 'function') {
+    const allReady = () =>
+      typeof window.initSendOTP === 'function' &&
+      typeof window.sendOtp === 'function' &&
+      typeof window.verifyOtp === 'function';
+
+    if (allReady()) {
       resolve();
       return;
     }
     const deadline = Date.now() + timeoutMs;
     const timer = setInterval(() => {
-      if (typeof window.initSendOTP === 'function') {
+      if (allReady()) {
         clearInterval(timer);
         resolve();
       } else if (Date.now() >= deadline) {
@@ -143,14 +149,13 @@ const waitForWidget = (timeoutMs = 5000, intervalMs = 50) =>
   });
 
 export const initWidget = async (config) => {
-  await waitForWidget();
+  await waitForWidgetGlobals();
   window.initSendOTP(config);
 };
 
-export const sendOtpWithWidget = (identifier, onSuccess, onFailure) => {
-  if (typeof window.sendOtp !== 'function') {
-    throw new Error('MSG91 widget sendOtp is not available.');
-  }
+export const sendOtpWithWidget = async (identifier, onSuccess, onFailure) => {
+  // Wait for window.sendOtp to be available (set asynchronously by MSG91 script).
+  await waitForWidgetGlobals();
 
   const normalizedIdentifier = buildIdentifier(identifier);
   const currentTime = Date.now();
@@ -190,9 +195,9 @@ export const sendOtpWithWidget = (identifier, onSuccess, onFailure) => {
   return promise;
 };
 
-export const verifyOtpWithWidget = (otp, onSuccess, onFailure, reqId) => {
-  if (typeof window.verifyOtp !== 'function') {
-    throw new Error('MSG91 widget verifyOtp is not available.');
-  }
+export const verifyOtpWithWidget = async (otp, onSuccess, onFailure, reqId) => {
+  // Wait for window.verifyOtp to be available (set asynchronously by MSG91 script).
+  await waitForWidgetGlobals();
   window.verifyOtp(otp, onSuccess, onFailure, reqId);
 };
+

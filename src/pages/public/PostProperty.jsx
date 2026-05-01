@@ -31,7 +31,7 @@ export default function PostProperty() {
       <div className="pp-container pp-choice-layout">
         <div className="pp-left pp-choice-left">
           <div className="pp-eyebrow"><Sparkles size={16} /> Add Listing</div>
-          <h1 className="pp-heading">Choose what you want to <span className="heading-accent">publish</span> on Purandar Properties.</h1>
+          <h1 className="pp-heading">Choose what you want to <span className="heading-accent">publish</span> on Purandar Prime Properties.</h1>
           <p className="pp-intro">Start with the listing type that matches your inventory. You can continue to the correct form in one step.</p>
           <ul className="pp-benefits">
             <li><span className="check-icon"><ShieldCheck size={14} /></span> Keep property and project workflows separate and cleaner</li>

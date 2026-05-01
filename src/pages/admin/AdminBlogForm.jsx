@@ -124,7 +124,7 @@ export default function AdminBlogForm() {
               <div className="apf-hero">
                 <div>
                   <h1 className="ppf-heading"><span className="ppf-heading-icon"><FileText size={18} /></span>{id && id !== 'new' ? 'Update' : 'Create'} blog post</h1>
-                  <p className="apf-hero-copy">Manage SEO-friendly blog content without breaking the existing Purandar Properties visual system.</p>
+                  <p className="apf-hero-copy">Manage SEO-friendly blog content without breaking the existing Purandar Prime Properties visual system.</p>
                 </div>
               </div>
 

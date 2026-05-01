@@ -98,7 +98,7 @@ export default function SubscriptionCheckoutPage() {
           key: env.razorpayKeyId,
           amount: order.amount,
           currency: order.currency,
-          name: 'Purandar Prime Propertys',
+          name: 'Purandar Prime Properties',
           description: `${order.packageName} plan`,
           order_id: order.orderId,
           handler: async (response) => {

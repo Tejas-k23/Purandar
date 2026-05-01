@@ -20,7 +20,7 @@ const ensureMessaging = () => {
   if (messaging || !firebaseInitialized) return;
   messaging = firebase.messaging();
   messaging.onBackgroundMessage((payload) => {
-    const title = payload.notification?.title || 'Purandar Estate';
+    const title = payload.notification?.title || 'Purandar Prime Properties';
     const options = {
       body: payload.notification?.body || payload.data?.body || 'You have a new notification.',
       icon: '/pwa-192x192.png',

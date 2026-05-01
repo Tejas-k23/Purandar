@@ -45,7 +45,7 @@ export default function NewsInsightDetail() {
     '@type': 'BlogPosting',
     headline: blog.title,
     image: blog.featuredImage ? [blog.featuredImage] : [],
-    author: { '@type': 'Person', name: blog.author || 'Purandar Properties' },
+    author: { '@type': 'Person', name: blog.author || 'Purandar Prime Properties' },
     datePublished: blog.publishDate || blog.createdAt,
     dateModified: blog.updatedAt || blog.publishDate || blog.createdAt,
     description: blog.metaDescription || blog.shortDescription,
@@ -60,7 +60,7 @@ export default function NewsInsightDetail() {
           <p className="ni-eyebrow">{blog.category || 'News & Insights'}</p>
           <h1 className="ni-detail-title">{blog.title}</h1>
           <div className="ni-detail-meta">
-            <span><UserRound size={15} /> {blog.author || 'Purandar Properties'}</span>
+            <span><UserRound size={15} /> {blog.author || 'Purandar Prime Properties'}</span>
             <span><CalendarDays size={15} /> {new Date(blog.publishDate || blog.createdAt).toLocaleDateString('en-IN')}</span>
           </div>
           <img src={blog.featuredImage || 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80'} alt={blog.title} className="ni-detail-image" />

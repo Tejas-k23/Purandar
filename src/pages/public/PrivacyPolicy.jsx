@@ -6,7 +6,7 @@ const sections = [
   {
     id: 'introduction',
     title: '1. Introduction',
-    content: `Welcome to Purandar Prime Propertys ("we", "our", or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+    content: `Welcome to Purandar Prime Properties ("we", "our", or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
 
 By accessing or using our platform, you agree to the terms of this Privacy Policy. If you do not agree, please discontinue use of our services immediately.`,
   },
@@ -122,7 +122,7 @@ While we take reasonable precautions, no method of transmission over the Interne
     title: '12. Contact Us',
     content: `If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
 
-**Purandar Prime Propertys**
+**Purandar Prime Properties**
 Email: privacy@purandarprimepropertys.com
 Address: Purandar, Pune District, Maharashtra, India
 
@@ -142,7 +142,7 @@ export default function PrivacyPolicy() {
             Last Updated: <strong>April 18, 2026</strong>
           </p>
           <p className="pp-intro">
-            At <strong>Purandar Prime Propertys</strong>, we take your privacy seriously. This policy explains
+            At <strong>Purandar Prime Properties</strong>, we take your privacy seriously. This policy explains
             exactly what data we collect, why we collect it, and how you can control it.
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function PrivacyPolicy() {
 
           <div className="pp-footer-note">
             <p>
-              By using Purandar Prime Propertys, you acknowledge that you have read and understood this Privacy Policy.
+              By using Purandar Prime Properties, you acknowledge that you have read and understood this Privacy Policy.
               For any concerns, visit our <Link to="/contact" className="pp-link">Contact Us</Link> page.
             </p>
           </div>

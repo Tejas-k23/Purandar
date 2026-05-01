@@ -46,23 +46,23 @@ const buildSeoTitle = ({ label, kind, intentLabel, typeLabel }) => {
 
   if (lowerLabel.includes('saswad')) {
     if (baseType.toLowerCase().includes('land')) {
-      return `Plots in Saswad with Pune access | Purandar Properties`;
+      return `Plots in Saswad with Pune access | Purandar Prime Properties`;
     }
-    return `${baseType}s in Saswad with strong Pune connectivity | Purandar Properties`;
+    return `${baseType}s in Saswad with strong Pune connectivity | Purandar Prime Properties`;
   }
 
   if (lowerLabel.includes('purandar')) {
     if (baseType.toLowerCase().includes('apartment')) {
-      return `Flats near Purandar airport | Purandar Properties`;
+      return `Flats near Purandar airport | Purandar Prime Properties`;
     }
-    return `Property near Purandar airport in Purandar | Purandar Properties`;
+    return `Property near Purandar airport in Purandar | Purandar Prime Properties`;
   }
 
   if (lowerLabel.includes('dive ghat')) {
-    return `Property near Purandar airport in Dive Ghat | Purandar Properties`;
+    return `Property near Purandar airport in Dive Ghat | Purandar Prime Properties`;
   }
 
-  return `${intentLabel} ${baseType}s ${kind === 'landmark' ? 'near' : 'in'} ${label} | Purandar Properties`;
+  return `${intentLabel} ${baseType}s ${kind === 'landmark' ? 'near' : 'in'} ${label} | Purandar Prime Properties`;
 };
 
 const buildSeoDescription = ({ label, kind, intentLabel, typeLabel }) => {
@@ -198,7 +198,7 @@ export default function LocationListingsPage({ mode = 'location' }) {
         description={seoDescription}
         canonicalPath={canonicalPath}
         schema={schema}
-        siteName="Purandar Properties"
+        siteName="Purandar Prime Properties"
       />
 
       <section className="location-hero">

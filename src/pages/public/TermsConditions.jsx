@@ -6,7 +6,7 @@ const sections = [
   {
     id: 'acceptance',
     title: '1. Acceptance of Terms',
-    content: `By accessing or using the Purandar Prime Propertys platform (the "Platform"), you agree to be bound by these Terms and Conditions ("Terms"). These Terms constitute a legally binding agreement between you and Purandar Prime Propertys.
+    content: `By accessing or using the Purandar Prime Properties platform (the "Platform"), you agree to be bound by these Terms and Conditions ("Terms"). These Terms constitute a legally binding agreement between you and Purandar Prime Properties.
     
     If you do not agree to these Terms, you must not access or use the Platform. We reserve the right to modify these Terms at any time, and your continued use of the Platform following any changes signifies your acceptance of the revised Terms.`,
   },
@@ -22,7 +22,7 @@ const sections = [
     To access certain features, you may need to create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.
     
     **Content Submission:**
-    When you submit property listings, photos, or other content, you grant Purandar Prime Propertys a non-exclusive, worldwide, royalty-free license to use, display, and distribute such content for the purpose of providing our services.
+    When you submit property listings, photos, or other content, you grant Purandar Prime Properties a non-exclusive, worldwide, royalty-free license to use, display, and distribute such content for the purpose of providing our services.
     
     **Accuracy of Information:**
     You agree to provide accurate, current, and complete information when registering or listing properties. You are solely responsible for the content you post.`,
@@ -30,7 +30,7 @@ const sections = [
   {
     id: 'listings-accuracy',
     title: '4. Property Listings & Accuracy',
-    content: `Purandar Prime Propertys is a marketplace platform. We do not own, inspect, or guarantee the properties listed on the Platform.
+    content: `Purandar Prime Properties is a marketplace platform. We do not own, inspect, or guarantee the properties listed on the Platform.
     
     **Disclaimer of Accuracy:**
     While we strive to maintain high-quality listings, we do not warrant the accuracy, completeness, or reliability of any property description, price, location, or images provided by users.
@@ -52,19 +52,19 @@ const sections = [
   {
     id: 'intellectual-property',
     title: '6. Intellectual Property',
-    content: `All content on the Platform, including logos, text, graphics, and software, is the property of Purandar Prime Propertys or its content suppliers and is protected by intellectual property laws. You may not use our branding or content without prior written consent.`,
+    content: `All content on the Platform, including logos, text, graphics, and software, is the property of Purandar Prime Properties or its content suppliers and is protected by intellectual property laws. You may not use our branding or content without prior written consent.`,
   },
   {
     id: 'limitation-of-liability',
     title: '7. Limitation of Liability',
-    content: `To the maximum extent permitted by law, Purandar Prime Propertys shall not be liable for any indirect, incidental, special, or consequential damages arising out of or in connection with your use of the Platform.
+    content: `To the maximum extent permitted by law, Purandar Prime Properties shall not be liable for any indirect, incidental, special, or consequential damages arising out of or in connection with your use of the Platform.
     
     We are not responsible for any disputes, losses, or damages resulting from transactions or interactions between buyers, renters, and sellers on the Platform.`,
   },
   {
     id: 'indemnification',
     title: '8. Indemnification',
-    content: `You agree to indemnify and hold harmless Purandar Prime Propertys and its affiliates from any claims, losses, or damages arising from your violation of these Terms or your use of the Platform.`,
+    content: `You agree to indemnify and hold harmless Purandar Prime Properties and its affiliates from any claims, losses, or damages arising from your violation of these Terms or your use of the Platform.`,
   },
   {
     id: 'termination',
@@ -86,7 +86,7 @@ const sections = [
     title: '12. Contact Information',
     content: `If you have any questions about these Terms, please contact us at:
     
-    **Purandar Prime Propertys**
+    **Purandar Prime Properties**
     Email: legal@purandarprimepropertys.com
     Address: Purandar, Pune, Maharashtra, India`,
   },
@@ -104,7 +104,7 @@ export default function TermsConditions() {
           </p>
           <p className="tc-intro">
             Please read these terms carefully before using our platform. These terms govern your 
-            access to and use of <strong>Purandar Prime Propertys</strong> services. Your use 
+            access to and use of <strong>Purandar Prime Properties</strong> services. Your use 
             of the platform is also governed by our <Link to="/privacy-policy" className="tc-link">Privacy Policy</Link>.
           </p>
         </div>
@@ -150,7 +150,7 @@ export default function TermsConditions() {
 
           <div className="tc-footer-note">
             <p>
-              By using Purandar Prime Propertys, you acknowledge that you have read and agreed to these Terms & Conditions.
+              By using Purandar Prime Properties, you acknowledge that you have read and agreed to these Terms & Conditions.
               For more information, visit our <Link to="/contact" className="tc-link">Contact Us</Link> page.
             </p>
           </div>

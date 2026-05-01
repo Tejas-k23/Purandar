@@ -248,13 +248,13 @@ export default function PropertyDetails() {
   return (
     <div className="pd-page" style={{ paddingBottom: '3rem' }}>
       <SeoManager
-        title={`${titleBase} | Purandar Prime Propertys`}
+        title={`${titleBase} | Purandar Prime Properties`}
         description={seoDescription}
         canonicalPath={`/property/${property._id}`}
         schema={schema}
         image={primaryImage}
         type="product"
-        siteName="Purandar Prime Propertys"
+        siteName="Purandar Prime Properties"
       />
       <div className="pd-layout">
         <div className="pd-main">

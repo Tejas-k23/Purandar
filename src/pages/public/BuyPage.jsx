@@ -25,7 +25,7 @@ export default function BuyPage() {
   const { savedPropertyIds, savedProjectIds, toggleSavedProperty, toggleSavedProject, isAuthenticated } = useAuth();
   const locationLabel = routeFilters.locality || routeFilters.city || 'Purandar';
   const propertyTypeLabel = routeFilters.propertyType ? `${routeFilters.propertyType} ` : '';
-  const seoTitle = `Buy ${propertyTypeLabel}properties in ${locationLabel} | Purandar Properties`;
+  const seoTitle = `Buy ${propertyTypeLabel}properties in ${locationLabel} | Purandar Prime Properties`;
   const seoDescription = `Explore verified ${propertyTypeLabel}properties for sale in ${locationLabel}. Compare prices, photos, and map views to find the right home faster.`;
 
   const handleSortChange = React.useCallback((sort) => {
@@ -43,7 +43,7 @@ export default function BuyPage() {
         title={seoTitle}
         description={seoDescription}
         canonicalPath="/buy"
-        siteName="Purandar Properties"
+        siteName="Purandar Prime Properties"
       />
       <SearchBar intent="sell" />
       <div className="buy-page-content">

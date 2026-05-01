@@ -89,7 +89,7 @@ export default function usePwaInstallPrompt() {
     if (isInstalled) {
       return {
         badge: 'Installed',
-        title: 'Purandar Properties is ready on your device',
+        title: 'Purandar Prime Properties is ready on your device',
         description: 'Launch it like an app for faster access to listings, favourites, and enquiries.',
         primaryLabel: 'App Added',
         primaryDisabled: true,
@@ -100,7 +100,7 @@ export default function usePwaInstallPrompt() {
     if (canInstall) {
       return {
         badge: 'Install App',
-        title: 'Download Purandar Properties as an app',
+        title: 'Download Purandar Prime Properties as an app',
         description: 'Install the PWA for quicker launch, a cleaner full-screen view, and better repeat visits.',
         primaryLabel: isInstalling ? 'Preparing...' : 'Install Now',
         primaryDisabled: isInstalling,
@@ -111,7 +111,7 @@ export default function usePwaInstallPrompt() {
     if (needsIosHelp) {
       return {
         badge: 'Add to Home Screen',
-        title: 'Install Purandar Properties on iPhone or iPad',
+        title: 'Install Purandar Prime Properties on iPhone or iPad',
         description: 'Safari can add this website to your home screen as an app in just a few taps.',
         primaryLabel: showIosHelp ? 'Hide Steps' : 'Show Steps',
         primaryDisabled: false,
@@ -121,7 +121,7 @@ export default function usePwaInstallPrompt() {
 
     return {
       badge: 'App Access',
-      title: 'Keep Purandar Properties ready for your next visit',
+      title: 'Keep Purandar Prime Properties ready for your next visit',
       description: 'Once your browser allows install, this banner will let users add the app in one tap.',
       primaryLabel: 'Check Again',
       primaryDisabled: true,

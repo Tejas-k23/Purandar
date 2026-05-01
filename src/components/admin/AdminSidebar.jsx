@@ -19,7 +19,7 @@ export default function AdminSidebar() {
         <div className="admin-sidebar-badge"><ShieldCheck className="w-5 h-5" /></div>
         <div>
           <h2>Admin Panel</h2>
-          <p>Purandar Prime Propertys ops</p>
+          <p>Purandar Prime Properties ops</p>
         </div>
       </div>
 

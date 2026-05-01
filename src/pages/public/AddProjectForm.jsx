@@ -1314,7 +1314,7 @@ export default function AddProjectForm() {
             <div className="apf-hero">
               <div>
                 <h1 className="ppf-heading">
-                  Add a new <span>project</span> for Purandar Properties
+                  Add a new <span>project</span> for Purandar Prime Properties
                 </h1>
                 <p className="apf-hero-copy">Add your project details, images, amenities, and contact information in one simple flow.</p>
               </div>

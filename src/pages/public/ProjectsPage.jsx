@@ -16,7 +16,7 @@ export default function ProjectsPage() {
       <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap' }}>
         <div>
           <h1 className="section-title">All <span className="heading-accent">Projects</span></h1>
-          <p className="section-subtitle">Explore featured launches, ready inventory, and plotted communities from Purandar Properties.</p>
+          <p className="section-subtitle">Explore featured launches, ready inventory, and plotted communities from Purandar Prime Properties.</p>
         </div>
         <Link to="/" className="activity-btn" style={{ textDecoration: 'none' }}>
           Back Home <ArrowRight className="w-4 h-4" />

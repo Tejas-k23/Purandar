@@ -99,7 +99,7 @@ export default function AdminUsers() {
           </style>
         </head>
         <body>
-          <h1>Purandar Prime Propertys Admin Users</h1>
+          <h1>Purandar Prime Properties Admin Users</h1>
           <p>Total users: ${users.length}</p>
           <table>
             <thead>

@@ -22,7 +22,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const displayName = user?.name || 'Guest';
-  const displayEmail = user?.email || 'Welcome to Purandar Prime Propertys';
+  const displayEmail = user?.email || 'Welcome to Purandar Prime Properties';
   const avatarInitial = (displayName || 'G').trim().charAt(0).toUpperCase();
   const authRouteState = { backgroundLocation: location };
   const [notifyStatus, setNotifyStatus] = useState('');
@@ -75,7 +75,7 @@ export default function Navbar() {
           <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
             <img
               src="/apple-touch-icon.png"
-              alt="Purandar Prime Propertys"
+              alt="Purandar Prime Properties"
               className="navbar-logo"
             />
           </div>

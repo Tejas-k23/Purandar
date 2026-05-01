@@ -212,7 +212,7 @@ export default function ContactUs() {
       <section className="contact-hero">
         <div className="contact-card contact-card--hero">
           <p style={{ fontWeight: 700, color: 'var(--indigo-700)', marginBottom: 8 }}>Contact Us</p>
-          <h1 style={{ marginBottom: 12 }}>Talk to the <span className="heading-accent">Purandar Prime Propertys</span> team</h1>
+          <h1 style={{ marginBottom: 12 }}>Talk to the <span className="heading-accent">Purandar Prime Properties</span> team</h1>
           <p className="contact-lead">We help buyers, tenants, owners, and agents discover and manage verified property listings across Purandar and nearby Pune locations.</p>
           <div className="contact-meta">
             <div><strong>Phone:</strong> +91 98765 43210</div>
@@ -287,7 +287,7 @@ export default function ContactUs() {
       <section className="contact-card contact-card--about">
         <p style={{ fontWeight: 700, color: 'var(--indigo-700)', marginBottom: 8 }}>About Us</p>
         <h2 style={{ marginBottom: 12 }}>Built for <span className="heading-accent">practical</span> property search and management</h2>
-        <p className="contact-about-copy">Purandar Prime Propertys is a modern real estate platform focused on helping users browse verified listings, contact sellers, save favorites, and post new properties with a clean owner workflow.</p>
+        <p className="contact-about-copy">Purandar Prime Properties is a modern real estate platform focused on helping users browse verified listings, contact sellers, save favorites, and post new properties with a clean owner workflow.</p>
         <p className="contact-about-copy" style={{ marginBottom: 0 }}>Our goal is to make local discovery simpler while keeping the experience responsive, searchable, and useful for both property seekers and property owners.</p>
       </section>
 

@@ -17,7 +17,7 @@ function AppShell() {
 
   useEffect(() => {
     const unsubscribe = listenToForegroundMessages((payload) => {
-      const title = payload?.notification?.title || 'Purandar Prime Propertys';
+      const title = payload?.notification?.title || 'Purandar Prime Properties';
       const body = payload?.notification?.body || payload?.data?.body || '';
       if (Notification.permission === 'granted') {
         // eslint-disable-next-line no-new

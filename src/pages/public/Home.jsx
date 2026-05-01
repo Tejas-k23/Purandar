@@ -484,7 +484,7 @@ const Footer = () => (
       </div>
     </div>
     <div className="footer-bottom">
-      <div>&copy; 2026 Purandar Prime Propertys. All rights reserved.</div>
+      <div>&copy; 2026 Purandar Prime Properties. All rights reserved.</div>
       <div className="footer-bottom-links">
         <Link to="/privacy-policy">Privacy Policy</Link>
         <a href="#">Cookie Policy</a>

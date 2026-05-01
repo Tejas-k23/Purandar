@@ -56,7 +56,7 @@ export default function NewsInsights() {
 
   return (
     <div className="ni-page">
-      <SeoManager title="News & Insights | Purandar Properties" description="Read Purandar Properties news, investment guides, and local real estate insights." canonicalPath="/news-insights" />
+      <SeoManager title="News & Insights | Purandar Prime Properties" description="Read Purandar Prime Properties news, investment guides, and local real estate insights." canonicalPath="/news-insights" />
       <section className="ni-hero">
         <div>
           <p className="ni-eyebrow">News & Insights</p>
