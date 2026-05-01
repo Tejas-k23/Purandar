@@ -24,6 +24,17 @@ settingSchema.statics.getSingleton = async function getSingleton() {
   return settings;
 };
 
+settingSchema.statics.getEffectiveSingleton = async function getEffectiveSingleton() {
+  const settings = await this.getSingleton();
+
+  if (settings.launchDate && !settings.isPricingActive && new Date() >= settings.launchDate) {
+    settings.isPricingActive = true;
+    await settings.save();
+  }
+
+  return settings;
+};
+
 const Setting = mongoose.model('Setting', settingSchema);
 
 export default Setting;

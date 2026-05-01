@@ -1,5 +1,4 @@
 import api from './api';
-import env from '../config/env';
 
 // Packages
 export const listPackages = () => api.get('/packages');
@@ -19,5 +18,7 @@ export const getSettings = () => api.get('/settings');
 export const updateSettings = (data) => api.patch('/settings', data);
 
 // Payments
+export const createPaymentOrder = (data) => api.post('/payments/orders', data);
+export const verifyPayment = (data) => api.post('/payments/verify', data);
 export const listPayments = () => api.get('/payments');
 export const getPaymentById = (id) => api.get(`/payments/${id}`);

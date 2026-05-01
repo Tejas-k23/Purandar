@@ -2,12 +2,7 @@ import Setting from '../models/Setting.js';
 import ApiError from '../utils/ApiError.js';
 
 const getSettings = async () => {
-  const settings = await Setting.getSingleton();
-  if (settings.launchDate && !settings.isPricingActive && new Date() >= settings.launchDate) {
-    settings.isPricingActive = true;
-    await settings.save();
-  }
-  return settings;
+  return Setting.getEffectiveSingleton();
 };
 
 export const pricingEnabled = async (req, _res, next) => {
