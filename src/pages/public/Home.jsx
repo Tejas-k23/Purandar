@@ -471,7 +471,7 @@ const Footer = () => (
         <h4>For Owners</h4>
         <ul>
           <li><Link to="/post-property">Post Property</Link></li>
-          <li><a href="#">Lease Commercial</a></li>
+          <li><Link to="/admin">Lease Commercial</Link></li>
         </ul>
       </div>
       <div className="footer-col">
