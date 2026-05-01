@@ -23,7 +23,7 @@ export const getMyProfile = asyncHandler(async (req, res) => {
 });
 
 export const updateMyProfile = asyncHandler(async (req, res) => {
-  const allowedFields = ['name', 'location', 'bio', 'avatar'];
+  const allowedFields = ['name', 'email', 'location', 'bio', 'avatar'];
   const updates = {};
 
   for (const field of allowedFields) {

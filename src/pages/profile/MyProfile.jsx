@@ -108,7 +108,7 @@ export default function MyProfile() {
 
         <div className="form-grid">
           <div className="form-group"><label>Full Name</label><input className="styled-input" disabled={!isEditing} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-          <div className="form-group"><label>Email Address</label><input className="styled-input" disabled value={form.email} /></div>
+          <div className="form-group"><label>Email Address</label><input className="styled-input" disabled={!isEditing} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
           <div className="form-group"><label>Phone Number</label><input className="styled-input" disabled value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
           <div className="form-group"><label>Location</label><input className="styled-input" disabled={!isEditing} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
           <div className="form-group full-width"><label>Avatar URL</label><input className="styled-input" disabled={!isEditing} value={form.avatar} onChange={(e) => setForm({ ...form, avatar: e.target.value })} /></div>
