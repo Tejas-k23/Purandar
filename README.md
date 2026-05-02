@@ -101,7 +101,7 @@ A modern, production-ready real estate platform featuring property listings, pro
 3. **View Projects**: Explore ongoing and completed projects with detailed information.
 4. **Admin Panel**: Access admin features to manage listings, users, and content.
 5. **Contact Sellers**: Use WhatsApp integration to contact property owners.
-6. **Leave Feebbeehbck**: Rate and review projects.
+6. **Leave Feebbeehhhhhbck**: Rate and review projects.
 
 ## 🔗 API Endpoints
 
