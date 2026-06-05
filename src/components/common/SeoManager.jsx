@@ -48,11 +48,17 @@ export default function SeoManager({
 
     if (image) {
       upsertMeta('og:image', image, 'property');
+      upsertMeta('og:image:width', '1200', 'property');
+      upsertMeta('og:image:height', '630', 'property');
       upsertMeta('twitter:image', image, 'name');
       upsertMeta('twitter:card', twitterCard || 'summary_large_image', 'name');
     } else {
       upsertMeta('twitter:card', twitterCard || 'summary', 'name');
     }
+
+    // Additional tags for better social media support
+    upsertMeta('og:locale', 'en_IN', 'property');
+    upsertMeta('twitter:site', '@PurandarPrime', 'name');
 
     let schemaScript = null;
     if (schema) {

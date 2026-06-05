@@ -3,6 +3,17 @@
     { "src": "/sitemap.xml", "dest": "https://purandar.onrender.com/api/v1/seo/sitemap.xml" },
     { "src": "/robots.txt", "dest": "/robots.txt" },
     { "src": "/googled916601387fa451f.html", "dest": "/googled916601387fa451f.html" },
+    {
+      "src": "/property/([A-Za-z0-9_-]+)$",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "facebookexternalhit|Facebot|Twitterbot|TwitterBot|LinkedInBot|linkedin|WhatsApp|Whatsapp|TelegramBot|Telegram|Discordbot|Discord|Slackbot|Slack|Skype|Googlebot|Bingbot|MSNBot|DuckDuckBot|OpenGraph|curl|wget|python"
+        }
+      ],
+      "dest": "/api/meta?propertyId=$1"
+    },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
