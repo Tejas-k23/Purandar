@@ -43,11 +43,65 @@ export const generatePropertyMetaTags = (property, baseUrl = '') => {
   };
 };
 
+export const generateProjectMetaTags = (project, baseUrl = '') => {
+  const siteUrl = baseUrl || process.env.CLIENT_URL || 'https://purandarprimeproperties.com';
+  const projectUrl = `${siteUrl}/projects/${project.slug || project._id}`;
+  const title = project.projectName || `${project.projectType || 'Project'} in ${project.area || project.city || project.address || 'India'}`;
+  const location = [project.area, project.city, project.address].filter(Boolean).join(', ');
+  const description = project.shortDescription || project.detailedDescription?.substring(0, 160) ||
+    `${title}${location ? ` in ${location}` : ''}${project.developerName ? ` by ${project.developerName}` : ''}`;
+  const image = project.coverImage || (Array.isArray(project.projectImages) ? project.projectImages[0] : undefined) || `${siteUrl}/og-default.png`;
+
+  return {
+    title,
+    description,
+    image,
+    url: projectUrl,
+    type: 'website',
+    details: {
+      projectType: project.projectType,
+      developer: project.developerName,
+      location,
+      status: project.projectStatus,
+    },
+  };
+};
+
+export const generateProjectMetaTagsHTML = (project, baseUrl = '') => {
+  const meta = generateProjectMetaTags(project, baseUrl);
+  const twitterCard = `summary_large_image`;
+
+  return `
+    <!-- Project Meta Tags -->
+    <meta property="og:title" content="${escapeHtml(meta.title)}" />
+    <meta property="og:description" content="${escapeHtml(meta.description)}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${escapeHtml(meta.url)}" />
+    <meta property="og:image" content="${meta.image}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Purandar Prime Properties" />
+    
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="${twitterCard}" />
+    <meta name="twitter:title" content="${escapeHtml(meta.title)}" />
+    <meta name="twitter:description" content="${escapeHtml(meta.description)}" />
+    <meta name="twitter:image" content="${meta.image}" />
+    <meta name="twitter:site" content="@PurandarPrime" />
+    
+    <!-- Standard Meta Tags -->
+    <meta name="description" content="${escapeHtml(meta.description)}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Additional Tags for Various Platforms -->
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="telegram:channel" content="@PurandarPrime" />
+  `;
+};
+
 export const generateMetaTagsHTML = (property, baseUrl = '') => {
   const meta = generatePropertyMetaTags(property, baseUrl);
-  const siteUrl = baseUrl || process.env.CLIENT_URL || 'https://purandarprimeproperties.com';
-
-  const imageUrl = encodeURIComponent(meta.image);
   const twitterCard = `summary_large_image`;
 
   return `

@@ -59,14 +59,17 @@ export const isSocialMediaCrawler = (userAgent = '') => {
 export const crawlerMetaMiddleware = (req, res, next) => {
   const userAgent = req.get('user-agent') || '';
   
-  // Check if this is a property page request from a crawler
-  const propertyMatch = req.path.match(/^\/property\/([a-zA-Z0-9]+)$/);
+  const propertyMatch = req.path.match(/^\/property\/([a-zA-Z0-9_-]+)$/);
+  const projectMatch = req.path.match(/^\/projects\/([a-zA-Z0-9_-]+)$/);
   
   if (propertyMatch && isSocialMediaCrawler(userAgent)) {
     const propertyId = propertyMatch[1];
-    // Internal redirect to meta endpoint
-    // This serves the HTML with OG tags without exposing the redirect to the user
     return res.redirect(`/api/v1/meta/property/${propertyId}`);
+  }
+
+  if (projectMatch && isSocialMediaCrawler(userAgent)) {
+    const projectId = projectMatch[1];
+    return res.redirect(`/api/v1/meta/project/${projectId}`);
   }
   
   next();

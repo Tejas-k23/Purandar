@@ -12,11 +12,6 @@ Node.js + Express + MongoDB backend for authentication, authorization, property 
 
 ## Main Routes
 
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/refresh`
-- `POST /api/v1/auth/logout`
-- `GET /api/v1/auth/me`
 - `GET /api/v1/properties`
 - `GET /api/v1/properties/:id`
 - `POST /api/v1/properties`

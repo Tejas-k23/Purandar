@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import authRoutes from './auth.routes.js';
 import blogRoutes from './blog.routes.js';
 import contactRoutes from './contact.routes.js';
 import propertyRoutes from './property.routes.js';
@@ -16,7 +15,6 @@ import metaRoutes from './meta.routes.js';
 
 const router = Router();
 
-router.use('/auth', authRoutes);
 router.use('/blogs', blogRoutes);
 router.use('/contact', contactRoutes);
 router.use('/properties', propertyRoutes);

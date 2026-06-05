@@ -1,7 +1,8 @@
 import Property from '../models/Property.js';
+import Project from '../models/Project.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import { generateMetaTagsHTML } from '../utils/metaTags.js';
+import { generateMetaTagsHTML, generateProjectMetaTagsHTML } from '../utils/metaTags.js';
 import { env } from '../config/env.js';
 
 /**
@@ -103,6 +104,87 @@ export const getPropertyMetaJson = asyncHandler(async (req, res) => {
   });
 });
 
+export const getProjectMeta = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || id.length < 10) {
+    throw new ApiError(404, 'Project not found');
+  }
+
+  const project = await Project.findById(id)
+    .select('_id projectName shortDescription detailedDescription projectType area city address developerName projectStatus coverImage projectImages slug')
+    .lean();
+
+  if (!project) {
+    throw new ApiError(404, 'Project not found');
+  }
+
+  const metaTags = generateProjectMetaTagsHTML(project, env.CLIENT_URL);
+  const projectPath = project.slug || project._id;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(project.projectName || 'Project')}</title>
+  ${metaTags}
+  <script>
+    if (typeof window !== 'undefined') {
+      window.location.replace('/projects/${projectPath}');
+    }
+  </script>
+  <meta http-equiv="refresh" content="0;url=/projects/${projectPath}" />
+</head>
+<body>
+  <p>Redirecting to project page...</p>
+</body>
+</html>
+  `;
+
+  res.set({
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'public, max-age=3600',
+    'X-Content-Type-Options': 'nosniff',
+  });
+
+  res.send(htmlContent);
+});
+
+export const getProjectMetaJson = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const project = await Project.findById(id)
+    .select('_id projectName shortDescription detailedDescription projectType area city address developerName projectStatus coverImage projectImages slug')
+    .lean();
+
+  if (!project) {
+    throw new ApiError(404, 'Project not found');
+  }
+
+  const location = [project.area, project.city, project.address].filter(Boolean).join(', ');
+  const title = project.projectName || `${project.projectType || 'Project'} in ${location}`;
+  const description = project.shortDescription || project.detailedDescription?.substring(0, 160) ||
+    `${title}${location ? ` in ${location}` : ''}${project.developerName ? ` by ${project.developerName}` : ''}`;
+  const image = project.coverImage || (Array.isArray(project.projectImages) ? project.projectImages[0] : undefined);
+  const projectPath = project.slug || project._id;
+
+  res.json({
+    success: true,
+    data: {
+      title,
+      description,
+      image,
+      url: `${env.CLIENT_URL}/projects/${projectPath}`,
+      location,
+      projectType: project.projectType,
+      developer: project.developerName,
+      status: project.projectStatus,
+    },
+  });
+});
+
 const formatPrice = (price) => {
   if (!price) return '';
   if (price >= 10000000) {
@@ -126,4 +208,6 @@ const escapeHtml = (text) => {
 export default {
   getPropertyMeta,
   getPropertyMetaJson,
+  getProjectMeta,
+  getProjectMetaJson,
 };
