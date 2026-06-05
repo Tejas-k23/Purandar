@@ -12,6 +12,7 @@ import paymentRoutes from './payment.routes.js';
 import settingsRoutes from './settings.routes.js';
 import subscriptionRoutes from './subscription.routes.js';
 import seoRoutes from './seo.routes.js';
+import metaRoutes from './meta.routes.js';
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use('/settings', settingsRoutes);
 router.use('/subscriptions', subscriptionRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/seo', seoRoutes);
+router.use('/meta', metaRoutes);
 
 export default router;
