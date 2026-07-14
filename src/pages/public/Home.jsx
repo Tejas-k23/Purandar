@@ -286,12 +286,8 @@ function PropertySection() {
             <div className="guest-badge">Guest Access</div>
             <h3 className="guest-title">Guest</h3>
             <p className="guest-text">
-              Save properties, contact sellers, and post listings once you log in.
+              Browse listings, view details, and explore the site without creating an account.
             </p>
-            <div className="guest-actions">
-              <Link to="/login" state={{ backgroundLocation: location }} className="guest-btn">Login</Link>
-              <Link to="/signup" state={{ backgroundLocation: location }} className="guest-btn guest-btn-secondary">Create Account</Link>
-            </div>
           </div>
         ) : (
           <div className="activity-card">

@@ -14,6 +14,17 @@
       ],
       "dest": "/api/meta?propertyId=$1"
     },
+    {
+      "src": "/projects/([A-Za-z0-9_-]+)$",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "facebookexternalhit|Facebot|Twitterbot|TwitterBot|LinkedInBot|linkedin|WhatsApp|Whatsapp|TelegramBot|Telegram|Discordbot|Discord|Slackbot|Slack|Skype|Googlebot|Bingbot|MSNBot|DuckDuckBot|OpenGraph|curl|wget|python"
+        }
+      ],
+      "dest": "/api/meta?projectId=$1"
+    },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]

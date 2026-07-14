@@ -455,6 +455,30 @@ export default function ProjectDetails() {
   const videoEmbedUrl = getYoutubeEmbedUrl(project.videoUrl || '');
   const uploadedDate = formatDate(project.createdAt);
   const pageUrl = `${window.location.origin}/projects/${project.slug || project._id}`;
+
+  const seoTitle = `${project.projectName} | Purandar Prime Properties`;
+  const seoDescription = project.shortDescription || project.detailedDescription ||
+    `${project.projectName || 'Project'} by ${project.developerName || 'Purandar Prime'} in ${[project.area, project.city].filter(Boolean).join(', ')}`;
+  const seoImage = project.coverImage || (project.projectImages || [])[0] || '';
+  const canonicalPath = `/projects/${project.slug || project._id}`;
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: project.projectName,
+    description: seoDescription,
+    image: seoImage ? [seoImage] : [],
+    url: pageUrl,
+    brand: {
+      '@type': 'Organization',
+      name: project.developerName || 'Purandar Prime Properties',
+    },
+    offers: {
+      '@type': 'Offer',
+      availability: 'https://schema.org/InStock',
+      url: pageUrl,
+    },
+  };
+
   const whatsappMessage = `WhatsApp chat started for ${project.projectName || 'Project'}`;
   const handleWhatsappClick = async () => {
     if (isAuthenticated && user?.email) {
@@ -475,7 +499,7 @@ export default function ProjectDetails() {
 
   const revealSellerDetails = async () => {
     if (!isAuthenticated) {
-      navigate('/login', { state: authRouteState });
+      navigate('/profile', { state: authRouteState });
       return;
     }
 
@@ -525,6 +549,15 @@ export default function ProjectDetails() {
 
   return (
     <div className="pd-page" style={{ paddingBottom: '3rem' }}>
+      <SeoManager
+        title={seoTitle}
+        description={seoDescription}
+        canonicalPath={canonicalPath}
+        image={seoImage}
+        type="product"
+        siteName="Purandar Prime Properties"
+        schema={schema}
+      />
       <div className="pd-layout">
         <div className="pd-main">
           <button onClick={() => navigate(-1)} className="pd-back-btn"><ArrowLeft size={16} /> Back to projects</button>
@@ -722,12 +755,12 @@ export default function ProjectDetails() {
               <div className="pd-feedback-lock">
                 <div className="pd-feedback-lock-icon"><Lock size={18} /></div>
                 <div>
-                  <div className="pd-feedback-lock-title">Login required</div>
-                  <p className="pd-feedback-lock-text">Please log in to add your feedback.</p>
+                  <div className="pd-feedback-lock-title">Profile required</div>
+                  <p className="pd-feedback-lock-text">Please visit your profile to add feedback.</p>
                 </div>
               </div>
-              <button type="button" className="pd-contact-btn" onClick={() => navigate('/login', { state: authRouteState })}>
-                Login to add feedback
+              <button type="button" className="pd-contact-btn" onClick={() => navigate('/profile', { state: authRouteState })}>
+                Go to profile
               </button>
             </div>
           )}

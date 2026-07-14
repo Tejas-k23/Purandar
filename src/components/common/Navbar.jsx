@@ -65,7 +65,7 @@ export default function Navbar() {
     { label: 'Buy', to: '/buy', icon: Building2 },
     { label: 'Add', to: '/post-property', icon: PlusCircle, action: true },
     { label: 'Rent', to: '/rent', icon: KeyRound },
-    { label: isAuthenticated ? 'Profile' : 'Login', to: isAuthenticated ? '/profile' : '/login', icon: User, state: isAuthenticated ? undefined : authRouteState },
+    { label: 'Profile', to: '/profile', icon: User },
   ];
 
   return (
@@ -92,19 +92,12 @@ export default function Navbar() {
 
           <div className="navbar-controls">
             <NavLink to="/post-property" className="btn-sell"><PlusCircle className="w-4 h-4" />Add Property</NavLink>
-            <button className="icon-button" onClick={() => navigate(isAuthenticated ? '/profile/saved' : '/login', isAuthenticated ? undefined : { state: authRouteState })} aria-label="Favorite properties">
+            <button className="icon-button" onClick={() => navigate('/profile/saved')} aria-label="Favorite properties">
               <Heart className="w-[22px] h-[22px]" />
             </button>
             <button className="icon-button" onClick={enableNotifications} aria-label="Enable notifications">
               <Bell className="w-[22px] h-[22px]" />
             </button>
-
-            {!isAuthenticated ? (
-              <div className="auth-actions">
-                <NavLink to="/login" state={authRouteState} className="auth-btn auth-btn-secondary">Login</NavLink>
-                <NavLink to="/signup" state={authRouteState} className="auth-btn auth-btn-primary">Sign Up</NavLink>
-              </div>
-            ) : null}
 
             {isAuthenticated ? (
               <div className="user-profile-wrapper" ref={profileRef}>

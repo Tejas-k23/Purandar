@@ -124,7 +124,7 @@ export default function PropertyDetails() {
 
   const revealSellerDetails = async () => {
     if (!isAuthenticated) {
-      navigate('/login', { state: { backgroundLocation: location } });
+      navigate('/profile', { state: { backgroundLocation: location } });
       return;
     }
 

@@ -22,8 +22,6 @@ import SavedProperties from '../pages/profile/SavedProperties';
 import MyProperties from '../pages/profile/MyProperties';
 import Dashboard from '../pages/profile/Dashboard';
 import MyEnquiries from '../pages/profile/MyEnquiries';
-import Login from '../pages/auth/Login';
-import Signup from '../pages/auth/Signup';
 import ProtectedRoute from './ProtectedRoute';
 import AdminRoute from './AdminRoute';
 import AdminLayout from '../layouts/AdminLayout';
@@ -69,8 +67,8 @@ export default function AppRoutes() {
         <Route path="/post-property" element={<PostProperty />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
-        {!backgroundLocation ? <Route path="/login" element={<Login />} /> : null}
-        {!backgroundLocation ? <Route path="/signup" element={<Signup />} /> : null}
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/signup" element={<Navigate to="/" replace />} />
         <Route path="/tk23" element={<AdminLogin />} />
 
         <Route element={<ProtectedRoute />}>
@@ -110,12 +108,6 @@ export default function AppRoutes() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {backgroundLocation ? (
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-        </Routes>
-      ) : null}
     </>
   );
 }

@@ -72,7 +72,7 @@ export default function SubscriptionCheckoutPage() {
 
   const handleBuyNow = async (pkg) => {
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: location.pathname } });
+      navigate('/profile', { state: { from: location.pathname } });
       return;
     }
 

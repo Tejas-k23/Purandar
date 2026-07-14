@@ -1,8 +1,8 @@
 /**
  * Vercel Serverless Function
- * This intercepts requests from social media crawlers to /property/:id
- * and serves HTML with proper OG tags instead of the SPA HTML
- * 
+ * This intercepts requests from social media crawlers to /property/:id and /projects/:id
+ * and serves HTML with proper OG tags instead of the SPA HTML.
+ *
  * Route: /api/meta.js
  * Access: Called automatically by Vercel routing rules
  */
@@ -24,7 +24,6 @@ const isSocialMediaCrawler = (userAgent = '') => {
     'DuckDuckBot', 'OpenGraph',
     'curl', 'wget', 'python',
   ];
-  
   const ua = userAgent.toLowerCase();
   return crawlers.some(bot => ua.includes(bot.toLowerCase()));
 };
@@ -49,12 +48,12 @@ const formatPrice = (price) => {
   return `₹${price.toLocaleString('en-IN')}`;
 };
 
-const generateMetaHTML = (property) => {
+const generatePropertyMetaHTML = (property) => {
   const propertyUrl = `${FRONTEND_URL}/property/${property._id}`;
   const title = property.title || `${property.propertyType || 'Property'} in ${property.locality || property.city}`;
   const price = property.price ? formatPrice(property.price) : '';
   const location = [property.locality, property.city].filter(Boolean).join(', ');
-  const description = property.description?.substring(0, 160) || 
+  const description = property.description?.substring(0, 160) ||
     `${title} - ${location}${price ? ' - ' + price : ''}`;
   const image = property.imageUrls?.[0] || property.images?.[0] || `${FRONTEND_URL}/og-default.png`;
 
@@ -64,7 +63,7 @@ const generateMetaHTML = (property) => {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(title)}</title>
-  
+
   <!-- Property Meta Tags -->
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
@@ -75,17 +74,17 @@ const generateMetaHTML = (property) => {
   <meta property="og:image:height" content="630" />
   <meta property="og:site_name" content="Purandar Prime Properties" />
   <meta property="og:locale" content="en_IN" />
-  
+
   <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <meta name="twitter:image" content="${image}" />
   <meta name="twitter:site" content="@PurandarPrime" />
-  
+
   <!-- Standard Meta Tags -->
   <meta name="description" content="${escapeHtml(description)}" />
-  
+
   <!-- Redirect to actual property page -->
   <script>
     if (typeof window !== 'undefined' && !navigator.userAgent.match(/bot|crawler|spider/i)) {
@@ -93,64 +92,77 @@ const generateMetaHTML = (property) => {
     }
   </script>
   <meta http-equiv="refresh" content="2;url=/property/${property._id}" />
-  
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background: #f5f5f5;
-    }
-    .container {
-      text-align: center;
-      background: white;
-      padding: 40px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
 </head>
 <body>
-  <div class="container">
-    <div class="spinner"></div>
-    <h2>Redirecting to property...</h2>
-    <p>If not redirected, <a href="/property/${property._id}">click here</a></p>
-  </div>
+  <p>Redirecting to property...</p>
+</body>
+</html>`;
+};
+
+const generateProjectMetaHTML = (project) => {
+  const projectPath = project.slug || project._id;
+  const projectUrl = `${FRONTEND_URL}/projects/${projectPath}`;
+  const title = project.projectName || `${project.projectType || 'Project'} in ${project.area || project.city || project.address}`;
+  const location = [project.area, project.city, project.address].filter(Boolean).join(', ');
+  const description = project.shortDescription || project.detailedDescription?.substring(0, 160) ||
+    `${title}${location ? ` in ${location}` : ''}${project.developerName ? ` by ${project.developerName}` : ''}`;
+  const image = project.coverImage || (Array.isArray(project.projectImages) ? project.projectImages[0] : undefined) || `${FRONTEND_URL}/og-default.png`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(title)}</title>
+
+  <!-- Project Meta Tags -->
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description)}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="${projectUrl}" />
+  <meta property="og:image" content="${image}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="Purandar Prime Properties" />
+  <meta property="og:locale" content="en_IN" />
+
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:description" content="${escapeHtml(description)}" />
+  <meta name="twitter:image" content="${image}" />
+  <meta name="twitter:site" content="@PurandarPrime" />
+
+  <!-- Standard Meta Tags -->
+  <meta name="description" content="${escapeHtml(description)}" />
+
+  <!-- Redirect to actual project page -->
+  <script>
+    if (typeof window !== 'undefined' && !navigator.userAgent.match(/bot|crawler|spider/i)) {
+      window.location.replace('/projects/${projectPath}');
+    }
+  </script>
+  <meta http-equiv="refresh" content="2;url=/projects/${projectPath}" />
+</head>
+<body>
+  <p>Redirecting to project...</p>
 </body>
 </html>`;
 };
 
 export default async (req, res) => {
   try {
-    const { propertyId } = req.query;
+    const { propertyId, projectId } = req.query;
     
-    if (!propertyId) {
-      return res.status(400).json({ error: 'Property ID is required' });
+    if (!propertyId && !projectId) {
+      return res.status(400).json({ error: 'Property ID or Project ID is required' });
     }
 
-    // Check if this is a crawler
-    const userAgent = req.headers['user-agent'] || '';
-    const isCrawler = isSocialMediaCrawler(userAgent);
+    const resourceType = propertyId ? 'properties' : 'projects';
+    const resourceId = propertyId || projectId;
 
-    // Fetch property data from backend API
     const response = await fetch(
-      `${BACKEND_URL}/api/v1/properties/${propertyId}`,
+      `${BACKEND_URL}/api/v1/${resourceType}/${resourceId}`,
       {
         headers: {
           'User-Agent': 'Vercel-Meta-Server/1.0',
@@ -162,30 +174,23 @@ export default async (req, res) => {
       return res.status(404).send(`
         <!DOCTYPE html>
         <html>
-        <head><title>Property Not Found</title></head>
-        <body><h1>Property not found</h1></body>
+        <head><title>Not Found</title></head>
+        <body><h1>Item not found</h1></body>
         </html>
       `);
     }
 
-    const { data: property } = await response.json();
-    
-    if (!property || !property.data) {
-      return res.status(404).send(`
-        <!DOCTYPE html>
-        <html>
-        <head><title>Property Not Found</title></head>
-        <body><h1>Property not found</h1></body>
-        </html>
-      `);
-    }
+    const { data } = await response.json();
+    const item = data;
 
-    const htmlContent = generateMetaHTML(property.data);
+    const htmlContent = propertyId
+      ? generatePropertyMetaHTML(item)
+      : generateProjectMetaHTML(item);
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=3600');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    
+
     return res.status(200).send(htmlContent);
   } catch (error) {
     console.error('Meta API Error:', error);
