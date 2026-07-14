@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Bookmark, Building2, MessageSquareMore, PlusCircle } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useProperties from '../../hooks/useProperties';
@@ -81,82 +81,6 @@ const SearchWidget = () => {
   );
 };
 
-const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
-  const isPausedRef = useRef(false);
-  const resumeTimeoutRef = useRef(null);
-
-  useEffect(() => {
-    const row = rowRef.current;
-    if (!row) return;
-
-    // More robust mobile detection
-    const isMobile = window.matchMedia('(max-width: 1024px)').matches || 
-                     window.matchMedia('(pointer: coarse)').matches;
-
-    // Disable auto-scroll completely on mobile/touch devices to avoid conflicts with native swipe
-    if (isMobile) {
-      return;
-    }
-
-    let rafId = 0;
-    let lastTime = performance.now();
-
-    const pause = () => {
-      isPausedRef.current = true;
-      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    };
-
-    const resume = () => {
-      // Delay resume to ensure native momentum scroll has finished
-      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-      resumeTimeoutRef.current = setTimeout(() => {
-        isPausedRef.current = false;
-        lastTime = performance.now(); // Reset time to avoid jump
-      }, 1000);
-    };
-
-    if (pauseOnHover) {
-      row.addEventListener('mouseenter', pause);
-      row.addEventListener('mouseleave', resume);
-    }
-
-    row.addEventListener('mousedown', pause);
-    window.addEventListener('mouseup', resume);
-    row.addEventListener('touchstart', pause, { passive: true });
-    row.addEventListener('touchend', resume, { passive: true });
-
-    const tick = (now) => {
-      const delta = now - lastTime;
-      lastTime = now;
-
-      if (!isPausedRef.current) {
-        const maxScroll = row.scrollWidth - row.clientWidth;
-        if (maxScroll > 0) {
-          const next = row.scrollLeft + (speed * delta) / 1000;
-          row.scrollLeft = next >= maxScroll ? 0 : next;
-        }
-      }
-
-      rafId = requestAnimationFrame(tick);
-    };
-
-    rafId = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-      if (pauseOnHover) {
-        row.removeEventListener('mouseenter', pause);
-        row.removeEventListener('mouseleave', resume);
-      }
-      row.removeEventListener('mousedown', pause);
-      window.removeEventListener('mouseup', resume);
-      row.removeEventListener('touchstart', pause);
-      row.removeEventListener('touchend', resume);
-    };
-  }, [rowRef, speed, pauseOnHover]);
-};
-
 function PropertySection() {
   const location = useLocation();
   const { properties, loading: propertiesLoading } = useProperties({
@@ -194,13 +118,14 @@ function PropertySection() {
     const projectCards = projects.slice(0, 2).map((p) => ({ ...p, type: 'project' }));
     return [...propertyCards, ...projectCards];
   }, [properties, projects]);
-  
-  const propertiesRowRef = useRef(null);
+
+  const scrollItems = useMemo(() => {
+    if (featured.length <= 1) return featured;
+    return [...featured, ...featured];
+  }, [featured]);
 
   const [activity, setActivity] = useState({ properties: 0, leads: 0, loading: false });
   const loading = propertiesLoading || projectsLoading;
-
-  useAutoScrollRow(propertiesRowRef, { speed: 26 });
 
   useEffect(() => {
     let active = true;
@@ -257,25 +182,31 @@ function PropertySection() {
         {loading ? <Loader label="Loading recommended properties..." /> : null}
         {!loading && featured.length === 0 ? <EmptyState title="No properties available yet" /> : null}
 
-        <div className="properties-scroll-row home-live-grid" ref={propertiesRowRef}>
-          {featured.map((item) => (
-            item.type === 'property' ? (
-              <PropertyCard
-                key={item._id}
-                property={item}
-                isSaved={savedPropertyIds.has(item._id)}
-                onToggleSave={isAuthenticated ? toggleSavedProperty : undefined}
-                variant="compact"
-              />
-            ) : (
-              <ProjectCard
-                key={item._id}
-                project={item}
-                isSaved={savedProjectIds.has(item._id)}
-                onToggleSave={isAuthenticated ? toggleSavedProject : undefined}
-              />
-            )
-          ))}
+        <div className="properties-scroll-row home-live-grid">
+          <div className="home-live-track">
+            {scrollItems.map((item, index) => {
+              const key = `${item._id || index}-${index >= featured.length ? 'duplicate' : 'original'}`;
+
+              return (
+                <div className="home-live-track-item" key={key}>
+                  {item.type === 'property' ? (
+                    <PropertyCard
+                      property={item}
+                      isSaved={savedPropertyIds.has(item._id)}
+                      onToggleSave={isAuthenticated ? toggleSavedProperty : undefined}
+                      variant="compact"
+                    />
+                  ) : (
+                    <ProjectCard
+                      project={item}
+                      isSaved={savedProjectIds.has(item._id)}
+                      onToggleSave={isAuthenticated ? toggleSavedProject : undefined}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

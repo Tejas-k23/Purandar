@@ -79,21 +79,38 @@
 .section-title { font-size: 1.5rem; font-weight: 700; color: var(--gray-900); margin-bottom: var(--space-1); }
 .section-subtitle { font-size: 0.95rem; color: var(--gray-500); }
 .home-live-grid {
-    display: flex;
-    gap: var(--space-4);
-    align-items: stretch;
+    display: block;
+    width: 100%;
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: var(--space-2);
-    scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
 }
 
-.home-live-grid > * {
+.home-live-track {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-4);
+    width: max-content;
+    animation: home-live-scroll 24s linear infinite;
+    will-change: transform;
+}
+
+.home-live-grid:hover .home-live-track,
+.home-live-track:hover {
+    animation-play-state: paused;
+}
+
+.home-live-track-item {
     flex: 0 0 340px;
     min-width: 340px;
-    scroll-snap-align: start;
+}
+
+@keyframes home-live-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
 }
 .guest-card { background: var(--color-bg-page); border-radius: var(--radius-2xl); padding: var(--space-6); box-shadow: 0 18px 38px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04); border: 1px solid var(--color-border); text-align: center; margin-left: auto; width: 100%; }
 .guest-avatar { width: 60px; height: 60px; background: var(--indigo-100); color: var(--indigo-600); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-3); font-size: 1.5rem; }
@@ -304,15 +321,16 @@
     
     .home-live-grid {
         padding-bottom: var(--space-4);
-        scroll-snap-type: x mandatory;
-        gap: var(--space-3);
         -webkit-overflow-scrolling: touch;
     }
-    
-    .home-live-grid > * {
+
+    .home-live-track {
+        gap: var(--space-3);
+    }
+
+    .home-live-track-item {
         flex: 0 0 300px;
         min-width: 300px;
-        scroll-snap-align: center;
     }
 
     .section-container { padding: 0 var(--space-3); }
@@ -324,14 +342,13 @@
 }
 
 @media (max-width: 754px) {
-    .home-live-grid {
+    .home-live-track {
         gap: var(--space-2);
     }
 
-    .home-live-grid > * {
+    .home-live-track-item {
         flex: 0 0 100%;
         min-width: 100%;
-        scroll-snap-align: start;
     }
 }
 
