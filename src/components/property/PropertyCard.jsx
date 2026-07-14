@@ -18,6 +18,7 @@ export default function PropertyCard({ property, isSaved = false, onToggleSave, 
     return urls.length ? urls : [getFallbackImage()];
   }, [property]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
   const contact = useMemo(() => resolveContact(property), [property]);
   const showBachelorsBadge = property.propertyType === 'PG / Hostel' || property.tenantPreference === 'bachelors';
   const [imageErrors, setImageErrors] = useState(new Set());
