@@ -12,9 +12,11 @@ import settingsRoutes from './settings.routes.js';
 import subscriptionRoutes from './subscription.routes.js';
 import seoRoutes from './seo.routes.js';
 import metaRoutes from './meta.routes.js';
+import authRoutes from './auth.routes.js';
 
 const router = Router();
 
+router.use('/auth', authRoutes);
 router.use('/blogs', blogRoutes);
 router.use('/contact', contactRoutes);
 router.use('/properties', propertyRoutes);
