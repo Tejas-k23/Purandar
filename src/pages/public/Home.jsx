@@ -81,6 +81,77 @@ const SearchWidget = () => {
   );
 };
 
+const useAutoScrollRow = (rowRef, { speed = 24, pauseOnHover = true } = {}) => {
+  const isPausedRef = useRef(false);
+  const resumeTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return;
+
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches || window.matchMedia('(pointer: coarse)').matches;
+    if (isMobile) {
+      return;
+    }
+
+    let rafId = 0;
+    let lastTime = performance.now();
+
+    const pause = () => {
+      isPausedRef.current = true;
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+    };
+
+    const resume = () => {
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+      resumeTimeoutRef.current = setTimeout(() => {
+        isPausedRef.current = false;
+        lastTime = performance.now();
+      }, 900);
+    };
+
+    if (pauseOnHover) {
+      row.addEventListener('mouseenter', pause);
+      row.addEventListener('mouseleave', resume);
+    }
+
+    row.addEventListener('mousedown', pause);
+    window.addEventListener('mouseup', resume);
+    row.addEventListener('touchstart', pause, { passive: true });
+    row.addEventListener('touchend', resume, { passive: true });
+
+    const tick = (now) => {
+      const delta = now - lastTime;
+      lastTime = now;
+
+      if (!isPausedRef.current) {
+        const maxScroll = row.scrollWidth - row.clientWidth;
+        if (maxScroll > 0) {
+          const next = row.scrollLeft + (speed * delta) / 1000;
+          row.scrollLeft = next >= maxScroll ? 0 : next;
+        }
+      }
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+      if (pauseOnHover) {
+        row.removeEventListener('mouseenter', pause);
+        row.removeEventListener('mouseleave', resume);
+      }
+      row.removeEventListener('mousedown', pause);
+      window.removeEventListener('mouseup', resume);
+      row.removeEventListener('touchstart', pause);
+      row.removeEventListener('touchend', resume);
+    };
+  }, [rowRef, speed, pauseOnHover]);
+};
+
 function PropertySection() {
   const location = useLocation();
   const { properties, loading: propertiesLoading } = useProperties({
