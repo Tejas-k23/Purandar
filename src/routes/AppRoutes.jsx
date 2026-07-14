@@ -35,6 +35,7 @@ import AdminBlogForm from '../pages/admin/AdminBlogForm';
 import ScrollToTop from '../components/common/ScrollToTop';
 import AdminEnquiries from '../pages/admin/AdminEnquiries';
 import AdminLogin from '../pages/admin/AdminLogin';
+import Login from '../pages/auth/Login';
 import AdminFeedback from '../pages/admin/AdminFeedback';
 import AdminNotifications from '../pages/admin/AdminNotifications';
 import AdminPackages from '../pages/admin/AdminPackages';
@@ -67,8 +68,8 @@ export default function AppRoutes() {
         <Route path="/post-property" element={<PostProperty />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="/signup" element={<Navigate to="/" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Login />} />
         <Route path="/tk23" element={<AdminLogin />} />
 
         <Route element={<ProtectedRoute />}>
